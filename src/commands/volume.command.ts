@@ -1,0 +1,14 @@
+import { SlashCommandBuilder } from 'discord.js';
+import { AppCommand } from './command.js';
+
+export const volume: AppCommand = {
+  data: new SlashCommandBuilder()
+    .setName('volume')
+    .setDescription('The volume level you want to set (maximum of 100, minimum of 0).'),
+  execute: async (interaction) => {
+    await interaction.reply({
+      ephemeral: true,
+      content: 'Not yet implemented.',
+    });
+  },
+};

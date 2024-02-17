@@ -1,0 +1,36 @@
+{
+  "name": "vivy",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./src/app.ts",
+  "scripts": {
+    "start": "tsx .",
+    "dev": "tsx watch .",
+    "register": "tsx ./src/register.ts",
+    "register:dev": "tsx ./src/register-dev.ts",
+    "lint": "eslint .",
+    "clean": "rimraf dist",
+    "build": "tsc",
+    "prettier": "prettier src --write"
+  },
+  "type": "module",
+  "author": "Gavenda <gavenda@disroot.org>",
+  "private": true,
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.4.4",
+    "redis": "^4.6.13",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.19",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.3",
+    "prettier": "^3.2.5",
+    "rimraf": "^5.0.5",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3"
+  }
+}
