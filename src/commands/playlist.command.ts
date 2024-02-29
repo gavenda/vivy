@@ -3,8 +3,6 @@ import { AppCommand } from './command.js';
 
 export const playlist: AppCommand = {
   data: new SlashCommandBuilder()
-    .setName('playlist')
-    .setDescription('Manage your playlist.')
     .addSubcommand(
       new SlashCommandSubcommandBuilder()
         .setName('list')
@@ -39,7 +37,9 @@ export const playlist: AppCommand = {
       new SlashCommandSubcommandBuilder()
         .setName('queue')
         .setDescription('Queue the music in your playlist.'),
-    ),
+    )
+    .setName('playlist')
+    .setDescription('Manage your playlist.'),
   execute: async (interaction) => {
     await interaction.reply({
       ephemeral: true,

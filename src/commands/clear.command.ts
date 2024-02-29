@@ -7,8 +7,6 @@ import { AppCommand } from './command.js';
 
 export const clear: AppCommand = {
   data: new SlashCommandBuilder()
-    .setName('clear')
-    .setDescription('Clear an existing applied setting.')
     .addSubcommandGroup(
       new SlashCommandSubcommandGroupBuilder()
         .setName('effect')
@@ -31,7 +29,9 @@ export const clear: AppCommand = {
     )
     .addSubcommand(
       new SlashCommandSubcommandBuilder().setName('queue').setDescription('Clear the music queue.'),
-    ),
+    )
+    .setName('clear')
+    .setDescription('Clear an existing applied setting.'),
   execute: async (interaction) => {
     await interaction.reply({
       ephemeral: true,

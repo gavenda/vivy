@@ -8,8 +8,6 @@ import { AppCommand } from './command.js';
 
 export const effect: AppCommand = {
   data: new SlashCommandBuilder()
-    .setName('effect')
-    .setDescription('Apply an effect to the playing music.')
     .addSubcommandGroup(
       new SlashCommandSubcommandGroupBuilder()
         .setName('filter')
@@ -54,7 +52,9 @@ export const effect: AppCommand = {
             .setName('bass-boost')
             .setDescription('Apply a bass boost equalizer to the playing music.'),
         ),
-    ),
+    )
+    .setName('effect')
+    .setDescription('Apply an effect to the playing music.'),
   execute: async (interaction) => {
     await interaction.reply({
       ephemeral: true,
