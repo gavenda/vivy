@@ -85,6 +85,7 @@ export const queue: AppCommand = {
       .setTitle(`Vivy's Song List`)
       .setDescription(`The audience has not requested me to sing anything.`)
       .setColor(0x00ffff)
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       .setImage(player?.current.artworkUrl)
       .addFields(
         { name: 'Now Playing', value: '-', inline: false },

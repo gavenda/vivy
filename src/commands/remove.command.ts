@@ -50,9 +50,6 @@ export const remove: AppCommand = {
       return;
     }
 
-    const from = interaction.options.getNumber('from', true);
-    const to = interaction.options.getNumber('to');
-
     await interaction.reply({
       ephemeral: true,
       content: 'Not yet implemented.'

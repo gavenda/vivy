@@ -40,7 +40,7 @@ export const resume: AppCommand = {
       return;
     }
 
-    player.resume();
+    await player.resume();
 
     await interaction.reply({
       ephemeral: true,

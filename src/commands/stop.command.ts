@@ -40,7 +40,7 @@ export const stop: AppCommand = {
       return;
     }
 
-    player.stop();
+    await player.stop();
 
     await interaction.reply({
       ephemeral: true,

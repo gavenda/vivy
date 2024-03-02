@@ -1,11 +1,21 @@
 import { REST, Routes } from 'discord.js';
 import { commands } from './commands.js';
+import { logger } from './logger.js';
 
 import dotenv from 'dotenv';
-import { logger } from './logger.js';
 
 // Load environment variables
 dotenv.config();
+
+if (!process.env.TOKEN) {
+  throw new Error('TOKEN is required.');
+}
+if (!process.env.CLIENT_ID) {
+  throw new Error('CLIENT_ID is required.');
+}
+if (!process.env.GUILD_ID) {
+  throw new Error('GUILD_ID is required.');
+}
 
 const rest = new REST().setToken(process.env.TOKEN);
 

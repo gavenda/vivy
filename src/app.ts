@@ -1,12 +1,12 @@
 import { SpotifyApi } from '@spotify/web-api-ts-sdk';
 import { ActivityType, Client, Events, GatewayIntentBits } from 'discord.js';
-import { MoonlinkManager } from 'moonlink.js';
+import { MoonlinkManager, VoicePacket } from 'moonlink.js';
 import { createClient } from 'redis';
-import { events } from './events.js';
-import { createLogger, format, transports } from 'winston';
 import { AppContext } from './app.context.js';
+import { events } from './events.js';
 
 import dotenv from 'dotenv';
+import { logger } from './logger.js';
 
 // Load environment variables
 dotenv.config();
@@ -29,28 +29,6 @@ if (!process.env.SPOTIFY_CLIENT_ID) {
 if (!process.env.SPOTIFY_CLIENT_SECRET) {
   throw new Error('SPOTIFY_CLIENT_SECRET is required.');
 }
-
-// Create logger
-const logger = createLogger({
-  level: 'info',
-  format: format.combine(
-    format.timestamp({
-      format: 'YYYY-MM-DD HH:mm:ss'
-    }),
-    format.errors({ stack: true }),
-    format.splat(),
-    format.json()
-  ),
-  defaultMeta: { service: 'lumi' },
-  transports: [
-    new transports.File({ filename: 'error.log', level: 'error', dirname: 'logs' }),
-    new transports.File({ filename: 'lumi.log', dirname: 'logs' }),
-    new transports.Console({
-      format: format.combine(format.colorize(), format.simple()),
-      level: process.env.NODE_ENV === 'production' ? 'info' : 'debug'
-    })
-  ]
-});
 
 // Create redis client
 const redis = createClient({
@@ -88,10 +66,12 @@ const moon = new MoonlinkManager(
     autoResume: true,
     previousTracksInArray: false
   },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (guildId: string, payload: any) => {
     const guild = client.guilds.cache.get(guildId);
 
     if (guild) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       guild.shard.send(JSON.parse(payload));
     } else {
       logger.error('Unable to send payload to guild', { guildId });
@@ -105,18 +85,18 @@ moon.on('nodeCreate', (node) => {
 });
 
 // Ready event
-client.once(Events.ClientReady, (readyClient) => {
+client.once(Events.ClientReady, async (readyClient) => {
   logger.info(`Ready! Logged in`, { user: readyClient.user.tag });
 
   // Init moon
-  moon.init(readyClient.user.id);
+  await moon.init(readyClient.user.id);
 });
 
-client.on(Events.Raw, (data) => {
+client.on(Events.Raw, (data: VoicePacket) => {
   moon.packetUpdate(data);
 });
 
-const appContext: AppContext = { logger, client, redis, moon, spotify };
+const appContext: AppContext = { client, redis, moon, spotify };
 
 // Register events
 for (const { event, execute } of events) {

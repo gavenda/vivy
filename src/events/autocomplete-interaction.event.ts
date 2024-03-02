@@ -1,6 +1,7 @@
 import { Events } from 'discord.js';
-import { commands } from '../commands.js';
+import { commands } from '@/commands.js';
 import { AppEvent } from './event.js';
+import { logger } from '@/logger.js';
 
 export const autocompleteInteraction: AppEvent<Events.InteractionCreate> = {
   event: Events.InteractionCreate,
@@ -16,18 +17,19 @@ export const autocompleteInteraction: AppEvent<Events.InteractionCreate> = {
       userId: interaction.user.id
     };
 
-    context.logger.debug(`Received autocomplete interaction`, autocompleteContext);
+    logger.debug(`Received autocomplete interaction`, autocompleteContext);
 
     if (!command || !command.autocomplete) {
-      context.logger.warn(`No matching autocomplete interaction was found`, autocompleteContext);
+      logger.warn(`No matching autocomplete interaction was found`, autocompleteContext);
       return;
     }
 
     try {
       await command.autocomplete(context, interaction);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      // Log error
-      context.logger.error(error, autocompleteContext);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      logger.error(error, autocompleteContext);
 
       if (!interaction.responded) {
         await interaction.respond([]);

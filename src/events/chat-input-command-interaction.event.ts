@@ -1,5 +1,6 @@
+import { commands } from '@/commands.js';
+import { logger } from '@/logger.js';
 import { Events } from 'discord.js';
-import { commands } from '../commands.js';
 import { AppEvent } from './event.js';
 
 export const chatInputCommandInteraction: AppEvent<Events.InteractionCreate> = {
@@ -16,18 +17,19 @@ export const chatInputCommandInteraction: AppEvent<Events.InteractionCreate> = {
       userId: interaction.user.id
     };
 
-    context.logger.debug(`Received interaction command`, commandContext);
+    logger.debug(`Received interaction command`, commandContext);
 
     if (!command) {
-      context.logger.warn(`No matching command was found`, commandContext);
+      logger.warn(`No matching command was found`, commandContext);
       return;
     }
 
     try {
       await command.execute(context, interaction);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      // Log error
-      context.logger.error(error, commandContext);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      logger.error(error, commandContext);
 
       // Make sure we reply to the user or they get an error for no response
       if (interaction.replied || interaction.deferred) {

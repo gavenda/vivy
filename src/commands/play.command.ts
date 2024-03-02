@@ -14,6 +14,7 @@ import {
 import { MoonlinkTrack } from 'moonlink.js';
 import { AppCommand } from './command.js';
 import { AppEmoji } from '@/app.emojis.js';
+import { logger } from '@/logger.js';
 
 export type QueueType = 'later' | 'next' | 'now';
 
@@ -63,10 +64,10 @@ export const play: AppCommand = {
     if (subcommand === 'now' || subcommand === 'next' || subcommand === 'later') {
       await playMusic(context, interaction, subcommand);
     } else {
-      context.logger.error(`Unknown subcommand`, { subcommand });
+      logger.error(`Unknown subcommand`, { subcommand });
     }
   },
-  autocomplete: async ({ logger, moon }, interaction) => {
+  autocomplete: async (context, interaction) => {
     const focusedValue = interaction.options.getFocused();
 
     const queriesRegExp = /\["(.+?(?="))".+?(?=]])]]/g;
@@ -96,7 +97,7 @@ export const play: AppCommand = {
 };
 
 const playMusic = async (
-  { moon, logger }: AppContext,
+  { moon }: AppContext,
   interaction: ChatInputCommandInteraction,
   queue: QueueType
 ) => {
@@ -144,21 +145,23 @@ const playMusic = async (
   });
 
   switch (result.loadType) {
-    case 'error':
+    case 'error': {
       // Responding with an error message if loading fails
       await interaction.followUp({
         ephemeral: true,
         content: `There was an error looking up the music. Please try again.`
       });
       break;
-    case 'empty':
+    }
+    case 'empty': {
       // Responding with a message if the search returns no results
       await interaction.followUp({
         ephemeral: true,
         content: `No matches found!`
       });
       break;
-    case 'playlist':
+    }
+    case 'playlist': {
       if (queue !== 'later') {
         await interaction.followUp({
           ephemeral: true,
@@ -177,7 +180,8 @@ const playMusic = async (
         content: `Playing later music list: \`${result.playlistInfo!.name}\`.`
       });
       break;
-    case 'search':
+    }
+    case 'search': {
       const selectMusicMenu = new StringSelectMenuBuilder()
         .setCustomId(`select:music`)
         .setPlaceholder('Please select music to play');
@@ -251,7 +255,7 @@ const playMusic = async (
             }
             break;
           case 'now':
-            player.play(selectedTrack);
+            await player.play(selectedTrack);
 
             if (player.previous instanceof MoonlinkTrack) {
               player.queue.add(player.previous, 0);
@@ -270,6 +274,7 @@ const playMusic = async (
         });
       }
       break;
+    }
   }
 
   if (!player.playing) {
