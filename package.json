@@ -8,6 +8,8 @@
     "dev": "tsx watch .",
     "register": "tsx ./src/register.ts",
     "register:dev": "tsx ./src/register-dev.ts",
+    "clear": "tsx ./src/clear.ts",
+    "clear:dev": "tsx ./src/clear-dev.ts",
     "lint": "eslint src",
     "clean": "rimraf dist",
     "build": "tsc",
