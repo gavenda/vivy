@@ -1,46 +1,106 @@
+import { SpotifyApi } from '@spotify/web-api-ts-sdk';
 import { ActivityType, Client, Events, GatewayIntentBits } from 'discord.js';
 import { MoonlinkManager } from 'moonlink.js';
+import { createClient } from 'redis';
+import { events } from './events.js';
+import { createLogger, format, transports } from 'winston';
+import { AppContext } from './app.context.js';
 
 import dotenv from 'dotenv';
-import { exit } from 'node:process';
-import { commands } from './commands.js';
-import { events } from './events.js';
-import { jukebox } from './jukebox.js';
-import { logger } from './logger.js';
-import { redis } from './redis.js';
 
 // Load environment variables
 dotenv.config();
+
+if (!process.env.TOKEN) {
+  throw new Error('TOKEN is required.');
+}
+if (!process.env.CLIENT_ID) {
+  throw new Error('CLIENT_ID is required.');
+}
+if (!process.env.GUILD_ID) {
+  throw new Error('GUILD_ID is required.');
+}
+if (!process.env.REDIS_URL) {
+  throw new Error('REDIS_URL is required.');
+}
+if (!process.env.SPOTIFY_CLIENT_ID) {
+  throw new Error('SPOTIFY_CLIENT_ID is required.');
+}
+if (!process.env.SPOTIFY_CLIENT_SECRET) {
+  throw new Error('SPOTIFY_CLIENT_SECRET is required.');
+}
+
+// Create logger
+const logger = createLogger({
+  level: 'info',
+  format: format.combine(
+    format.timestamp({
+      format: 'YYYY-MM-DD HH:mm:ss'
+    }),
+    format.errors({ stack: true }),
+    format.splat(),
+    format.json()
+  ),
+  defaultMeta: { service: 'lumi' },
+  transports: [
+    new transports.File({ filename: 'error.log', level: 'error', dirname: 'logs' }),
+    new transports.File({ filename: 'lumi.log', dirname: 'logs' }),
+    new transports.Console({
+      format: format.combine(format.colorize(), format.simple()),
+      level: process.env.NODE_ENV === 'production' ? 'info' : 'debug'
+    })
+  ]
+});
+
+// Create redis client
+const redis = createClient({
+  url: process.env.REDIS_URL
+});
+
+// Create spotify client
+const spotify = SpotifyApi.withClientCredentials(
+  process.env.SPOTIFY_CLIENT_ID,
+  process.env.SPOTIFY_CLIENT_SECRET
+);
 
 // Create discord client
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
   presence: {
     status: 'online',
-    activities: [{ name: `Flourite Eye's Song`, type: ActivityType.Listening }],
-  },
+    activities: [{ name: `Flourite Eye's Song`, type: ActivityType.Listening }]
+  }
 });
 
 // Configure moonlink
-jukebox.moon = new MoonlinkManager(
+const moon = new MoonlinkManager(
   [
     {
-      host: 'lavalink4.alfari.id',
-      port: 443,
-      password: 'catfein',
-      secure: true,
-    },
+      host: 'localhost',
+      port: 2333,
+      password: 'flourite',
+      secure: false
+    }
   ],
   {
-    /* Options */
+    balancingPlayersByRegion: true,
+    destroyPlayersStopped: false,
+    autoResume: true,
+    previousTracksInArray: false
   },
   (guildId: string, payload: any) => {
-    client.guilds.cache.get(guildId).shard.send(JSON.parse(payload));
-  },
+    const guild = client.guilds.cache.get(guildId);
+
+    if (guild) {
+      guild.shard.send(JSON.parse(payload));
+    } else {
+      logger.error('Unable to send payload to guild', { guildId });
+    }
+  }
 );
 
 // Moon events
-jukebox.moon.on('nodeCreate', (node) => {
+moon.on('nodeCreate', (node) => {
   logger.info(`Connected to lavalink node`, { host: node.host });
 });
 
@@ -49,65 +109,32 @@ client.once(Events.ClientReady, (readyClient) => {
   logger.info(`Ready! Logged in`, { user: readyClient.user.tag });
 
   // Init moon
-  jukebox.moon.init(readyClient.user.id);
+  moon.init(readyClient.user.id);
 });
 
 client.on(Events.Raw, (data) => {
-  jukebox.moon.packetUpdate(data);
+  moon.packetUpdate(data);
 });
 
-// Chat input command interaction event
-client.on(Events.InteractionCreate, async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
-
-  const command = commands.find((command) => command.data.name === interaction.commandName);
-
-  const context = {
-    command: interaction.commandName,
-    user: interaction.user.tag,
-    userId: interaction.user.id,
-  };
-
-  logger.debug(`Received interaction command`, context);
-
-  if (!command) {
-    logger.warn(`No matching command was found`, context);
-    return;
-  }
-
-  try {
-    await command.execute(interaction);
-  } catch (error) {
-    // Log error
-    logger.error(error, context);
-
-    // Make sure we reply to the user or they get an error for no response
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({
-        content: 'There was an error while executing this command!',
-        ephemeral: true,
-      });
-    } else {
-      await interaction.reply({
-        content: 'There was an error while executing this command!',
-        ephemeral: true,
-      });
-    }
-  }
-});
+const appContext: AppContext = { logger, client, redis, moon, spotify };
 
 // Register events
 for (const { event, execute } of events) {
-  client.on(event, execute);
+  client.on(event, (interaction) => execute(appContext, interaction));
 }
 
 try {
   // Connect to redis
   await redis.connect();
+} catch (error) {
+  logger.error('Unable to connect to redis', { error });
+  process.exit(1);
+}
 
+try {
   // Now ready to login to gateway
   await client.login(process.env.TOKEN);
 } catch (error) {
-  logger.error(error);
-  exit(1);
+  logger.error('Unable to connect to discord gateway', { error });
+  process.exit(1);
 }

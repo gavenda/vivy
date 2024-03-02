@@ -7,8 +7,10 @@
     "sourceMap": true,
     "outDir": "dist",
     "rootDir": "src",
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src/**/*.ts"],

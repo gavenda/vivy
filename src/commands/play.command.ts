@@ -1,16 +1,21 @@
+import { AppContext } from '@/app.context.js';
+import { hasVoiceState } from '@/utils/has-voice-state.js';
+import { trimEllipse } from '@/utils/trim-ellipses.js';
 import {
   ActionRowBuilder,
   ChatInputCommandInteraction,
   ComponentType,
-  GuildMember,
   SlashCommandBuilder,
   SlashCommandStringOption,
   SlashCommandSubcommandBuilder,
   StringSelectMenuBuilder,
-  StringSelectMenuOptionBuilder,
+  StringSelectMenuOptionBuilder
 } from 'discord.js';
-import { jukebox } from '../jukebox.js';
+import { MoonlinkTrack } from 'moonlink.js';
 import { AppCommand } from './command.js';
+import { AppEmoji } from '@/app.emojis.js';
+
+export type QueueType = 'later' | 'next' | 'now';
 
 export const play: AppCommand = {
   data: new SlashCommandBuilder()
@@ -22,8 +27,9 @@ export const play: AppCommand = {
           new SlashCommandStringOption()
             .setName('query')
             .setDescription('The music or url you want to play.')
-            .setRequired(true),
-        ),
+            .setAutocomplete(true)
+            .setRequired(true)
+        )
     )
     .addSubcommand(
       new SlashCommandSubcommandBuilder()
@@ -33,8 +39,9 @@ export const play: AppCommand = {
           new SlashCommandStringOption()
             .setName('query')
             .setDescription('The music or url you want to play.')
-            .setRequired(true),
-        ),
+            .setAutocomplete(true)
+            .setRequired(true)
+        )
     )
     .addSubcommand(
       new SlashCommandSubcommandBuilder()
@@ -44,58 +51,85 @@ export const play: AppCommand = {
           new SlashCommandStringOption()
             .setName('query')
             .setDescription('The music or url you want to play.')
-            .setRequired(true),
-        ),
+            .setAutocomplete(true)
+            .setRequired(true)
+        )
     )
     .setName('play')
     .setDescription('Play music.'),
-  execute: async (interaction) => {
-    switch (interaction.options.getSubcommand()) {
-      case 'later':
-        await later(interaction);
-        break;
-      case 'next':
-        await next(interaction);
-        break;
-      case 'now':
-        await now(interaction);
-        break;
-      default:
-        throw new Error(`Unknown subcommand: ${interaction.options.getSubcommand()}`);
+  execute: async (context, interaction) => {
+    const subcommand = interaction.options.getSubcommand(true);
+
+    if (subcommand === 'now' || subcommand === 'next' || subcommand === 'later') {
+      await playMusic(context, interaction, subcommand);
+    } else {
+      context.logger.error(`Unknown subcommand`, { subcommand });
     }
   },
+  autocomplete: async ({ logger, moon }, interaction) => {
+    const focusedValue = interaction.options.getFocused();
+
+    const queriesRegExp = /\["(.+?(?="))".+?(?=]])]]/g;
+    const queriesUrl = new URL(`https://suggestqueries-clients6.youtube.com/complete/search`);
+
+    queriesUrl.search = new URLSearchParams({
+      client: 'youtube',
+      ds: 'yt',
+      q: focusedValue,
+      cp: '10'
+    }).toString();
+
+    const response = await fetch(queriesUrl);
+    const responseBody = await response.text();
+    const matchResults = [...responseBody.matchAll(queriesRegExp)];
+    const results = matchResults.map((matchResult) => matchResult[1]);
+    const choices = results
+      .map((result) => {
+        return {
+          name: trimEllipse(result, 100),
+          value: trimEllipse(result, 100)
+        };
+      })
+      .slice(0, 25);
+    await interaction.respond(choices);
+  }
 };
 
-const hasVoiceState = (member: any): member is GuildMember => {
-  return member.voice !== undefined;
-};
-
-const later = async (interaction: ChatInputCommandInteraction) => {
-  const member = interaction.member;
-
-  if (!hasVoiceState(member)) {
+const playMusic = async (
+  { moon, logger }: AppContext,
+  interaction: ChatInputCommandInteraction,
+  queue: QueueType
+) => {
+  if (!interaction.guild || !interaction.guildId) {
+    await interaction.reply({
+      content: `You are not in a guild.`,
+      ephemeral: true
+    });
+    return;
+  }
+  if (!hasVoiceState(interaction.member)) {
     await interaction.reply({
       content: `Illegal attempt for a non gateway interaction request.`,
-      ephemeral: true,
+      ephemeral: true
     });
     return;
   }
-  if (!member.voice.channel) {
+  if (!interaction.member.voice.channel) {
     await interaction.reply({
       content: `You are not in a voice channel.`,
-      ephemeral: true,
+      ephemeral: true
     });
     return;
   }
 
+  // Passed the guards, defer (might be delayed)
   await interaction.deferReply({ ephemeral: true });
 
-  const query = interaction.options.getString('query');
-  const player = jukebox.moon.players.create({
+  const query = interaction.options.getString('query', true);
+  const player = moon.players.create({
     guildId: interaction.guild.id,
-    voiceChannel: member.voice.channel.id,
-    textChannel: interaction.channel.id,
-    autoPlay: true,
+    voiceChannel: interaction.member.voice.channel.id,
+    textChannel: interaction.channelId
   });
 
   if (!player.connected) {
@@ -103,10 +137,10 @@ const later = async (interaction: ChatInputCommandInteraction) => {
     player.connect({});
   }
 
-  const result = await jukebox.moon.search({
+  const result = await moon.search({
     query,
     source: 'youtube',
-    requester: interaction.user.id,
+    requester: interaction.user.id
   });
 
   switch (result.loadType) {
@@ -114,89 +148,131 @@ const later = async (interaction: ChatInputCommandInteraction) => {
       // Responding with an error message if loading fails
       await interaction.followUp({
         ephemeral: true,
-        content: `There was an error loading the music.`,
+        content: `There was an error looking up the music. Please try again.`
       });
       break;
     case 'empty':
       // Responding with a message if the search returns no results
       await interaction.followUp({
         ephemeral: true,
-        content: `No matches found!`,
+        content: `No matches found!`
       });
       break;
     case 'playlist':
-      await interaction.followUp({
-        ephemeral: true,
-        content: `Playing later music list: \`${result.playlistInfo.name}\`.`,
-      });
+      if (queue !== 'later') {
+        await interaction.followUp({
+          ephemeral: true,
+          content: `Trying to load an entire playlist on priority is cheating.`
+        });
+        return;
+      }
 
       for (const track of result.tracks) {
         // Adding tracks to the queue if it's a playlist
         player.queue.add(track);
       }
+
+      await interaction.followUp({
+        ephemeral: true,
+        content: `Playing later music list: \`${result.playlistInfo!.name}\`.`
+      });
       break;
     case 'search':
       const selectMusicMenu = new StringSelectMenuBuilder()
         .setCustomId(`select:music`)
-        .setPlaceholder('Select music to play!');
+        .setPlaceholder('Please select music to play');
 
-      for (const track of result.tracks) {
+      for (const [index, track] of result.tracks.entries()) {
         selectMusicMenu.addOptions(
           new StringSelectMenuOptionBuilder()
             .setLabel(track.title)
             .setDescription(track.author)
-            .setValue(track.identifier),
+            .setValue(track.identifier)
+            .setEmoji(index === 0 ? AppEmoji.Preferred : AppEmoji.MusicNote)
         );
       }
 
       const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMusicMenu);
 
       const response = await interaction.followUp({
-        components: [row],
+        components: [row]
       });
 
       try {
         const selectTrack = await response.awaitMessageComponent({
           componentType: ComponentType.StringSelect,
-          filter: (i) => i.user.id === member.id,
-          time: 60_000,
+          filter: (i) => i.user.id === interaction.user.id,
+          time: 60_000
         });
         const selectedIdentifier = selectTrack.values[0];
         const selectedTrack = result.tracks.find(
-          (track) => track.identifier === selectedIdentifier,
+          (track) => track.identifier === selectedIdentifier
         );
 
-        player.queue.add(selectedTrack);
+        if (!selectedTrack) {
+          await interaction.editReply({
+            content: `Unable to find selected track.`,
+            components: []
+          });
+          return;
+        }
 
-        await interaction.editReply({
-          content: `Now playing \`${selectedTrack.title}\`.`,
-          components: [],
-        });
+        logger.debug('Track selected', selectedTrack);
+
+        switch (queue) {
+          case 'later':
+            player.queue.add(selectedTrack);
+
+            if (!player.playing && player.queue.size === 1) {
+              await interaction.editReply({
+                content: `Now playing \`${selectedTrack.title}\`.`,
+                components: []
+              });
+            } else {
+              await interaction.editReply({
+                content: `Playing later \`${selectedTrack.title}\`.`,
+                components: []
+              });
+            }
+            break;
+          case 'next':
+            player.queue.add(selectedTrack, 0);
+
+            if (player.playing && player.queue.size === 1) {
+              await interaction.editReply({
+                content: `Now playing \`${selectedTrack.title}\`.`,
+                components: []
+              });
+            } else {
+              await interaction.editReply({
+                content: `Playing next \`${selectedTrack.title}\`.`,
+                components: []
+              });
+            }
+            break;
+          case 'now':
+            player.play(selectedTrack);
+
+            if (player.previous instanceof MoonlinkTrack) {
+              player.queue.add(player.previous, 0);
+            }
+
+            await interaction.editReply({
+              content: `Now playing \`${selectedTrack.title}\`.`,
+              components: []
+            });
+            break;
+        }
       } catch (e) {
         await interaction.editReply({
           content: 'No music selected within a minute, cancelled.',
-          components: [],
+          components: []
         });
       }
       break;
   }
 
   if (!player.playing) {
-    // Starting playback if not already playing
-    player.play();
+    await player.play();
   }
-};
-
-const next = async (interaction: ChatInputCommandInteraction) => {
-  await interaction.reply({
-    ephemeral: true,
-    content: 'Not yet implemented.',
-  });
-};
-
-const now = async (interaction: ChatInputCommandInteraction) => {
-  await interaction.reply({
-    ephemeral: true,
-    content: 'Not yet implemented.',
-  });
 };

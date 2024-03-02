@@ -5,10 +5,10 @@ export const unbind: AppCommand = {
   data: new SlashCommandBuilder()
     .setName('unbind')
     .setDescription('Unbinds the sticky music queue from this channel.'),
-  execute: async (interaction) => {
+  execute: async (context, interaction) => {
     await interaction.reply({
       ephemeral: true,
-      content: 'Not yet implemented.',
+      content: 'Not yet implemented.'
     });
-  },
+  }
 };

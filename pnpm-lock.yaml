@@ -1,5 +1,9 @@
 lockfileVersion: '6.0'
 
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
 dependencies:
   '@spotify/web-api-ts-sdk':
     specifier: ^1.2.0
@@ -11,8 +15,8 @@ dependencies:
     specifier: ^16.4.4
     version: 16.4.4
   moonlink.js:
-    specifier: ^3.3.76
-    version: 3.3.76
+    specifier: ^3.5.5
+    version: 3.5.5
   redis:
     specifier: ^4.6.13
     version: 4.6.13
@@ -1216,8 +1220,8 @@ packages:
     engines: {node: '>=16 || 14 >=14.17'}
     dev: true
 
-  /moonlink.js@3.3.76:
-    resolution: {integrity: sha512-6F1SDDfjCgIxWuZ80zkbn6LPDv0lW0kKVWqIMXtPqJj0KYYlD4nJmZyvQ8nOdEQ3w7voxV9qjknvWxhOT6XJaw==}
+  /moonlink.js@3.5.5:
+    resolution: {integrity: sha512-RM4d/2rk95Kc/TVikI7PlUpttnqOq/vGonhGBRb4UeVMiGtAT7ygMbhG1Q5a49spcwlz8hqkWRCWny2nX7CtJw==}
     engines: {node: '>=16.6.0'}
     dev: false
 

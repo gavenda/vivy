@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, SlashCommandIntegerOption } from 'discord.js';
 import { AppCommand } from './command.js';
+import { hasVoiceState } from '@/utils/has-voice-state.js';
 
 export const remove: AppCommand = {
   data: new SlashCommandBuilder()
@@ -7,19 +8,54 @@ export const remove: AppCommand = {
       new SlashCommandIntegerOption()
         .setName('from')
         .setDescription('The first number of the music in the queue you want to remove.')
-        .setRequired(true),
+        .setRequired(true)
     )
     .addIntegerOption(
       new SlashCommandIntegerOption()
         .setName('to')
-        .setDescription('The last number of the music in the queue you want to remove.'),
+        .setDescription('The last number of the music in the queue you want to remove.')
     )
     .setName('remove')
     .setDescription('Remove a music in the music queue.'),
-  execute: async (interaction) => {
+  execute: async ({ moon }, interaction) => {
+    if (!interaction.guild || !interaction.guildId) {
+      await interaction.reply({
+        content: `You are not in a guild.`,
+        ephemeral: true
+      });
+      return;
+    }
+    if (!hasVoiceState(interaction.member)) {
+      await interaction.reply({
+        content: `Illegal attempt for a non gateway interaction request.`,
+        ephemeral: true
+      });
+      return;
+    }
+    if (!interaction.member.voice.channel) {
+      await interaction.reply({
+        content: `You are not in a voice channel.`,
+        ephemeral: true
+      });
+      return;
+    }
+
+    const player = moon.players.get(interaction.guildId);
+
+    if (!player) {
+      await interaction.reply({
+        ephemeral: true,
+        content: 'I am not playing anything.'
+      });
+      return;
+    }
+
+    const from = interaction.options.getNumber('from', true);
+    const to = interaction.options.getNumber('to');
+
     await interaction.reply({
       ephemeral: true,
-      content: 'Not yet implemented.',
+      content: 'Not yet implemented.'
     });
-  },
+  }
 };

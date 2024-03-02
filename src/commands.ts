@@ -31,5 +31,5 @@ export const commands = [
   skip,
   stop,
   unbind,
-  volume,
+  volume
 ];

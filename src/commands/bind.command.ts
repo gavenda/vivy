@@ -5,10 +5,10 @@ export const bind: AppCommand = {
   data: new SlashCommandBuilder()
     .setName('bind')
     .setDescription('Binds a sticky music queue in this channel.'),
-  execute: async (interaction) => {
+  execute: async (context, interaction) => {
     await interaction.reply({
       ephemeral: true,
-      content: 'Not yet implemented.',
+      content: 'Not yet implemented.'
     });
-  },
+  }
 };
