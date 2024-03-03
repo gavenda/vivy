@@ -6,13 +6,14 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        type: string
-        default: main
+        required: true
         description: Branch to deploy
+        default: main
+        type: string
       environment:
         required: true
         description: 'Environment to deploy'
-        default: development
+        default: production
         type: environment
 
 jobs:
