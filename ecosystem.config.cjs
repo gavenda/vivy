@@ -2,9 +2,8 @@ module.exports = {
   apps: [
     {
       name: 'vivy',
-      script: './src/app.ts',
-      interpreter: 'node',
-      interpreterArgs: '--import tsx'
+      script: 'pnpm',
+      args: 'start'
     }
   ],
   deploy: {
