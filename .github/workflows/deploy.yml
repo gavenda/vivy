@@ -55,7 +55,7 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install
       - if: ${{ inputs.environment == 'development' }}
-        run: pnpm run deploy:dev
+        run: pnpm exec pm2 deploy ecosystem.config.cjs development
         env:
           CLIENT_ID: ${{ vars.CLIENT_ID }}
           GUILD_ID: ${{ vars.CLIENT_ID }}
@@ -68,7 +68,7 @@ jobs:
           SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
           REDIS_URL: ${{ secrets.REDIS_URL }}
       - if: ${{ inputs.environment == 'production' }}
-        run: pnpm run deploy
+        run: pnpm exec pm2 deploy ecosystem.config.cjs production
         env:
           CLIENT_ID: ${{ vars.CLIENT_ID }}
           GUILD_ID: ${{ vars.CLIENT_ID }}
