@@ -18,13 +18,7 @@ module.exports = {
       'post-deploy':
         'pnpm install && pnpm run register && pm2 startOrRestart ecosystem.config.cjs && pm2 save',
       env: {
-        APP_ENV: 'production',
-        TOKEN: process.env.TOKEN,
-        CLIENT_ID: process.env.CLIENT_ID,
-        GUILD_ID: process.env.GUILD_ID,
-        SPOTIFY_CLIENT_ID: process.env.SPOTIFY_CLIENT_ID,
-        SPOTIFY_CLIENT_SECRET: process.env.SPOTIFY_CLIENT_SECRET,
-        REDIS_URL: process.env.REDIS_URL
+        APP_ENV: 'production'
       }
     },
     development: {
@@ -37,13 +31,7 @@ module.exports = {
       'post-deploy':
         'pnpm install && pnpm run register && pm2 startOrRestart ecosystem.config.cjs && pm2 save',
       env: {
-        APP_ENV: 'development',
-        TOKEN: process.env.TOKEN,
-        CLIENT_ID: process.env.CLIENT_ID,
-        GUILD_ID: process.env.GUILD_ID,
-        SPOTIFY_CLIENT_ID: process.env.SPOTIFY_CLIENT_ID,
-        SPOTIFY_CLIENT_SECRET: process.env.SPOTIFY_CLIENT_SECRET,
-        REDIS_URL: process.env.REDIS_URL
+        APP_ENV: 'development'
       }
     }
   }

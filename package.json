@@ -6,10 +6,6 @@
   "scripts": {
     "start": "dotenvx run -- tsx .",
     "dev": "dotenvx run -- tsx watch .",
-    "deploy": "dotenvx run -- pm2 deploy ecosystem.config.cjs production",
-    "deploy:dev": "dotenvx run --env-file=.env.dev -- pm2 deploy ecosystem.config.cjs development",
-    "deploy-setup": "dotenvx run -- pm2 deploy ecosystem.config.cjs production setup",
-    "deploy-setup:dev": "dotenvx run --env-file=.env.dev -- pm2 deploy ecosystem.config.cjs development setup",
     "register": "dotenvx run -- tsx ./src/register.ts",
     "register:dev": "dotenvx run -- tsx ./src/register-dev.ts",
     "clear": "dotenvx run -- tsx ./src/clear.ts",

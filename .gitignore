@@ -3,6 +3,7 @@ node_modules
 .env.keys
 .env.dev
 .env.staging
+.env.production
 dump.rdb
 logs/*.log
 dist
