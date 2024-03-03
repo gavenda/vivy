@@ -3,3 +3,5 @@ node_modules
 dump.rdb
 logs/*.log
 dist
+deploy.key
+deploy.key.pub
