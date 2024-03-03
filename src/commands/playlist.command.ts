@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
-import { AppCommand } from './command.js';
+import { AppCommand } from './command';
 
 export const playlist: AppCommand = {
   data: new SlashCommandBuilder()

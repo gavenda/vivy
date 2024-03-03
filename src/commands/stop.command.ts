@@ -1,6 +1,6 @@
-import { hasVoiceState } from '@/utils/has-voice-state.js';
+import { hasVoiceState } from '@/utils/has-voice-state';
 import { SlashCommandBuilder } from 'discord.js';
-import { AppCommand } from './command.js';
+import { AppCommand } from './command';
 
 export const stop: AppCommand = {
   // prettier-ignore

@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
-import { AppCommand } from './command.js';
-import { hasVoiceState } from '@/utils/has-voice-state.js';
+import { AppCommand } from './command';
+import { hasVoiceState } from '@/utils/has-voice-state';
 
 export const pause: AppCommand = {
   // prettier-ignore

@@ -1,6 +1,8 @@
-import { AppContext } from '@/app.context.js';
-import { hasVoiceState } from '@/utils/has-voice-state.js';
-import { trimEllipse } from '@/utils/trim-ellipses.js';
+import { AppContext } from '@/app.context';
+import { AppEmoji } from '@/app.emojis';
+import { logger } from '@/logger';
+import { hasVoiceState } from '@/utils/has-voice-state';
+import { trimEllipse } from '@/utils/trim-ellipses';
 import {
   ActionRowBuilder,
   ChatInputCommandInteraction,
@@ -11,10 +13,8 @@ import {
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder
 } from 'discord.js';
-import { MoonlinkTrack } from 'moonlink.js';
-import { AppCommand } from './command.js';
-import { AppEmoji } from '@/app.emojis.js';
-import { logger } from '@/logger.js';
+import { MoonlinkPlayer, MoonlinkTrack } from 'moonlink.js';
+import { AppCommand } from './command';
 
 export type QueueType = 'later' | 'next' | 'now';
 
@@ -97,7 +97,7 @@ export const play: AppCommand = {
 };
 
 const playMusic = async (
-  { moon }: AppContext,
+  context: AppContext,
   interaction: ChatInputCommandInteraction,
   queue: QueueType
 ) => {
@@ -126,16 +126,23 @@ const playMusic = async (
   // Passed the guards, defer (might be delayed)
   await interaction.deferReply({ ephemeral: true });
 
+  logger.debug(`Play command, queue type: ${queue}`);
+
+  const { moon } = context;
   const query = interaction.options.getString('query', true);
   const player = moon.players.create({
     guildId: interaction.guild.id,
     voiceChannel: interaction.member.voice.channel.id,
-    textChannel: interaction.channelId
+    textChannel: interaction.channelId,
+    autoPlay: false,
+    volume: 100
   });
 
   if (!player.connected) {
     // Connecting to the voice channel if not already connected
-    player.connect({});
+    player.connect({
+      setMute: process.env.APP_ENV === 'development'
+    });
   }
 
   const result = await moon.search({
@@ -151,7 +158,7 @@ const playMusic = async (
         ephemeral: true,
         content: `There was an error looking up the music. Please try again.`
       });
-      break;
+      return;
     }
     case 'empty': {
       // Responding with a message if the search returns no results
@@ -159,7 +166,7 @@ const playMusic = async (
         ephemeral: true,
         content: `No matches found!`
       });
-      break;
+      return;
     }
     case 'playlist': {
       if (queue !== 'later') {
@@ -181,6 +188,10 @@ const playMusic = async (
       });
       break;
     }
+    case 'track': {
+      await respondToPlay({ interaction, track: result.tracks[0], player, queue });
+      break;
+    }
     case 'search': {
       const selectMusicMenu = new StringSelectMenuBuilder()
         .setCustomId(`select:music`)
@@ -189,8 +200,8 @@ const playMusic = async (
       for (const [index, track] of result.tracks.entries()) {
         selectMusicMenu.addOptions(
           new StringSelectMenuOptionBuilder()
-            .setLabel(track.title)
-            .setDescription(track.author)
+            .setLabel(trimEllipse(track.title, 100))
+            .setDescription(trimEllipse(track.author, 100))
             .setValue(track.identifier)
             .setEmoji(index === 0 ? AppEmoji.Preferred : AppEmoji.MusicNote)
         );
@@ -223,50 +234,7 @@ const playMusic = async (
 
         logger.debug('Track selected', selectedTrack);
 
-        switch (queue) {
-          case 'later':
-            player.queue.add(selectedTrack);
-
-            if (!player.playing && player.queue.size === 1) {
-              await interaction.editReply({
-                content: `Now playing \`${selectedTrack.title}\`.`,
-                components: []
-              });
-            } else {
-              await interaction.editReply({
-                content: `Playing later \`${selectedTrack.title}\`.`,
-                components: []
-              });
-            }
-            break;
-          case 'next':
-            player.queue.add(selectedTrack, 0);
-
-            if (player.playing && player.queue.size === 1) {
-              await interaction.editReply({
-                content: `Now playing \`${selectedTrack.title}\`.`,
-                components: []
-              });
-            } else {
-              await interaction.editReply({
-                content: `Playing next \`${selectedTrack.title}\`.`,
-                components: []
-              });
-            }
-            break;
-          case 'now':
-            await player.play(selectedTrack);
-
-            if (player.previous instanceof MoonlinkTrack) {
-              player.queue.add(player.previous, 0);
-            }
-
-            await interaction.editReply({
-              content: `Now playing \`${selectedTrack.title}\`.`,
-              components: []
-            });
-            break;
-        }
+        await respondToPlay({ interaction, track: selectedTrack, player, queue });
       } catch (e) {
         await interaction.editReply({
           content: 'No music selected within a minute, cancelled.',
@@ -279,5 +247,62 @@ const playMusic = async (
 
   if (!player.playing) {
     await player.play();
+  }
+};
+
+const respondToPlay = async (options: {
+  interaction: ChatInputCommandInteraction;
+  track: MoonlinkTrack;
+  player: MoonlinkPlayer;
+  queue: QueueType;
+}) => {
+  const { interaction, track, player, queue } = options;
+
+  switch (queue) {
+    case 'later': {
+      player.queue.add(track);
+
+      if (!player.playing && player.queue.size === 1) {
+        await interaction.editReply({
+          content: `Now playing \`${track.title}\`.`,
+          components: []
+        });
+      } else {
+        await interaction.editReply({
+          content: `Playing later \`${track.title}\`.`,
+          components: []
+        });
+      }
+      break;
+    }
+    case 'next': {
+      player.queue.add(track, 1);
+
+      if (!player.playing && player.queue.size === 1) {
+        await interaction.editReply({
+          content: `Now playing \`${track.title}\`.`,
+          components: []
+        });
+      } else {
+        await interaction.editReply({
+          content: `Playing next \`${track.title}\`.`,
+          components: []
+        });
+      }
+      break;
+    }
+    case 'now': {
+      await player.play(track);
+
+      if (player.previous instanceof MoonlinkTrack) {
+        player.queue.add(player.previous, 0);
+      }
+
+      await interaction.editReply({
+        content: `Now playing \`${track.title}\`.`,
+        components: []
+      });
+      break;
+    }
   }
 };

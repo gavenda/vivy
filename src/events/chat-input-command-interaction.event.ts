@@ -1,7 +1,8 @@
-import { commands } from '@/commands.js';
-import { logger } from '@/logger.js';
+import { commands } from '@/commands';
+import { logger } from '@/logger';
 import { Events } from 'discord.js';
-import { AppEvent } from './event.js';
+import { AppEvent } from './event';
+import { updatePlayer } from '@/app.player';
 
 export const chatInputCommandInteraction: AppEvent<Events.InteractionCreate> = {
   event: Events.InteractionCreate,
@@ -26,6 +27,12 @@ export const chatInputCommandInteraction: AppEvent<Events.InteractionCreate> = {
 
     try {
       await command.execute(context, interaction);
+      // Update player after every command
+      if (interaction.guildId) {
+        const pageKey = `player:page:${interaction.guildId}`;
+        await context.redis.set(pageKey, 0);
+        await updatePlayer(context, interaction.guildId);
+      }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument

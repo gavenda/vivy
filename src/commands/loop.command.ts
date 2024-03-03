@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
-import { AppCommand } from './command.js';
-import { hasVoiceState } from '@/utils/has-voice-state.js';
+import { AppCommand } from './command';
+import { hasVoiceState } from '@/utils/has-voice-state';
 
 export const loop: AppCommand = {
   data: new SlashCommandBuilder()

@@ -4,7 +4,7 @@ import {
   SlashCommandSubcommandBuilder,
   SlashCommandSubcommandGroupBuilder
 } from 'discord.js';
-import { AppCommand } from './command.js';
+import { AppCommand } from './command';
 
 export const effect: AppCommand = {
   data: new SlashCommandBuilder()

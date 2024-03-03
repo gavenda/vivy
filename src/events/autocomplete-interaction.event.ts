@@ -1,7 +1,7 @@
 import { Events } from 'discord.js';
-import { commands } from '@/commands.js';
-import { AppEvent } from './event.js';
-import { logger } from '@/logger.js';
+import { commands } from '@/commands';
+import { AppEvent } from './event';
+import { logger } from '@/logger';
 
 export const autocompleteInteraction: AppEvent<Events.InteractionCreate> = {
   event: Events.InteractionCreate,

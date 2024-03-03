@@ -1,12 +1,13 @@
 import { SpotifyApi } from '@spotify/web-api-ts-sdk';
 import { ActivityType, Client, Events, GatewayIntentBits } from 'discord.js';
-import { MoonlinkManager, VoicePacket } from 'moonlink.js';
+import { MoonlinkManager, MoonlinkTrack, VoicePacket } from 'moonlink.js';
 import { createClient } from 'redis';
-import { AppContext } from './app.context.js';
-import { events } from './events.js';
+import { AppContext } from './app.context';
+import { events } from './events';
 
 import dotenv from 'dotenv';
-import { logger } from './logger.js';
+import { updatePlayer } from './app.player';
+import { logger } from './logger';
 
 // Load environment variables
 dotenv.config();
@@ -57,12 +58,15 @@ const moon = new MoonlinkManager(
       host: 'localhost',
       port: 2333,
       password: 'flourite',
-      secure: false
+      secure: false,
+      regions: ['ph'],
+      retryAmount: 10,
+      retryDelay: 10000
     }
   ],
   {
     balancingPlayersByRegion: true,
-    destroyPlayersStopped: false,
+    destroyPlayersStopped: true,
     autoResume: true,
     previousTracksInArray: false
   },
@@ -79,28 +83,58 @@ const moon = new MoonlinkManager(
   }
 );
 
+// Handle raw packets
+client.on(Events.Raw, (data: VoicePacket) => {
+  moon.packetUpdate(data);
+});
+
+// Handle application errors
+client.on(Events.Error, (error) => {
+  logger.error('Internal error', { error });
+});
+
+const context: AppContext = { client, redis, moon, spotify };
+
 // Moon events
 moon.on('nodeCreate', (node) => {
   logger.info(`Connected to lavalink node`, { host: node.host });
 });
 
-// Ready event
-client.once(Events.ClientReady, async (readyClient) => {
-  logger.info(`Ready! Logged in`, { user: readyClient.user.tag });
-
-  // Init moon
-  await moon.init(readyClient.user.id);
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
+moon.on('trackStart', async (player, track: MoonlinkTrack) => {
+  logger.debug('Track start', { title: track.title });
+  await updatePlayer(context, player.guildId);
+});
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
+moon.on('trackEnd', async (player, track: MoonlinkTrack) => {
+  logger.debug('Track end', { title: track.title });
+  await updatePlayer(context, player.guildId);
+});
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
+moon.on('queueEnd', async (player) => {
+  logger.debug('Queue end');
+  await updatePlayer(context, player.guildId);
 });
 
-client.on(Events.Raw, (data: VoicePacket) => {
-  moon.packetUpdate(data);
+moon.on('trackError', (_player, track: MoonlinkTrack) => {
+  logger.error('Track error', { title: track.title });
 });
 
-const appContext: AppContext = { client, redis, moon, spotify };
+moon.on('trackStuck', (_player, track: MoonlinkTrack) => {
+  logger.error('Track stuck', { title: track.title });
+});
 
 // Register events
-for (const { event, execute } of events) {
-  client.on(event, (interaction) => execute(appContext, interaction));
+for (const { once, event, execute } of events) {
+  logger.debug(`Registering event handler`, { event });
+
+  if (once) {
+    // @ts-expect-error too much OR typing here, compiler will get confused
+    client.once(event, ($event) => execute(context, $event));
+  } else {
+    // @ts-expect-error too much OR typing here, compiler will get confused
+    client.on(event, ($event) => execute(context, $event));
+  }
 }
 
 try {

@@ -1,6 +1,6 @@
 import { REST, Routes } from 'discord.js';
-import { commands } from './commands.js';
-import { logger } from './logger.js';
+import { commands } from './commands';
+import { logger } from './logger';
 
 import dotenv from 'dotenv';
 
