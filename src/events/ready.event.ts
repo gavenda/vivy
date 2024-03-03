@@ -15,16 +15,20 @@ export const readyEvent: AppEvent<Events.ClientReady> = {
     const legacyPlayers = await redis.sMembers(`player:legacy`);
 
     for (const legacyPlayer of legacyPlayers) {
-      const [legacyChannelId, legacyMessageId] = legacyPlayer.split(':');
-      const legacyChannel = await client.channels.fetch(legacyChannelId);
+      try {
+        const [legacyChannelId, legacyMessageId] = legacyPlayer.split(':');
+        const legacyChannel = await client.channels.fetch(legacyChannelId);
 
-      if (legacyChannel?.isTextBased()) {
-        const legacyMessage = await legacyChannel.messages.fetch(legacyMessageId);
+        if (legacyChannel?.isTextBased()) {
+          const legacyMessage = await legacyChannel.messages.fetch(legacyMessageId);
 
-        if (legacyMessage.author.id === client?.user?.id) {
-          logger.debug('Removing legacy message', { legacyMessageId });
-          await legacyMessage.delete();
+          if (legacyMessage.author.id === client?.user?.id) {
+            logger.debug('Removing legacy message', { legacyMessageId });
+            await legacyMessage.delete();
+          }
         }
+      } catch (error) {
+        logger.warn('An error removing legacy player', { error });
       }
     }
   }
