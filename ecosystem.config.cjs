@@ -18,7 +18,8 @@ module.exports = {
       'post-deploy':
         'pnpm install && pnpm run register && pm2 startOrRestart ecosystem.config.cjs && pm2 save',
       env: {
-        APP_ENV: 'production'
+        APP_ENV: 'production',
+        DOTENV_KEY: process.env.DOTENV_KEY
       }
     },
     development: {
@@ -31,7 +32,8 @@ module.exports = {
       'post-deploy':
         'pnpm install && pnpm run register && pm2 startOrRestart ecosystem.config.cjs && pm2 save',
       env: {
-        APP_ENV: 'development'
+        APP_ENV: 'development',
+        DOTENV_KEY: process.env.DOTENV_KEY
       }
     }
   }
