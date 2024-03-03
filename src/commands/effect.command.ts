@@ -2,14 +2,12 @@ import {
   SlashCommandBuilder,
   SlashCommandIntegerOption,
   SlashCommandSubcommandBuilder,
-  SlashCommandSubcommandGroupBuilder,
+  SlashCommandSubcommandGroupBuilder
 } from 'discord.js';
-import { AppCommand } from './command.js';
+import { AppCommand } from './command';
 
 export const effect: AppCommand = {
   data: new SlashCommandBuilder()
-    .setName('effect')
-    .setDescription('Apply an effect to the playing music.')
     .addSubcommandGroup(
       new SlashCommandSubcommandGroupBuilder()
         .setName('filter')
@@ -21,19 +19,19 @@ export const effect: AppCommand = {
             .addIntegerOption(
               new SlashCommandIntegerOption()
                 .setName('speed')
-                .setDescription('The nightcore speed set (maximum of 300, minimum of 10).'),
-            ),
+                .setDescription('The nightcore speed set (maximum of 300, minimum of 10).')
+            )
         )
         .addSubcommand(
           new SlashCommandSubcommandBuilder()
             .setName('karaoke')
-            .setDescription('Apply a karaoke filter effect to the playing music.'),
+            .setDescription('Apply a karaoke filter effect to the playing music.')
         )
         .addSubcommand(
           new SlashCommandSubcommandBuilder()
             .setName('vaporwave')
-            .setDescription('Apply a vaporwave filter effect to the playing music.'),
-        ),
+            .setDescription('Apply a vaporwave filter effect to the playing music.')
+        )
     )
     .addSubcommandGroup(
       new SlashCommandSubcommandGroupBuilder()
@@ -42,23 +40,25 @@ export const effect: AppCommand = {
         .addSubcommand(
           new SlashCommandSubcommandBuilder()
             .setName('rock')
-            .setDescription('Apply a rock equalizer to the playing music.'),
+            .setDescription('Apply a rock equalizer to the playing music.')
         )
         .addSubcommand(
           new SlashCommandSubcommandBuilder()
             .setName('pop')
-            .setDescription('Apply a pop equalizer to the playing music.'),
+            .setDescription('Apply a pop equalizer to the playing music.')
         )
         .addSubcommand(
           new SlashCommandSubcommandBuilder()
             .setName('bass-boost')
-            .setDescription('Apply a bass boost equalizer to the playing music.'),
-        ),
-    ),
-  execute: async (interaction) => {
+            .setDescription('Apply a bass boost equalizer to the playing music.')
+        )
+    )
+    .setName('effect')
+    .setDescription('Apply an effect to the playing music.'),
+  execute: async (context, interaction) => {
     await interaction.reply({
       ephemeral: true,
-      content: 'Not yet implemented.',
+      content: 'Not yet implemented.'
     });
-  },
+  }
 };

@@ -1,5 +1,4 @@
 import { REST, Routes } from 'discord.js';
-import { commands } from './commands';
 import { logger } from './logger';
 
 import dotenv from 'dotenv';
@@ -23,15 +22,11 @@ try {
   const clientId = process.env.CLIENT_ID;
   const guildId = process.env.GUILD_ID;
 
-  const commandList = commands.map((command) => command.data.toJSON());
+  logger.info(`Started clearing application (/) commands on guild id: ${guildId}.`);
 
-  logger.info(
-    `Started refreshing ${commandList.length} application (/) commands on guild id: ${guildId}.`
-  );
+  await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: [] });
 
-  await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commandList });
-
-  logger.info(`Successfully reloaded application (/) commands on guild id: ${guildId}.`);
+  logger.info(`Successfully cleared application (/) commands on guild id: ${guildId}.`);
 } catch (error) {
   logger.error(error);
 }

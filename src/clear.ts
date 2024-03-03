@@ -1,5 +1,4 @@
 import { REST, Routes } from 'discord.js';
-import { commands } from './commands';
 import { logger } from './logger';
 
 import dotenv from 'dotenv';
@@ -19,13 +18,11 @@ const rest = new REST().setToken(process.env.TOKEN);
 try {
   const clientId = process.env.CLIENT_ID;
 
-  const commandList = commands.map((command) => command.data.toJSON());
+  logger.info(`Started clearing application (/) commands.`);
 
-  logger.info(`Started refreshing ${commandList.length} application (/) commands.`);
+  await rest.put(Routes.applicationCommands(clientId), { body: [] });
 
-  await rest.put(Routes.applicationCommands(clientId), { body: commandList });
-
-  logger.info(`Successfully reloaded application (/) commands.`);
+  logger.info(`Successfully cleared application (/) commands.`);
 } catch (error) {
   logger.error(error);
 }
