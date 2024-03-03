@@ -2,6 +2,7 @@ import { AppContext } from '@/app.context';
 import { AppEmoji } from '@/app.emojis';
 import { logger } from '@/logger';
 import { hasVoiceState } from '@/utils/has-voice-state';
+import { isSpotify } from '@/utils/is-spotify';
 import { trimEllipse } from '@/utils/trim-ellipses';
 import {
   ActionRowBuilder,
@@ -15,6 +16,7 @@ import {
 } from 'discord.js';
 import { MoonlinkPlayer, MoonlinkTrack } from 'moonlink.js';
 import { AppCommand } from './command';
+import { parse as parseSpotifyUri } from 'spotify-uri';
 
 export type QueueType = 'later' | 'next' | 'now';
 
@@ -62,7 +64,7 @@ export const play: AppCommand = {
     const subcommand = interaction.options.getSubcommand(true);
 
     if (subcommand === 'now' || subcommand === 'next' || subcommand === 'later') {
-      await playMusic(context, interaction, subcommand);
+      await playMusic({ context, interaction, queue: subcommand });
     } else {
       logger.error(`Unknown subcommand`, { subcommand });
     }
@@ -96,11 +98,13 @@ export const play: AppCommand = {
   }
 };
 
-const playMusic = async (
-  context: AppContext,
-  interaction: ChatInputCommandInteraction,
-  queue: QueueType
-) => {
+const playMusic = async (options: {
+  context: AppContext;
+  interaction: ChatInputCommandInteraction;
+  queue: QueueType;
+}) => {
+  const { context, interaction, queue } = options;
+
   if (!interaction.guild || !interaction.guildId) {
     await interaction.reply({
       content: `You are not in a guild.`,
@@ -130,6 +134,7 @@ const playMusic = async (
 
   const { moon } = context;
   const query = interaction.options.getString('query', true);
+
   const player = moon.players.create({
     guildId: interaction.guild.id,
     voiceChannel: interaction.member.voice.channel.id,
@@ -144,6 +149,27 @@ const playMusic = async (
       setMute: process.env.APP_ENV === 'development'
     });
   }
+
+  if (isSpotify(query)) {
+    await handleSpotify({ query, player, context, interaction, queue });
+  } else {
+    await handleYoutube({ query, player, context, interaction, queue });
+  }
+
+  if (!player.playing) {
+    await player.play();
+  }
+};
+
+const handleYoutube = async (options: {
+  query: string;
+  player: MoonlinkPlayer;
+  context: AppContext;
+  interaction: ChatInputCommandInteraction;
+  queue: QueueType;
+}) => {
+  const { moon } = options.context;
+  const { query, interaction, queue, player } = options;
 
   const result = await moon.search({
     query,
@@ -184,7 +210,7 @@ const playMusic = async (
 
       await interaction.followUp({
         ephemeral: true,
-        content: `Playing later music list: \`${result.playlistInfo!.name}\`.`
+        content: `Queueing music list: \`${result.playlistInfo!.name}\`.`
       });
       break;
     }
@@ -244,10 +270,139 @@ const playMusic = async (
       break;
     }
   }
+};
 
-  if (!player.playing) {
-    await player.play();
+const handleSpotify = async (options: {
+  query: string;
+  player: MoonlinkPlayer;
+  context: AppContext;
+  interaction: ChatInputCommandInteraction;
+  queue: QueueType;
+}) => {
+  const { query, interaction, queue, player, context } = options;
+  const { spotify } = context;
+  const spotifyUri = parseSpotifyUri(query);
+
+  switch (spotifyUri.type) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
+    case 'album': {
+      if (queue !== 'later') {
+        await interaction.followUp({
+          ephemeral: true,
+          content: `Trying to load an entire album on priority is cheating.`
+        });
+        return;
+      }
+
+      const spotifyAlbum = await spotify.albums.get(spotifyUri.id);
+
+      for (const spotifyTrack of spotifyAlbum.tracks.items) {
+        const spotifyArtists = spotifyTrack.artists.map((artist) => artist.name).join(' ');
+        const track = await lookupTrack({
+          query: `${spotifyTrack.name} ${spotifyArtists}`,
+          interaction,
+          context
+        });
+
+        if (track) {
+          player.queue.add(track);
+        }
+      }
+
+      await interaction.followUp({
+        ephemeral: true,
+        content: `Queueing spotify album \`${spotifyAlbum.name}\``
+      });
+
+      break;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
+    case 'track': {
+      const spotifyTrack = await spotify.tracks.get(spotifyUri.id);
+      const spotifyArtists = spotifyTrack.artists.map((artist) => artist.name).join(' ');
+      const track = await lookupTrack({
+        query: `${spotifyTrack.name} ${spotifyArtists}`,
+        interaction,
+        context
+      });
+
+      if (track) {
+        await respondToPlay({ interaction, track, player, queue });
+      }
+      break;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
+    case 'playlist': {
+      if (queue !== 'later') {
+        await interaction.followUp({
+          ephemeral: true,
+          content: `Trying to load an entire playlist on priority is cheating.`
+        });
+        return;
+      }
+
+      const playlistInfo = await spotify.playlists.getPlaylist(spotifyUri.id);
+
+      for (const playlistedSpotifyTrack of playlistInfo.tracks.items) {
+        const spotifyTrack = playlistedSpotifyTrack.track;
+        const spotifyArtists = spotifyTrack.artists.map((artist) => artist.name).join(' ');
+        const track = await lookupTrack({
+          query: `${spotifyTrack.name} ${spotifyArtists}`,
+          interaction,
+          context
+        });
+
+        if (track) {
+          player.queue.add(track);
+        }
+      }
+
+      await interaction.followUp({
+        ephemeral: true,
+        content: `Queueing spotify playlist \`${playlistInfo.name}\``
+      });
+
+      break;
+    }
   }
+};
+
+const lookupTrack = async (options: {
+  query: string;
+  context: AppContext;
+  interaction: ChatInputCommandInteraction;
+}): Promise<MoonlinkTrack | null> => {
+  const { moon } = options.context;
+  const { query, interaction } = options;
+  const result = await moon.search({
+    query,
+    source: 'youtube',
+    requester: interaction.user.id
+  });
+
+  switch (result.loadType) {
+    case 'error': {
+      // Responding with an error message if loading fails
+      await interaction.followUp({
+        ephemeral: true,
+        content: `There was an error looking up the music. Please try again.`
+      });
+      return null;
+    }
+    case 'empty': {
+      // Responding with a message if the search returns no results
+      await interaction.followUp({
+        ephemeral: true,
+        content: `No matches found!`
+      });
+      return null;
+    }
+    case 'search': {
+      return result.tracks[0];
+    }
+  }
+
+  return null;
 };
 
 const respondToPlay = async (options: {
