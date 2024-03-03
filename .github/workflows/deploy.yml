@@ -3,15 +3,41 @@ name: Deploy
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      branch:
+        type: string
+        default: main
+        description: Branch to deploy
+      environment:
+        required: true
+        description: 'Environment to deploy'
+        default: development
+        type: environment
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    environment: production
     steps:
       - uses: actions/checkout@v3
-      - name: Set up SSH
-        run: |
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 8
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm lint
+      - run: pnpm clean
+      - run: pnpm build
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
           mkdir -p ~/.ssh/
           echo "$SSH_PRIVATE_KEY" > ./deploy.key
           sudo chmod 600 ./deploy.key
@@ -28,10 +54,25 @@ jobs:
           node-version: 20
           cache: 'pnpm'
       - run: pnpm install
-      - run: pnpm run deploy
+      - if: ${{ inputs.environment == 'development' }}
+        run: pnpm run deploy:dev
         env:
           CLIENT_ID: ${{ vars.CLIENT_ID }}
           GUILD_ID: ${{ vars.CLIENT_ID }}
+          APP_BRANCH: ${{ inputs.branch }}
+          APP_HOST: ${{ secrets.APP_HOST }}
+          APP_PATH: ${{ secrets.APP_PATH }}
+          APP_USER: ${{ secrets.APP_USER }}
+          TOKEN: ${{ secrets.APP_USER }}
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+      - if: ${{ inputs.environment == 'production' }}
+        run: pnpm run deploy
+        env:
+          CLIENT_ID: ${{ vars.CLIENT_ID }}
+          GUILD_ID: ${{ vars.CLIENT_ID }}
+          APP_BRANCH: ${{ inputs.branch }}
           APP_HOST: ${{ secrets.APP_HOST }}
           APP_PATH: ${{ secrets.APP_PATH }}
           APP_USER: ${{ secrets.APP_USER }}
