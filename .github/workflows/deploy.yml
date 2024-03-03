@@ -28,7 +28,7 @@ jobs:
           node-version: 20
           cache: 'pnpm'
       - run: pnpm install
-      - run: pnpm deploy
+      - run: pnpm run deploy
         env:
           APP_HOST: ${{ secrets.APP_HOST }}
           APP_PATH: ${{ secrets.APP_PATH }}
