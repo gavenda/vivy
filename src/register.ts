@@ -2,11 +2,6 @@ import { REST, Routes } from 'discord.js';
 import { commands } from './commands';
 import { logger } from './logger';
 
-import dotenv from 'dotenv';
-
-// Load environment variables
-dotenv.config();
-
 if (!process.env.TOKEN) {
   throw new Error('TOKEN is required.');
 }

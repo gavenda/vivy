@@ -3,13 +3,13 @@ import { ActivityType, Client, Events, GatewayIntentBits } from 'discord.js';
 import { MoonlinkManager, MoonlinkTrack, VoicePacket } from 'moonlink.js';
 import { createClient } from 'redis';
 import { AppContext } from './app.context';
-import { events } from './events';
-
-import dotenv from 'dotenv';
 import { updatePlayer } from './app.player';
+import { events } from './events';
 import { logger } from './logger';
+// @ts-expect-error no type definitions
+import * as dotenv from '@dotenvx/dotenvx';
 
-// Load environment variables
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
 dotenv.config();
 
 if (!process.env.TOKEN) {
@@ -137,6 +137,13 @@ for (const { once, event, execute } of events) {
   }
 }
 
+// Graceful disconnect
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
+process.on('SIGINT', async () => {
+  await redis.disconnect();
+  await client.destroy();
+});
+
 try {
   // Connect to redis
   await redis.connect();
@@ -151,4 +158,8 @@ try {
 } catch (error) {
   logger.error('Unable to connect to discord gateway', { error });
   process.exit(1);
+} finally {
+  if (process.send) {
+    process.send('ready');
+  }
 }
