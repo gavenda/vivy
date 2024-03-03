@@ -8,7 +8,7 @@ on:
       branch:
         required: true
         description: Branch to deploy
-        default: main
+        default: origin/main
         type: string
       environment:
         required: true
@@ -35,7 +35,7 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    environment: ${{ inputs.environment || 'production' }}
     steps:
       - uses: actions/checkout@v3
       - run: |
@@ -55,15 +55,8 @@ jobs:
           node-version: 20
           cache: 'pnpm'
       - run: pnpm install
-      - run: pnpm exec pm2 deploy ecosystem.config.cjs ${{ inputs.environment }}
+      - run: curl -fsS https://dotenvx.sh/ | sh
+      - run: dotenvx run -- pnpm exec pm2 deploy ecosystem.config.cjs ${{ inputs.environment || 'production' }}
         env:
-          CLIENT_ID: ${{ vars.CLIENT_ID }}
-          GUILD_ID: ${{ vars.CLIENT_ID }}
-          APP_BRANCH: ${{ inputs.branch }}
-          APP_HOST: ${{ secrets.APP_HOST }}
-          APP_PATH: ${{ secrets.APP_PATH }}
-          APP_USER: ${{ secrets.APP_USER }}
-          TOKEN: ${{ secrets.APP_USER }}
-          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
-          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
-          REDIS_URL: ${{ secrets.REDIS_URL }}
+          APP_BRANCH: ${{ inputs.branch || 'origin/main' }}
+          DOTENV_KEY: ${{ secrets.DOTENV_KEY }}
