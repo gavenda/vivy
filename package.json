@@ -6,6 +6,7 @@
   "scripts": {
     "start": "tsx .",
     "dev": "tsx watch .",
+    "deploy": "pm2 deploy ecosystem.config.cjs",
     "register": "tsx ./src/register.ts",
     "register:dev": "tsx ./src/register-dev.ts",
     "clear": "tsx ./src/clear.ts",
