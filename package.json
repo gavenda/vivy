@@ -1,6 +1,6 @@
 {
   "name": "vivy",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "My mission is to make everyone happy by singing.",
   "main": "./src/app.ts",
   "scripts": {
@@ -24,6 +24,7 @@
     "discord.js": "^14.14.1",
     "dotenv": "^16.4.4",
     "moonlink.js": "^3.5.5",
+    "pm2": "^5.3.1",
     "redis": "^4.6.13",
     "winston": "^3.11.0"
   },

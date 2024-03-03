@@ -1,4 +1,4 @@
-name: Vivy
+name: Build
 
 on:
   push:
