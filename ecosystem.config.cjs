@@ -15,7 +15,7 @@ module.exports = {
       ref: 'origin/main',
       repo: 'https://github.com/gavenda/vivy',
       path: process.env.APP_PATH,
-      'post-deploy': 'pnpm install && pm2 reload ecosystem.config.js && pm2 save',
+      'post-deploy': 'pnpm install && pm2 startOrRestart ecosystem.config.cjs && pm2 save',
       env: {
         APP_ENV: 'production',
         TOKEN: process.env.TOKEN,
