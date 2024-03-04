@@ -64,8 +64,8 @@ export const createPlayerEmbed = (context: AppContext, guildId: string, pageInde
   const player = magma.players.get(guildId);
   const track = player?.queue.current;
   const requester = String(track?.requester ?? '-');
-  const duration = msToTime(Math.min(0, track?.duration ?? 0));
-  const position = msToTime(Math.min(0, (track?.duration ?? 0) - (player?.position ?? 0) ?? 0));
+  const duration = msToTime(Math.max(0, track?.duration ?? 0));
+  const position = msToTime(Math.max(0, (track?.duration ?? 0) - (player?.position ?? 0) ?? 0));
   const queue = createPlayerQueue(context, guildId, pageIndex);
 
   const queueEmbed = new EmbedBuilder()
