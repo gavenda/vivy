@@ -81,11 +81,6 @@ export const createPlayerEmbed = (context: AppContext, guildId: string, pageInde
         inline: false
       },
       {
-        name: 'Songs',
-        value: player?.queue.size.toString() ?? '-',
-        inline: true
-      },
-      {
         name: 'Duration',
         value: `${String(duration.minutes).padStart(2, '0')}:${String(duration.seconds).padStart(2, '0')}`,
         inline: true
@@ -113,16 +108,6 @@ export const createPlayerEmbed = (context: AppContext, guildId: string, pageInde
       {
         name: 'Volume',
         value: player?.volume ? `${player?.volume}%` : '-',
-        inline: true
-      },
-      {
-        name: 'Filter(s)',
-        value: '-',
-        inline: true
-      },
-      {
-        name: 'Equalizer',
-        value: '-',
         inline: true
       }
     );
