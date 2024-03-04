@@ -30,6 +30,15 @@ if (!process.env.SPOTIFY_CLIENT_ID) {
 if (!process.env.SPOTIFY_CLIENT_SECRET) {
   throw new Error('SPOTIFY_CLIENT_SECRET is required.');
 }
+if (!process.env.LAVA_HOST) {
+  throw new Error('LAVA_HOST is required.');
+}
+if (!process.env.LAVA_PASS) {
+  throw new Error('LAVA_HOST is required.');
+}
+if (!process.env.LAVA_PORT) {
+  throw new Error('LAVA_PORT is required.');
+}
 
 // Create redis client
 const redis = createClient({
@@ -55,10 +64,10 @@ const client = new Client({
 const magma = new Manager({
   nodes: [
     {
-      host: 'localhost',
-      port: 2333,
-      password: 'flourite',
-      secure: false,
+      host: process.env.LAVA_HOST,
+      port: Number(process.env.LAVA_PORT),
+      password: process.env.LAVA_PASS,
+      secure: true,
       retryAmount: 100,
       retryDelay: 5000
     }
@@ -88,7 +97,13 @@ const context: AppContext = { client, redis, magma, spotify };
 
 // Magma events
 magma.on('nodeConnect', (node) => {
-  logger.info(`Connected to lavalink node`, { ...node.options });
+  const { password, ...nodeContext } = node.options;
+  logger.info(`Connected to lavalink node`, { ...nodeContext });
+});
+
+magma.on('nodeError', (node, error) => {
+  const { password, ...nodeContext } = node.options;
+  logger.info(`Error on lavalink node`, { ...nodeContext });
 });
 // eslint-disable-next-line @typescript-eslint/no-misused-promises
 magma.on('trackStart', async (player, track) => {
