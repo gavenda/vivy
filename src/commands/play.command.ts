@@ -153,7 +153,7 @@ const playMusic = async (options: {
     await handleYoutube({ query, player, context, interaction, queue });
   }
 
-  if (!player.playing && !player.paused) {
+  if (!player.playing && !player.paused && player.queue.current) {
     await player.play();
   }
 };

@@ -68,6 +68,7 @@ const magma = new Manager({
       port: Number(process.env.LAVA_PORT),
       password: process.env.LAVA_PASS,
       secure: true,
+      resumeStatus: true,
       retryAmount: 100,
       retryDelay: 5000
     }
@@ -81,6 +82,12 @@ const magma = new Manager({
       logger.error('Unable to send payload to guild', { guildId });
     }
   }
+});
+
+// Handle redis errors
+redis.on('error', (error) => {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  logger.error('Redis error', { error });
 });
 
 // Handle raw packets
