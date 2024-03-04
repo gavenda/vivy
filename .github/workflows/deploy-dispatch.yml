@@ -1,8 +1,20 @@
-name: Deploy
+name: Manual Deploy
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
+    inputs:
+      branch:
+        required: true
+        description: Branch to deploy
+        default: origin/main
+        type: string
+      environment:
+        required: true
+        description: 'Environment to deploy'
+        default: production
+        type: environment
+
+run-name: Deploy branch '${{ inputs.branch }}' to ${{ inputs.environment }}
 
 jobs:
   build:
@@ -28,7 +40,7 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    environment: production
+    environment: ${{ inputs.environment || 'production' }}
     steps:
       - uses: actions/checkout@v4
         name: Checkout
@@ -53,8 +65,8 @@ jobs:
           cache: 'pnpm'
       - run: curl -fsS https://dotenvx.sh/ | sh
         name: Install @dotenvx/dotenvx
-      - run: dotenvx run -- pnpm exec pm2 deploy ecosystem.config.cjs production
-        name: Deploy to production
+      - run: dotenvx run -- pnpm exec pm2 deploy ecosystem.config.cjs ${{ inputs.environment }}
+        name: Deploy to ${{ inputs.environment }}
         env:
-          APP_BRANCH: origin/main
+          APP_BRANCH: ${{ inputs.branch }}
           DOTENV_KEY: ${{ secrets.DOTENV_KEY }}
