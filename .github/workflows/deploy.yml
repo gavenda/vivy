@@ -20,43 +20,53 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v3
+      - uses: actions/checkout@v4
+        name: Checkout
+      - uses: actions/setup-node@v4
+        name: Install Node.js
         with:
-          version: 8
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 20
+          node-version-file: '.nvmrc'
           cache: 'pnpm'
-      - run: pnpm install
+      - uses: pnpm/action-setup@v3
+        name: Install pnpm
+        with:
+          run_install: true
       - run: pnpm lint
-      - run: pnpm clean
-      - run: pnpm build
+        name: Lint
+      - run: |
+          pnpm clean
+          pnpm build
+        name: Build
   deploy:
     needs: build
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment || 'production' }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        name: Checkout
       - run: |
           mkdir -p ~/.ssh/
           echo "$SSH_PRIVATE_KEY" > ./deploy.key
           sudo chmod 600 ./deploy.key
           echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+        name: 'Setup SSH'
         shell: bash
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
-      - uses: pnpm/action-setup@v3
+      - uses: actions/setup-node@v4
+        name: Install Node.js
         with:
-          version: 8
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 20
+          node-version-file: '.nvmrc'
           cache: 'pnpm'
-      - run: pnpm install
+      - uses: pnpm/action-setup@v3
+        name: Install pnpm
+        with:
+          run_install: true
       - run: curl -fsS https://dotenvx.sh/ | sh
+        name: Install @dotenvx/dotenvx
       - run: dotenvx run -- pnpm exec pm2 deploy ecosystem.config.cjs ${{ inputs.environment || 'production' }}
+        name: Deploy to ${{ inputs.environment || 'production' }}
         env:
           APP_BRANCH: ${{ inputs.branch || 'origin/main' }}
           DOTENV_KEY: ${{ secrets.DOTENV_KEY }}
