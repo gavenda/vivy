@@ -331,7 +331,7 @@ const handleSpotify = async (options: {
       } else {
         await interaction.followUp({
           ephemeral: true,
-          content: `Cannot find equivalent track on youtube.`
+          content: `There was an error looking up the music. Please try again.`
         });
       }
       break;
