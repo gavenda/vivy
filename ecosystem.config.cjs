@@ -21,7 +21,7 @@ module.exports = {
       name: 'vivy',
       script: './src/app.ts',
       interpreter: 'node',
-      interpreterArgs: '--import tsx',
+      interpreterArgs: '--import tsx/esm',
       wait_ready: true
     }
   ],
