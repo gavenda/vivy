@@ -53,7 +53,7 @@ export const loop: AppCommand = {
 
     switch (subcommand) {
       case 'single':
-        player.setLoop('track');
+        player.setLoop(1);
 
         await interaction.reply({
           ephemeral: true,
@@ -61,7 +61,7 @@ export const loop: AppCommand = {
         });
         break;
       case 'all':
-        player.setLoop('queue');
+        player.setLoop(2);
 
         await interaction.reply({
           ephemeral: true,

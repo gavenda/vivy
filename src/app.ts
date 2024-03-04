@@ -59,15 +59,14 @@ const moon = new MoonlinkManager(
       port: 2333,
       password: 'flourite',
       secure: false,
-      regions: ['ph'],
       retryAmount: 10,
       retryDelay: 10000
     }
   ],
   {
-    balancingPlayersByRegion: true,
     destroyPlayersStopped: true,
     autoResume: true,
+    resume: true,
     previousTracksInArray: false
   },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

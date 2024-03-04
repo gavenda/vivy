@@ -156,7 +156,7 @@ const playMusic = async (options: {
     await handleYoutube({ query, player, context, interaction, queue });
   }
 
-  if (!player.playing) {
+  if (!player.playing && !player.current) {
     await player.play();
   }
 };
@@ -328,6 +328,11 @@ const handleSpotify = async (options: {
 
       if (track) {
         await respondToPlay({ interaction, track, player, queue });
+      } else {
+        await interaction.followUp({
+          ephemeral: true,
+          content: `Cannot find equivalent track on youtube.`
+        });
       }
       break;
     }
@@ -417,7 +422,7 @@ const respondToPlay = async (options: {
     case 'later': {
       player.queue.add(track);
 
-      if (!player.playing && player.queue.size === 1) {
+      if (!player.playing && !player.current) {
         await interaction.editReply({
           content: `Now playing \`${track.title}\`.`,
           components: []
@@ -433,7 +438,7 @@ const respondToPlay = async (options: {
     case 'next': {
       player.queue.add(track, 1);
 
-      if (!player.playing && player.queue.size === 1) {
+      if (!player.playing && !player.current) {
         await interaction.editReply({
           content: `Now playing \`${track.title}\`.`,
           components: []

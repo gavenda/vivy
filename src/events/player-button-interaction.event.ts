@@ -64,11 +64,11 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
         break;
       }
       case 'repeat-all': {
-        player.setLoop(player.loop === 0 ? 'queue' : 0);
+        player.setLoop(player.loop === 0 ? 2 : 0);
         break;
       }
       case 'repeat-single': {
-        player.setLoop(player.loop === 0 ? 'track' : 0);
+        player.setLoop(player.loop === 0 ? 1 : 0);
         break;
       }
       case 'stop': {
