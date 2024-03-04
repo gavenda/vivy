@@ -16,7 +16,7 @@ export const loop: AppCommand = {
     )
     .setName('loop')
     .setDescription('Loop the music queue.'),
-  execute: async ({ moon }, interaction) => {
+  execute: async ({ magma }, interaction) => {
     if (!interaction.guild || !interaction.guildId) {
       await interaction.reply({
         content: `You are not in a guild.`,
@@ -39,7 +39,7 @@ export const loop: AppCommand = {
       return;
     }
 
-    const player = moon.players.get(interaction.guildId);
+    const player = magma.players.get(interaction.guildId);
 
     if (!player) {
       await interaction.reply({
@@ -53,7 +53,7 @@ export const loop: AppCommand = {
 
     switch (subcommand) {
       case 'single':
-        player.setLoop(1);
+        player.setTrackRepeat(true);
 
         await interaction.reply({
           ephemeral: true,
@@ -61,7 +61,7 @@ export const loop: AppCommand = {
         });
         break;
       case 'all':
-        player.setLoop(2);
+        player.setQueueRepeat(true);
 
         await interaction.reply({
           ephemeral: true,

@@ -1,13 +1,13 @@
+import { hasVoiceState } from '@/utils/has-voice-state';
 import { SlashCommandBuilder } from 'discord.js';
 import { AppCommand } from './command';
-import { hasVoiceState } from '@/utils/has-voice-state';
 
 export const shuffle: AppCommand = {
   // prettier-ignore
   data: new SlashCommandBuilder()
     .setName('shuffle')
     .setDescription('Shuffle the music queue.'),
-  execute: async ({ moon }, interaction) => {
+  execute: async ({ magma }, interaction) => {
     if (!interaction.guild || !interaction.guildId) {
       await interaction.reply({
         content: `You are not in a guild.`,
@@ -30,7 +30,7 @@ export const shuffle: AppCommand = {
       return;
     }
 
-    const player = moon.players.get(interaction.guildId);
+    const player = magma.players.get(interaction.guildId);
 
     if (!player) {
       await interaction.reply({
