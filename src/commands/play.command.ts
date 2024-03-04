@@ -387,19 +387,11 @@ const lookupTrack = async (options: {
 
   switch (result.loadType) {
     case 'error': {
-      // Responding with an error message if loading fails
-      await interaction.followUp({
-        ephemeral: true,
-        content: `There was an error looking up the music. Please try again.`
-      });
+      logger.warn('Lookup error', { query, exception: result.exception });
       return null;
     }
     case 'empty': {
-      // Responding with a message if the search returns no results
-      await interaction.followUp({
-        ephemeral: true,
-        content: `No matches found!`
-      });
+      logger.warn('Lookup returned', { query });
       return null;
     }
     case 'search': {
