@@ -60,7 +60,7 @@ export const createPlayerQueue = ({ magma }: AppContext, guildId: string, pageIn
 };
 
 export const createPlayerEmbed = (context: AppContext, guildId: string, pageIndex: number = 0) => {
-  const { magma } = context;
+  const { magma, client } = context;
   const player = magma.players.get(guildId);
   const track = player?.queue.current;
   const requester = String(track?.requester ?? '-');
@@ -69,7 +69,7 @@ export const createPlayerEmbed = (context: AppContext, guildId: string, pageInde
   const queue = createPlayerQueue(context, guildId, pageIndex);
 
   const queueEmbed = new EmbedBuilder()
-    .setTitle(`Vivy's Song List`)
+    .setTitle(`${client.user?.username ?? 'Vivy'} Song List`)
     .setDescription(queue)
     .setColor(0x00ffff)
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
