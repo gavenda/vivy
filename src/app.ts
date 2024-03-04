@@ -97,13 +97,15 @@ const context: AppContext = { client, redis, magma, spotify };
 
 // Magma events
 magma.on('nodeConnect', (node) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { password, ...nodeContext } = node.options;
   logger.info(`Connected to lavalink node`, { ...nodeContext });
 });
 
 magma.on('nodeError', (node, error) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { password, ...nodeContext } = node.options;
-  logger.info(`Error on lavalink node`, { ...nodeContext });
+  logger.info(`Error on lavalink node`, { ...nodeContext, error });
 });
 // eslint-disable-next-line @typescript-eslint/no-misused-promises
 magma.on('trackStart', async (player, track) => {
