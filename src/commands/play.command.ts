@@ -258,6 +258,7 @@ const handleYoutube = async (options: {
           content: 'No music selected within a minute, cancelled.',
           components: []
         });
+        return;
       }
       break;
     }
@@ -370,11 +371,8 @@ const lookupTrack = async (options: {
   interaction: ChatInputCommandInteraction;
 }): Promise<Track | null> => {
   const { magma } = options.context;
-  const { query } = options;
-  const result = await magma.search({
-    query,
-    source: 'youtube'
-  });
+  const { query, interaction } = options;
+  const result = await magma.search({ query, source: 'youtube' }, `<@${interaction.user.id}>`);
 
   switch (result.loadType) {
     case 'error': {
