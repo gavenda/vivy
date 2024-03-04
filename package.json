@@ -40,5 +40,8 @@
     "typescript": "^5.3.3",
     "typescript-eslint": "^7.1.1"
   },
-  "packageManager": "pnpm@8.15.4+sha256.cea6d0bdf2de3a0549582da3983c70c92ffc577ff4410cbf190817ddc35137c2"
+  "packageManager": "pnpm@8.15.4+sha256.cea6d0bdf2de3a0549582da3983c70c92ffc577ff4410cbf190817ddc35137c2",
+  "volta": {
+    "node": "21.6.2"
+  }
 }
