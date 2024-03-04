@@ -1,5 +1,4 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
-import { MoonlinkTrack } from 'moonlink.js';
 import { AppContext } from './app.context';
 import { AppEmoji } from './app.emojis';
 import { logger } from './logger';
@@ -35,25 +34,22 @@ export const updatePlayer = async (context: AppContext, guildId: string) => {
   }
 };
 
-export const createPlayerQueue = ({ moon, client }: AppContext, guildId: string, pageIndex = 0) => {
-  const player = moon.players.get(guildId);
+export const createPlayerQueue = ({ magma }: AppContext, guildId: string, pageIndex = 0) => {
+  const player = magma.players.get(guildId);
   const queue: string[] = [];
 
   if (player && player.queue.size > 0) {
-    const tracksChunked = chunk(player.queue.getQueue(), 15);
+    const tracksChunked = chunk(player.queue, 15);
     const tracks = tracksChunked[pageIndex];
 
     for (const [index, track] of tracks.entries()) {
       const title = trimEllipse(track.title, 100);
       const trackNo = pageIndex * 15 + (index + 1);
-      const requester = track?.requester
-        ? // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          `<@${client.users.cache.get(track.requester)?.id}>`
-        : '-';
+      const requester = String(track?.requester) ?? '-';
       const duration = msToTime(track?.duration ?? 0);
       // # [Track Title](URL) `00:00` <@user-id>
       queue.push(
-        `\`${trackNo}\` [${title}](${track.url}) \`${String(duration.minutes).padStart(2, '0')}:${String(duration.seconds).padStart(2, '0')}\` ${requester}`
+        `\`${trackNo}\` [${title}](${track.uri}) \`${String(duration.minutes).padStart(2, '0')}:${String(duration.seconds).padStart(2, '0')}\` ${requester}`
       );
     }
   }
@@ -64,13 +60,12 @@ export const createPlayerQueue = ({ moon, client }: AppContext, guildId: string,
 };
 
 export const createPlayerEmbed = (context: AppContext, guildId: string, pageIndex: number = 0) => {
-  const { moon, client } = context;
-  const player = moon.players.get(guildId);
-  const track = player?.current as MoonlinkTrack | undefined;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  const requester = track?.requester ? `<@${client.users.cache.get(track.requester)?.id}>` : '-';
+  const { magma } = context;
+  const player = magma.players.get(guildId);
+  const track = player?.queue.current;
+  const requester = String(track?.requester) ?? '-';
   const duration = msToTime(track?.duration ?? 0);
-  const position = msToTime((track?.duration ?? 0) - (track?.position ?? 0) ?? 0);
+  const position = msToTime((track?.duration ?? 0) - (player?.position ?? 0) ?? 0);
   const queue = createPlayerQueue(context, guildId, pageIndex);
 
   const queueEmbed = new EmbedBuilder()
@@ -82,7 +77,7 @@ export const createPlayerEmbed = (context: AppContext, guildId: string, pageInde
     .addFields(
       {
         name: 'Now Playing',
-        value: track?.title ? `[${track.title}](${track.url})` : '-',
+        value: track?.title ? `[${track.title}](${track.uri})` : '-',
         inline: false
       },
       {
@@ -107,12 +102,12 @@ export const createPlayerEmbed = (context: AppContext, guildId: string, pageInde
       },
       {
         name: 'Looped (Track)',
-        value: player?.loop === 1 ? 'Yes' : 'No',
+        value: player?.trackRepeat ? 'Yes' : 'No',
         inline: true
       },
       {
         name: 'Looped (Queue)',
-        value: player?.loop === 2 ? 'Yes' : 'No',
+        value: player?.queueRepeat ? 'Yes' : 'No',
         inline: true
       },
       {
@@ -135,11 +130,10 @@ export const createPlayerEmbed = (context: AppContext, guildId: string, pageInde
   return queueEmbed;
 };
 
-export const createPlayerComponents = ({ moon }: AppContext, guildId: string) => {
-  const player = moon.players.get(guildId);
+export const createPlayerComponents = ({ magma }: AppContext, guildId: string) => {
+  const player = magma.players.get(guildId);
   const playing = player?.playing ?? false;
   const disablePagination = (player?.queue?.size ?? 0) < 15;
-  const loop = player?.loop ?? 0;
 
   const pausePlayButton = new ButtonBuilder()
     .setCustomId('player:play-toggle')
@@ -165,11 +159,11 @@ export const createPlayerComponents = ({ moon }: AppContext, guildId: string) =>
   const repeatAllButton = new ButtonBuilder()
     .setCustomId('player:repeat-all')
     .setStyle(ButtonStyle.Secondary)
-    .setEmoji(loop === 2 ? AppEmoji.RepeatAllOn : AppEmoji.RepeatAll);
+    .setEmoji(player?.queueRepeat ? AppEmoji.RepeatAllOn : AppEmoji.RepeatAll);
   const repeatSingleButton = new ButtonBuilder()
     .setCustomId('player:repeat-single')
     .setStyle(ButtonStyle.Secondary)
-    .setEmoji(loop === 1 ? AppEmoji.RepeatSingleOn : AppEmoji.RepeatSingle);
+    .setEmoji(player?.trackRepeat ? AppEmoji.RepeatSingleOn : AppEmoji.RepeatSingle);
   const stopButton = new ButtonBuilder()
     .setCustomId('player:stop')
     .setStyle(ButtonStyle.Danger)

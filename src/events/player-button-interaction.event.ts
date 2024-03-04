@@ -19,8 +19,8 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
     }
 
     const [, buttonId] = interaction.customId.split(':');
-    const { moon, redis } = context;
-    const player = moon.players.get(interaction.guild.id);
+    const { magma, redis } = context;
+    const player = magma.players.get(interaction.guild.id);
 
     if (!player) {
       await interaction.reply({
@@ -32,7 +32,7 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
 
     logger.debug('Received player button interaction', { buttonId });
 
-    const pageKey = `player:page:${player.guildId}`;
+    const pageKey = `player:page:${player.guild}`;
     let pageIndex = Number(await redis.get(pageKey));
     const pageSize = chunkSize(player.queue.size, 15);
 
@@ -41,14 +41,14 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
     switch (buttonId) {
       case 'play-toggle': {
         if (player.playing) {
-          await player.pause();
+          player.pause(true);
         } else {
-          await player.resume();
+          player.pause(false);
         }
         break;
       }
       case 'skip': {
-        await player.skip();
+        player.stop();
         break;
       }
       case 'shuffle': {
@@ -56,27 +56,23 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
         break;
       }
       case 'volume-down': {
-        await player.setVolume(Math.min(100, Math.max(0, player.volume - 10)));
+        player.setVolume(Math.min(100, Math.max(0, player.volume - 10)));
         break;
       }
       case 'volume-up': {
-        await player.setVolume(Math.min(100, Math.max(0, player.volume + 10)));
+        player.setVolume(Math.min(100, Math.max(0, player.volume + 10)));
         break;
       }
       case 'repeat-all': {
-        player.setLoop(player.loop === 0 ? 2 : 0);
+        player.setQueueRepeat(!player.queueRepeat);
         break;
       }
       case 'repeat-single': {
-        player.setLoop(player.loop === 0 ? 1 : 0);
+        player.setTrackRepeat(!player.trackRepeat);
         break;
       }
       case 'stop': {
-        await player.stop();
-        if (!player.playing) {
-          await player.stop();
-        }
-        break;
+        player.stop();
       }
       case 'previous': {
         pageIndex--;
