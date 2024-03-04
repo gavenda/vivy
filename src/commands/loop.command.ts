@@ -6,12 +6,12 @@ export const loop: AppCommand = {
   data: new SlashCommandBuilder()
     .addSubcommand(
       new SlashCommandSubcommandBuilder()
-        .setName('single')
+        .setName('track')
         .setDescription('Loop the current playing music.')
     )
     .addSubcommand(
       new SlashCommandSubcommandBuilder()
-        .setName('all')
+        .setName('queue')
         .setDescription('Loop the entire music queue.')
     )
     .setName('loop')
@@ -52,7 +52,7 @@ export const loop: AppCommand = {
     const subcommand = interaction.options.getSubcommand(true);
 
     switch (subcommand) {
-      case 'single':
+      case 'track':
         player.setTrackRepeat(true);
 
         await interaction.reply({
@@ -60,7 +60,7 @@ export const loop: AppCommand = {
           content: 'Now looping the current track.'
         });
         break;
-      case 'all':
+      case 'queue':
         player.setQueueRepeat(true);
 
         await interaction.reply({

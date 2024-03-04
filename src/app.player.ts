@@ -156,14 +156,14 @@ export const createPlayerComponents = ({ magma }: AppContext, guildId: string) =
     .setStyle(ButtonStyle.Secondary)
     .setEmoji(AppEmoji.VolumeUp);
 
-  const repeatAllButton = new ButtonBuilder()
-    .setCustomId('player:repeat-all')
+  const repeatQueueButton = new ButtonBuilder()
+    .setCustomId('player:repeat-queue')
     .setStyle(ButtonStyle.Secondary)
-    .setEmoji(player?.queueRepeat ? AppEmoji.RepeatAllOn : AppEmoji.RepeatAll);
-  const repeatSingleButton = new ButtonBuilder()
-    .setCustomId('player:repeat-single')
+    .setEmoji(player?.queueRepeat ? AppEmoji.RepeatQueueOn : AppEmoji.RepeatQueue);
+  const repeatTrackButton = new ButtonBuilder()
+    .setCustomId('player:repeat-track')
     .setStyle(ButtonStyle.Secondary)
-    .setEmoji(player?.trackRepeat ? AppEmoji.RepeatSingleOn : AppEmoji.RepeatSingle);
+    .setEmoji(player?.trackRepeat ? AppEmoji.RepeatTrackOn : AppEmoji.RepeatTrack);
   const stopButton = new ButtonBuilder()
     .setCustomId('player:stop')
     .setStyle(ButtonStyle.Danger)
@@ -187,8 +187,8 @@ export const createPlayerComponents = ({ magma }: AppContext, guildId: string) =
     volumeUpButton
   );
   const secondRow = new ActionRowBuilder<ButtonBuilder>().setComponents(
-    repeatAllButton,
-    repeatSingleButton,
+    repeatQueueButton,
+    repeatTrackButton,
     stopButton,
     previousButton,
     nextButton
