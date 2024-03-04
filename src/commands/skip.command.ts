@@ -7,7 +7,7 @@ export const skip: AppCommand = {
   data: new SlashCommandBuilder()
     .setName('skip')
     .setDescription('Skip the currently playing music.'),
-  execute: async ({ moon }, interaction) => {
+  execute: async ({ magma }, interaction) => {
     if (!interaction.guild || !interaction.guildId) {
       await interaction.reply({
         content: `You are not in a guild.`,
@@ -30,7 +30,7 @@ export const skip: AppCommand = {
       return;
     }
 
-    const player = moon.players.get(interaction.guildId);
+    const player = magma.players.get(interaction.guildId);
 
     if (!player) {
       await interaction.reply({
@@ -40,11 +40,19 @@ export const skip: AppCommand = {
       return;
     }
 
+    if (!player.queue.current) {
+      await interaction.reply({
+        ephemeral: true,
+        content: 'There is nothing playing.'
+      });
+      return;
+    }
+
     await interaction.reply({
       ephemeral: true,
-      content: `Skipped \`${player.current.title}\``
+      content: `Skipped \`${player.queue.current.title}\``
     });
 
-    await player.skip();
+    player.stop();
   }
 };

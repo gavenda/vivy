@@ -17,7 +17,7 @@ export const remove: AppCommand = {
     )
     .setName('remove')
     .setDescription('Remove a music in the music queue.'),
-  execute: async ({ moon }, interaction) => {
+  execute: async ({ magma }, interaction) => {
     if (!interaction.guild || !interaction.guildId) {
       await interaction.reply({
         content: `You are not in a guild.`,
@@ -40,7 +40,7 @@ export const remove: AppCommand = {
       return;
     }
 
-    const player = moon.players.get(interaction.guildId);
+    const player = magma.players.get(interaction.guildId);
 
     if (!player) {
       await interaction.reply({

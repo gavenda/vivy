@@ -1,6 +1,6 @@
 import { SpotifyApi } from '@spotify/web-api-ts-sdk';
 import { ActivityType, Client, Events, GatewayIntentBits } from 'discord.js';
-import { MoonlinkManager, MoonlinkTrack, VoicePacket } from 'moonlink.js';
+import { Manager, VoicePacket, VoiceServer, VoiceState } from 'magmastream';
 import { createClient } from 'redis';
 import { AppContext } from './app.context';
 import { updatePlayer } from './app.player';
@@ -51,40 +51,32 @@ const client = new Client({
   }
 });
 
-// Configure moonlink
-const moon = new MoonlinkManager(
-  [
+// Configure magmastream
+const magma = new Manager({
+  nodes: [
     {
       host: 'localhost',
       port: 2333,
       password: 'flourite',
       secure: false,
-      retryAmount: 10,
-      retryDelay: 10000
+      retryAmount: 100,
+      retryDelay: 5000
     }
   ],
-  {
-    destroyPlayersStopped: true,
-    autoResume: true,
-    resume: true,
-    previousTracksInArray: false
-  },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (guildId: string, payload: any) => {
+  send: (guildId, payload) => {
     const guild = client.guilds.cache.get(guildId);
 
     if (guild) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      guild.shard.send(JSON.parse(payload));
+      guild.shard.send(payload);
     } else {
       logger.error('Unable to send payload to guild', { guildId });
     }
   }
-);
+});
 
 // Handle raw packets
-client.on(Events.Raw, (data: VoicePacket) => {
-  moon.packetUpdate(data);
+client.on(Events.Raw, async (data: VoicePacket | VoiceServer | VoiceState) => {
+  await magma.updateVoiceState(data);
 });
 
 // Handle application errors
@@ -92,34 +84,33 @@ client.on(Events.Error, (error) => {
   logger.error('Internal error', { error });
 });
 
-const context: AppContext = { client, redis, moon, spotify };
+const context: AppContext = { client, redis, magma, spotify };
 
-// Moon events
-moon.on('nodeCreate', (node) => {
-  logger.info(`Connected to lavalink node`, { host: node.host });
+// Magma events
+magma.on('nodeConnect', (node) => {
+  logger.info(`Connected to lavalink node`, { ...node.options });
 });
-
 // eslint-disable-next-line @typescript-eslint/no-misused-promises
-moon.on('trackStart', async (player, track: MoonlinkTrack) => {
+magma.on('trackStart', async (player, track) => {
   logger.debug('Track start', { title: track.title });
-  await updatePlayer(context, player.guildId);
+  await updatePlayer(context, player.guild);
 });
 // eslint-disable-next-line @typescript-eslint/no-misused-promises
-moon.on('trackEnd', async (player, track: MoonlinkTrack) => {
+magma.on('trackEnd', async (player, track) => {
   logger.debug('Track end', { title: track.title });
-  await updatePlayer(context, player.guildId);
+  await updatePlayer(context, player.guild);
 });
 // eslint-disable-next-line @typescript-eslint/no-misused-promises
-moon.on('queueEnd', async (player) => {
+magma.on('queueEnd', async (player) => {
   logger.debug('Queue end');
-  await updatePlayer(context, player.guildId);
+  await updatePlayer(context, player.guild);
 });
 
-moon.on('trackError', (_player, track: MoonlinkTrack) => {
+magma.on('trackError', (_player, track) => {
   logger.error('Track error', { title: track.title });
 });
 
-moon.on('trackStuck', (_player, track: MoonlinkTrack) => {
+magma.on('trackStuck', (_player, track) => {
   logger.error('Track stuck', { title: track.title });
 });
 
@@ -139,8 +130,13 @@ for (const { once, event, execute } of events) {
 // Graceful disconnect
 // eslint-disable-next-line @typescript-eslint/no-misused-promises
 process.on('SIGINT', async () => {
-  await redis.disconnect();
-  await client.destroy();
+  logger.info('Received SIGINT, cleaning up');
+  if (redis.isReady) {
+    await redis.disconnect();
+  }
+  if (client.isReady()) {
+    await client.destroy();
+  }
 });
 
 try {

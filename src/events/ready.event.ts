@@ -5,14 +5,15 @@ import { logger } from '@/logger';
 export const readyEvent: AppEvent<Events.ClientReady> = {
   event: Events.ClientReady,
   once: true,
-  execute: async ({ moon, redis }, client) => {
+  execute: async ({ magma, redis }, client) => {
     logger.info(`Ready! Logged in`, { user: client.user.tag });
 
-    // Init moon
-    await moon.init(client.user.id);
+    // Init magma
+    magma.init(client.user.id);
 
     // Cleanup legacy players
-    const legacyPlayers = await redis.sMembers(`player:legacy`);
+    const legacyPlayersKey = `player:legacy`;
+    const legacyPlayers = await redis.sMembers(legacyPlayersKey);
 
     for (const legacyPlayer of legacyPlayers) {
       try {
@@ -25,6 +26,7 @@ export const readyEvent: AppEvent<Events.ClientReady> = {
           if (legacyMessage.author.id === client?.user?.id) {
             logger.debug('Removing legacy message', { legacyMessageId });
             await legacyMessage.delete();
+            await redis.sRem(legacyPlayersKey, legacyPlayer);
           }
         }
       } catch (error) {

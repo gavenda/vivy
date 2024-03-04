@@ -14,9 +14,9 @@ import {
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder
 } from 'discord.js';
-import { MoonlinkPlayer, MoonlinkTrack } from 'moonlink.js';
 import { AppCommand } from './command';
 import { parse as parseSpotifyUri } from 'spotify-uri';
+import { Player, Track } from 'magmastream';
 
 export type QueueType = 'later' | 'next' | 'now';
 
@@ -132,22 +132,19 @@ const playMusic = async (options: {
 
   logger.debug(`Play command, queue type: ${queue}`);
 
-  const { moon } = context;
+  const { magma } = context;
   const query = interaction.options.getString('query', true);
 
-  const player = moon.players.create({
-    guildId: interaction.guild.id,
+  const player = magma.create({
+    guild: interaction.guild.id,
     voiceChannel: interaction.member.voice.channel.id,
     textChannel: interaction.channelId,
-    autoPlay: false,
     volume: 100
   });
 
-  if (!player.connected) {
+  if (player.state !== 'CONNECTED') {
     // Connecting to the voice channel if not already connected
-    player.connect({
-      setMute: process.env.APP_ENV === 'development'
-    });
+    player.connect();
   }
 
   if (isSpotify(query)) {
@@ -156,26 +153,22 @@ const playMusic = async (options: {
     await handleYoutube({ query, player, context, interaction, queue });
   }
 
-  if (!player.playing && !player.current) {
+  if (!player.playing && !player.paused) {
     await player.play();
   }
 };
 
 const handleYoutube = async (options: {
   query: string;
-  player: MoonlinkPlayer;
+  player: Player;
   context: AppContext;
   interaction: ChatInputCommandInteraction;
   queue: QueueType;
 }) => {
-  const { moon } = options.context;
+  const { magma } = options.context;
   const { query, interaction, queue, player } = options;
 
-  const result = await moon.search({
-    query,
-    source: 'youtube',
-    requester: interaction.user.id
-  });
+  const result = await magma.search({ query, source: 'youtube' }, `<@${interaction.user.id}>`);
 
   switch (result.loadType) {
     case 'error': {
@@ -203,14 +196,13 @@ const handleYoutube = async (options: {
         return;
       }
 
-      for (const track of result.tracks) {
-        // Adding tracks to the queue if it's a playlist
-        player.queue.add(track);
-      }
+      if (!result.playlist) return;
+
+      player.queue.add(result.playlist.tracks);
 
       await interaction.followUp({
         ephemeral: true,
-        content: `Queueing music list: \`${result.playlistInfo!.name}\`.`
+        content: `Queueing music list: \`${result.playlist.name}\`.`
       });
       break;
     }
@@ -274,7 +266,7 @@ const handleYoutube = async (options: {
 
 const handleSpotify = async (options: {
   query: string;
-  player: MoonlinkPlayer;
+  player: Player;
   context: AppContext;
   interaction: ChatInputCommandInteraction;
   queue: QueueType;
@@ -331,7 +323,7 @@ const handleSpotify = async (options: {
       } else {
         await interaction.followUp({
           ephemeral: true,
-          content: `Cannot find equivalent track on youtube.`
+          content: `There was an error looking up the music. Please try again.`
         });
       }
       break;
@@ -376,18 +368,17 @@ const lookupTrack = async (options: {
   query: string;
   context: AppContext;
   interaction: ChatInputCommandInteraction;
-}): Promise<MoonlinkTrack | null> => {
-  const { moon } = options.context;
-  const { query, interaction } = options;
-  const result = await moon.search({
+}): Promise<Track | null> => {
+  const { magma } = options.context;
+  const { query } = options;
+  const result = await magma.search({
     query,
-    source: 'youtube',
-    requester: interaction.user.id
+    source: 'youtube'
   });
 
   switch (result.loadType) {
     case 'error': {
-      logger.warn('Lookup error', { query, exception: result.exception });
+      logger.warn('Lookup error', { query });
       return null;
     }
     case 'empty': {
@@ -404,8 +395,8 @@ const lookupTrack = async (options: {
 
 const respondToPlay = async (options: {
   interaction: ChatInputCommandInteraction;
-  track: MoonlinkTrack;
-  player: MoonlinkPlayer;
+  track: Track;
+  player: Player;
   queue: QueueType;
 }) => {
   const { interaction, track, player, queue } = options;
@@ -414,7 +405,7 @@ const respondToPlay = async (options: {
     case 'later': {
       player.queue.add(track);
 
-      if (!player.playing && !player.current) {
+      if (!player.playing && !player.queue.current) {
         await interaction.editReply({
           content: `Now playing \`${track.title}\`.`,
           components: []
@@ -430,7 +421,7 @@ const respondToPlay = async (options: {
     case 'next': {
       player.queue.add(track, 1);
 
-      if (!player.playing && !player.current) {
+      if (!player.playing && !player.queue.current) {
         await interaction.editReply({
           content: `Now playing \`${track.title}\`.`,
           components: []
@@ -446,8 +437,8 @@ const respondToPlay = async (options: {
     case 'now': {
       await player.play(track);
 
-      if (player.previous instanceof MoonlinkTrack) {
-        player.queue.add(player.previous, 0);
+      if (player.queue.previous) {
+        player.queue.add(player.queue.previous, 1);
       }
 
       await interaction.editReply({
