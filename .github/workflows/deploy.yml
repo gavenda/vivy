@@ -22,15 +22,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         name: Checkout
+      - uses: pnpm/action-setup@v3
+        name: Install pnpm
+        with:
+          run_install: true
       - uses: actions/setup-node@v4
         name: Install Node.js
         with:
           node-version-file: '.nvmrc'
           cache: 'pnpm'
-      - uses: pnpm/action-setup@v3
-        name: Install pnpm
-        with:
-          run_install: true
       - run: pnpm lint
         name: Lint
       - run: |
@@ -54,15 +54,15 @@ jobs:
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+      - uses: pnpm/action-setup@v3
+        name: Install pnpm
+        with:
+          run_install: true
       - uses: actions/setup-node@v4
         name: Install Node.js
         with:
           node-version-file: '.nvmrc'
           cache: 'pnpm'
-      - uses: pnpm/action-setup@v3
-        name: Install pnpm
-        with:
-          run_install: true
       - run: curl -fsS https://dotenvx.sh/ | sh
         name: Install @dotenvx/dotenvx
       - run: dotenvx run -- pnpm exec pm2 deploy ecosystem.config.cjs ${{ inputs.environment || 'production' }}
