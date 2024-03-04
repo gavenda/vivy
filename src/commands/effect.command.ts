@@ -1,9 +1,14 @@
+import { AppContext } from '@/app.context';
+import { logger } from '@/logger';
+import { hasVoiceState } from '@/utils/has-voice-state';
 import {
+  ChatInputCommandInteraction,
   SlashCommandBuilder,
   SlashCommandIntegerOption,
   SlashCommandSubcommandBuilder,
   SlashCommandSubcommandGroupBuilder
 } from 'discord.js';
+import { Player } from 'magmastream';
 import { AppCommand } from './command';
 
 export const effect: AppCommand = {
@@ -11,11 +16,11 @@ export const effect: AppCommand = {
     .addSubcommandGroup(
       new SlashCommandSubcommandGroupBuilder()
         .setName('filter')
-        .setDescription('Apply a filter effect to the playing music.')
+        .setDescription('Apply an audio effect to the playing music.')
         .addSubcommand(
           new SlashCommandSubcommandBuilder()
             .setName('nightcore')
-            .setDescription('Apply a nightcore filter effect to the playing music.')
+            .setDescription('Apply a nightcore effect to the playing music.')
             .addIntegerOption(
               new SlashCommandIntegerOption()
                 .setName('speed')
@@ -25,12 +30,37 @@ export const effect: AppCommand = {
         .addSubcommand(
           new SlashCommandSubcommandBuilder()
             .setName('karaoke')
-            .setDescription('Apply a karaoke filter effect to the playing music.')
+            .setDescription('Apply a karaoke effect to the playing music.')
         )
         .addSubcommand(
           new SlashCommandSubcommandBuilder()
             .setName('vaporwave')
-            .setDescription('Apply a vaporwave filter effect to the playing music.')
+            .setDescription('Apply a vaporwave effect to the playing music.')
+        )
+        .addSubcommand(
+          new SlashCommandSubcommandBuilder()
+            .setName('slowmo')
+            .setDescription('Apply a slow-mo effect to the playing music.')
+        )
+        .addSubcommand(
+          new SlashCommandSubcommandBuilder()
+            .setName('eightd')
+            .setDescription('Apply a eight dimension effect to the playing music.')
+        )
+        .addSubcommand(
+          new SlashCommandSubcommandBuilder()
+            .setName('soft')
+            .setDescription('Apply a soft effect to the playing music.')
+        )
+        .addSubcommand(
+          new SlashCommandSubcommandBuilder()
+            .setName('tv')
+            .setDescription('Apply a TV effect to the playing music.')
+        )
+        .addSubcommand(
+          new SlashCommandSubcommandBuilder()
+            .setName('distort')
+            .setDescription('Apply a distort effect to the playing music.')
         )
     )
     .addSubcommandGroup(
@@ -52,13 +82,196 @@ export const effect: AppCommand = {
             .setName('bass-boost')
             .setDescription('Apply a bass boost equalizer to the playing music.')
         )
+        .addSubcommand(
+          new SlashCommandSubcommandBuilder()
+            .setName('treble-bass')
+            .setDescription('Apply a treble bass equalizer to the playing music.')
+        )
     )
     .setName('effect')
     .setDescription('Apply an effect to the playing music.'),
   execute: async (context, interaction) => {
-    await interaction.reply({
-      ephemeral: true,
-      content: 'Not yet implemented.'
-    });
+    if (!interaction.guild || !interaction.guildId) {
+      await interaction.reply({
+        content: `You are not in a guild.`,
+        ephemeral: true
+      });
+      return;
+    }
+    if (!hasVoiceState(interaction.member)) {
+      await interaction.reply({
+        content: `Illegal attempt for a non gateway interaction request.`,
+        ephemeral: true
+      });
+      return;
+    }
+    if (!interaction.member.voice.channel) {
+      await interaction.reply({
+        content: `You are not in a voice channel.`,
+        ephemeral: true
+      });
+      return;
+    }
+
+    const { magma } = context;
+    const player = magma.players.get(interaction.guildId);
+
+    if (!player) {
+      await interaction.reply({
+        ephemeral: true,
+        content: 'I am not playing anything.'
+      });
+      return;
+    }
+
+    const group = interaction.options.getSubcommandGroup(true);
+
+    switch (group) {
+      case 'filter': {
+        await handleFilter({ context, player, interaction });
+        break;
+      }
+      case 'equalizer': {
+        await handleEqualizer({ context, player, interaction });
+        break;
+      }
+    }
   }
+};
+
+const handleFilter = async (options: {
+  context: AppContext;
+  player: Player;
+  interaction: ChatInputCommandInteraction;
+}) => {
+  const { interaction, player } = options;
+  const subcommand = interaction.options.getSubcommand(true);
+
+  switch (subcommand) {
+    case 'nightcore': {
+      const speed = interaction.options.getInteger('speed') ?? 105;
+
+      if (speed > 300) {
+        await interaction.reply({
+          ephemeral: true,
+          content: 'Speed should not be greater than 300.'
+        });
+        return;
+      }
+      if (speed < 10) {
+        await interaction.reply({
+          ephemeral: true,
+          content: 'Speed should not be less than 10.'
+        });
+        return;
+      }
+
+      player.filters.setTimescale({ rate: speed / 100 });
+      break;
+    }
+    case 'karaoke': {
+      player.filters.setKaraoke({
+        level: 1.0,
+        monoLevel: 1.0,
+        filterBand: 220.0,
+        filterWidth: 100.0
+      });
+      break;
+    }
+    case 'vaporwave': {
+      player.filters.vaporwave();
+      break;
+    }
+    case 'slowmo': {
+      player.filters.slowmo();
+      break;
+    }
+    case 'eightd': {
+      player.filters.eightD();
+      break;
+    }
+    case 'soft': {
+      player.filters.soft();
+      break;
+    }
+    case 'tv': {
+      player.filters.tv();
+      break;
+    }
+    case 'distort': {
+      player.filters.distort();
+      break;
+    }
+    default:
+      logger.warn('Unknown filter passed', { subcommand });
+      return;
+  }
+
+  await interaction.reply({
+    ephemeral: true,
+    content: 'Filter applied.'
+  });
+};
+
+const handleEqualizer = async (options: {
+  context: AppContext;
+  player: Player;
+  interaction: ChatInputCommandInteraction;
+}) => {
+  const { interaction, player } = options;
+  const subcommand = interaction.options.getSubcommand(true);
+
+  switch (subcommand) {
+    case 'rock': {
+      player.filters.setEqualizer([
+        { band: 0, gain: 0.3 },
+        { band: 1, gain: 0.25 },
+        { band: 2, gain: 0.2 },
+        { band: 3, gain: 0.1 },
+        { band: 4, gain: 0.05 },
+        { band: 5, gain: -0.05 },
+        { band: 6, gain: -0.15 },
+        { band: 7, gain: -0.2 },
+        { band: 8, gain: -0.1 },
+        { band: 9, gain: -0.05 },
+        { band: 10, gain: 0.05 },
+        { band: 11, gain: 0.1 },
+        { band: 12, gain: 0.2 },
+        { band: 13, gain: 0.25 },
+        { band: 14, gain: 0.3 }
+      ]);
+      break;
+    }
+    case 'pop': {
+      player.filters.setEqualizer([
+        { band: 0, gain: -0.25 },
+        { band: 1, gain: 0.48 },
+        { band: 2, gain: 0.59 },
+        { band: 3, gain: 0.72 },
+        { band: 4, gain: 0.56 },
+        { band: 5, gain: 0.15 },
+        { band: 6, gain: -0.24 },
+        { band: 7, gain: -0.24 },
+        { band: 8, gain: -0.16 },
+        { band: 9, gain: -0.16 }
+      ]);
+      break;
+    }
+    case 'treble-bass': {
+      player.filters.trebleBass();
+      break;
+    }
+    case 'bass-boost': {
+      player.filters.bassBoost();
+      break;
+    }
+    default:
+      logger.warn('Unknown equalizer passed', { subcommand });
+      return;
+  }
+
+  await interaction.reply({
+    ephemeral: true,
+    content: 'Equalizer applied.'
+  });
 };

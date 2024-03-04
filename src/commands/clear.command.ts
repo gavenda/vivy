@@ -1,32 +1,13 @@
-import {
-  SlashCommandBuilder,
-  SlashCommandSubcommandBuilder,
-  SlashCommandSubcommandGroupBuilder
-} from 'discord.js';
-import { AppCommand } from './command';
 import { hasVoiceState } from '@/utils/has-voice-state';
+import { SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
+import { AppCommand } from './command';
 
 export const clear: AppCommand = {
   data: new SlashCommandBuilder()
-    .addSubcommandGroup(
-      new SlashCommandSubcommandGroupBuilder()
+    .addSubcommand(
+      new SlashCommandSubcommandBuilder()
         .setName('effect')
-        .setDescription('Clear an applied effect to the playing music.')
-        .addSubcommand(
-          new SlashCommandSubcommandBuilder()
-            .setName('effect')
-            .setDescription('Clear an applied effect to the playing music.')
-        )
-        .addSubcommand(
-          new SlashCommandSubcommandBuilder()
-            .setName('filter')
-            .setDescription('Clear the applied filter(s) to the playing music.')
-        )
-        .addSubcommand(
-          new SlashCommandSubcommandBuilder()
-            .setName('equalizer')
-            .setDescription('Clear the applied equalizer(s) to the playing music.')
-        )
+        .setDescription('Clear the applied effects to the playing music.')
     )
     .addSubcommand(
       new SlashCommandSubcommandBuilder().setName('queue').setDescription('Clear the music queue.')
@@ -66,11 +47,23 @@ export const clear: AppCommand = {
       return;
     }
 
-    player.queue.clear();
+    const subcommand = interaction.options.getSubcommand(true);
 
-    await interaction.reply({
-      ephemeral: true,
-      content: 'Queue cleared.'
-    });
+    switch (subcommand) {
+      case 'queue':
+        player.queue.clear();
+        await interaction.reply({
+          ephemeral: true,
+          content: 'Queue cleared.'
+        });
+        break;
+      case 'effect':
+        await player.filters.clearFilters();
+        await interaction.reply({
+          ephemeral: true,
+          content: 'Effects cleared.'
+        });
+        break;
+    }
   }
 };
