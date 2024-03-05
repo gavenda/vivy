@@ -1,4 +1,4 @@
-import { AppContext } from '@/app.context';
+import { AppContext } from '@app/context';
 import { Awaitable, ClientEvents } from 'discord.js';
 
 export interface AppEvent<DiscordEvent extends keyof ClientEvents> {

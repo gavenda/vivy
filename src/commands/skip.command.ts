@@ -1,4 +1,4 @@
-import { hasVoiceState } from '@/utils/has-voice-state';
+import { hasVoiceState } from '@app/utils';
 import { SlashCommandBuilder } from 'discord.js';
 import { MoonlinkTrack } from 'moonlink.js';
 import { AppCommand } from './command';

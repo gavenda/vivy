@@ -1,6 +1,6 @@
 import { REST, Routes } from 'discord.js';
-import { commands } from './commands';
 import { logger } from './logger';
+import { commands } from './commands';
 
 if (!process.env.TOKEN) {
   throw new Error('TOKEN is required.');

@@ -1,4 +1,4 @@
-import { AppContext } from '@/app.context';
+import { AppContext } from '@app/context';
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,

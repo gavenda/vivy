@@ -1,4 +1,4 @@
-import { hasVoiceState } from '@/utils/has-voice-state';
+import { hasVoiceState } from '@app/utils';
 import { SlashCommandBuilder } from 'discord.js';
 import { AppCommand } from './command';
 
@@ -40,7 +40,9 @@ export const stop: AppCommand = {
       return;
     }
 
+    player.queue.clear();
     await player.stop();
+    await player.destroy();
 
     await interaction.reply({
       ephemeral: true,

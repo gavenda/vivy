@@ -1,6 +1,6 @@
+import { logger } from '@app/logger';
 import { Events } from 'discord.js';
 import { AppEvent } from './event';
-import { logger } from '@/logger';
 
 export const readyEvent: AppEvent<Events.ClientReady> = {
   event: Events.ClientReady,
@@ -25,8 +25,8 @@ export const readyEvent: AppEvent<Events.ClientReady> = {
 
           if (legacyMessage.author.id === client?.user?.id) {
             logger.debug('Removing legacy message', { legacyMessageId });
-            await legacyMessage.delete();
             await redis.sRem(legacyPlayersKey, legacyPlayer);
+            await legacyMessage.delete();
           }
         }
       } catch (error) {

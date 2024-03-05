@@ -1,8 +1,8 @@
+import { logger } from '@app/logger';
+import { createPlayerComponents, createPlayerEmbed } from '@app/player';
+import { chunkSize } from '@app/utils';
 import { Events } from 'discord.js';
 import { AppEvent } from './event';
-import { logger } from '@/logger';
-import { createPlayerComponents, createPlayerEmbed } from '@/app.player';
-import { chunkSize } from '@/utils/chunk';
 
 export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
   event: Events.InteractionCreate,
@@ -17,8 +17,6 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
       });
       return;
     }
-
-    const [, buttonId] = interaction.customId.split(':');
     const { link, redis } = context;
     const player = link.players.get(interaction.guild.id);
 
@@ -29,6 +27,9 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
       });
       return;
     }
+
+    const [, buttonId] = interaction.customId.split(':');
+    const volume = player.filters.volume ?? 1;
 
     logger.debug('Received player button interaction', { buttonId });
 
@@ -56,11 +57,11 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
         break;
       }
       case 'volume-down': {
-        player.filters.setVolume(Math.min(100, Math.max(0, player.volume - 10)));
+        player.filters.setVolume(Math.min(1, Math.max(0, volume - 0.1)));
         break;
       }
       case 'volume-up': {
-        player.filters.setVolume(Math.min(100, Math.max(0, player.volume + 10)));
+        player.filters.setVolume(Math.min(1, Math.max(0, volume + 0.1)));
         break;
       }
       case 'repeat-track': {
@@ -74,6 +75,7 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
       case 'stop': {
         player.queue.clear();
         await player.stop();
+        await player.destroy();
       }
       case 'previous': {
         pageIndex--;
