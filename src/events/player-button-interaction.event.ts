@@ -19,8 +19,8 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
     }
 
     const [, buttonId] = interaction.customId.split(':');
-    const { magma, redis } = context;
-    const player = magma.players.get(interaction.guild.id);
+    const { link, redis } = context;
+    const player = link.players.get(interaction.guild.id);
 
     if (!player) {
       await interaction.reply({
@@ -32,7 +32,7 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
 
     logger.debug('Received player button interaction', { buttonId });
 
-    const pageKey = `player:page:${player.guild}`;
+    const pageKey = `player:page:${player.guildId}`;
     let pageIndex = Number(await redis.get(pageKey));
     const pageSize = chunkSize(player.queue.size, 15);
 
@@ -41,14 +41,14 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
     switch (buttonId) {
       case 'play-toggle': {
         if (player.playing) {
-          player.pause(true);
+          await player.pause();
         } else {
-          player.pause(false);
+          await player.resume();
         }
         break;
       }
       case 'skip': {
-        player.stop();
+        await player.skip();
         break;
       }
       case 'shuffle': {
@@ -56,23 +56,24 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
         break;
       }
       case 'volume-down': {
-        player.setVolume(Math.min(100, Math.max(0, player.volume - 10)));
+        player.filters.setVolume(Math.min(100, Math.max(0, player.volume - 10)));
         break;
       }
       case 'volume-up': {
-        player.setVolume(Math.min(100, Math.max(0, player.volume + 10)));
+        player.filters.setVolume(Math.min(100, Math.max(0, player.volume + 10)));
         break;
       }
-      case 'repeat-all': {
-        player.setQueueRepeat(!player.queueRepeat);
+      case 'repeat-track': {
+        player.setLoop(player.loop === 1 ? 0 : 1);
         break;
       }
-      case 'repeat-single': {
-        player.setTrackRepeat(!player.trackRepeat);
+      case 'repeat-queue': {
+        player.setLoop(player.loop === 2 ? 0 : 2);
         break;
       }
       case 'stop': {
-        player.stop();
+        player.queue.clear();
+        await player.stop();
       }
       case 'previous': {
         pageIndex--;

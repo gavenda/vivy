@@ -7,7 +7,7 @@ export const pause: AppCommand = {
   data: new SlashCommandBuilder()
     .setName('pause')
     .setDescription('Pause the playing music.'),
-  execute: async ({ magma }, interaction) => {
+  execute: async ({ link }, interaction) => {
     if (!interaction.guild || !interaction.guildId) {
       await interaction.reply({
         content: `You are not in a guild.`,
@@ -30,7 +30,7 @@ export const pause: AppCommand = {
       return;
     }
 
-    const player = magma.players.get(interaction.guildId);
+    const player = link.players.get(interaction.guildId);
 
     if (!player) {
       await interaction.reply({
@@ -40,7 +40,7 @@ export const pause: AppCommand = {
       return;
     }
 
-    player.pause(true);
+    await player.pause();
 
     await interaction.reply({
       ephemeral: true,

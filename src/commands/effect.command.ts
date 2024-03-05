@@ -8,8 +8,8 @@ import {
   SlashCommandSubcommandBuilder,
   SlashCommandSubcommandGroupBuilder
 } from 'discord.js';
-import { Player } from 'magmastream';
 import { AppCommand } from './command';
+import { MoonlinkPlayer } from 'moonlink.js';
 
 export const effect: AppCommand = {
   data: new SlashCommandBuilder()
@@ -32,36 +32,6 @@ export const effect: AppCommand = {
             .setName('karaoke')
             .setDescription('Apply a karaoke effect to the playing music.')
         )
-        .addSubcommand(
-          new SlashCommandSubcommandBuilder()
-            .setName('vaporwave')
-            .setDescription('Apply a vaporwave effect to the playing music.')
-        )
-        .addSubcommand(
-          new SlashCommandSubcommandBuilder()
-            .setName('slowmo')
-            .setDescription('Apply a slow-mo effect to the playing music.')
-        )
-        .addSubcommand(
-          new SlashCommandSubcommandBuilder()
-            .setName('eightd')
-            .setDescription('Apply a eight dimension effect to the playing music.')
-        )
-        .addSubcommand(
-          new SlashCommandSubcommandBuilder()
-            .setName('soft')
-            .setDescription('Apply a soft effect to the playing music.')
-        )
-        .addSubcommand(
-          new SlashCommandSubcommandBuilder()
-            .setName('tv')
-            .setDescription('Apply a TV effect to the playing music.')
-        )
-        .addSubcommand(
-          new SlashCommandSubcommandBuilder()
-            .setName('distort')
-            .setDescription('Apply a distort effect to the playing music.')
-        )
     )
     .addSubcommandGroup(
       new SlashCommandSubcommandGroupBuilder()
@@ -76,16 +46,6 @@ export const effect: AppCommand = {
           new SlashCommandSubcommandBuilder()
             .setName('pop')
             .setDescription('Apply a pop equalizer to the playing music.')
-        )
-        .addSubcommand(
-          new SlashCommandSubcommandBuilder()
-            .setName('bass-boost')
-            .setDescription('Apply a bass boost equalizer to the playing music.')
-        )
-        .addSubcommand(
-          new SlashCommandSubcommandBuilder()
-            .setName('treble-bass')
-            .setDescription('Apply a treble bass equalizer to the playing music.')
         )
     )
     .setName('effect')
@@ -113,8 +73,8 @@ export const effect: AppCommand = {
       return;
     }
 
-    const { magma } = context;
-    const player = magma.players.get(interaction.guildId);
+    const { link } = context;
+    const player = link.players.get(interaction.guildId);
 
     if (!player) {
       await interaction.reply({
@@ -141,7 +101,7 @@ export const effect: AppCommand = {
 
 const handleFilter = async (options: {
   context: AppContext;
-  player: Player;
+  player: MoonlinkPlayer;
   interaction: ChatInputCommandInteraction;
 }) => {
   const { interaction, player } = options;
@@ -178,30 +138,6 @@ const handleFilter = async (options: {
       });
       break;
     }
-    case 'vaporwave': {
-      player.filters.vaporwave();
-      break;
-    }
-    case 'slowmo': {
-      player.filters.slowmo();
-      break;
-    }
-    case 'eightd': {
-      player.filters.eightD();
-      break;
-    }
-    case 'soft': {
-      player.filters.soft();
-      break;
-    }
-    case 'tv': {
-      player.filters.tv();
-      break;
-    }
-    case 'distort': {
-      player.filters.distort();
-      break;
-    }
     default:
       logger.warn('Unknown filter passed', { subcommand });
       return;
@@ -215,7 +151,7 @@ const handleFilter = async (options: {
 
 const handleEqualizer = async (options: {
   context: AppContext;
-  player: Player;
+  player: MoonlinkPlayer;
   interaction: ChatInputCommandInteraction;
 }) => {
   const { interaction, player } = options;
@@ -255,14 +191,6 @@ const handleEqualizer = async (options: {
         { band: 8, gain: -0.16 },
         { band: 9, gain: -0.16 }
       ]);
-      break;
-    }
-    case 'treble-bass': {
-      player.filters.trebleBass();
-      break;
-    }
-    case 'bass-boost': {
-      player.filters.bassBoost();
       break;
     }
     default:

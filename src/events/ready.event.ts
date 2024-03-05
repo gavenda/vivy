@@ -5,11 +5,11 @@ import { logger } from '@/logger';
 export const readyEvent: AppEvent<Events.ClientReady> = {
   event: Events.ClientReady,
   once: true,
-  execute: async ({ magma, redis }, client) => {
+  execute: async ({ link, redis }, client) => {
     logger.info(`Ready! Logged in`, { user: client.user.tag });
 
-    // Init magma
-    magma.init(client.user.id);
+    // Init link
+    await link.init(client.user.id);
 
     // Cleanup legacy players
     const legacyPlayersKey = `player:legacy`;
