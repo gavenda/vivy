@@ -142,8 +142,16 @@ const playMusic = async (options: {
     volume: 100
   });
 
+  if (player.voiceChannel !== interaction.member.voice.channel.id) {
+    // Set to voice channel if not matching
+    player.setVoiceChannel(interaction.member.voice.channel.id);
+  }
+  if (player.textChannel !== interaction.channelId) {
+    // Set text channel if not matching
+    player.setTextChannel(interaction.channelId);
+  }
   if (player.state !== 'CONNECTED') {
-    // Connecting to the voice channel if not already connected
+    // Connect to the voice channel if not connected
     player.connect();
   }
 
