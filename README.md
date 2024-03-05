@@ -14,6 +14,8 @@ My mission is to make everyone happy by singing.
 
 If you're forking from this repository, remove `.env.vault` and create your own `.env` using the sample given: `.env.sample`.
 
+You can ignore `APP_USER`, `APP_HOST`, `APP_HOST`, `APP_PATH`, and `APP_BRANCH` unless you're planning to setting up your own CI workflow for your bot.
+
 If it is your first time creating a discord bot, follow the instructions [here](https://discordjs.guide/preparations/setting-up-a-bot-application.html) and [invite](https://discordjs.guide/preparations/adding-your-bot-to-servers.html#bot-invite-links) your bot right after.
 
 Required bot permissions should be:
