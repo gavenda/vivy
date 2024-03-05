@@ -69,7 +69,8 @@ const client = new Client({
 });
 
 const linkOptions: IOptions = {
-  resume: true
+  resume: true,
+  previousTracksInArray: false
 };
 
 const linkNodes: INode[] = [
