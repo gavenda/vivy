@@ -11,7 +11,7 @@ export const volume: AppCommand = {
     )
     .setName('volume')
     .setDescription('The volume level you want to set (maximum of 100, minimum of 0).'),
-  execute: async ({ magma }, interaction) => {
+  execute: async ({ link }, interaction) => {
     if (!interaction.guild || !interaction.guildId) {
       await interaction.reply({
         content: `You are not in a guild.`,
@@ -34,7 +34,7 @@ export const volume: AppCommand = {
       return;
     }
 
-    const player = magma.players.get(interaction.guildId);
+    const player = link.players.get(interaction.guildId);
 
     if (!player) {
       await interaction.reply({
@@ -62,7 +62,7 @@ export const volume: AppCommand = {
       return;
     }
 
-    player.setVolume(volume);
+    player.filters.setVolume(volume);
 
     await interaction.reply({
       ephemeral: true,

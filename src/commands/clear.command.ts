@@ -14,7 +14,7 @@ export const clear: AppCommand = {
     )
     .setName('clear')
     .setDescription('Clear an existing applied setting.'),
-  execute: async ({ magma }, interaction) => {
+  execute: async ({ link }, interaction) => {
     if (!interaction.guild || !interaction.guildId) {
       await interaction.reply({
         content: `You are not in a guild.`,
@@ -37,7 +37,7 @@ export const clear: AppCommand = {
       return;
     }
 
-    const player = magma.players.get(interaction.guildId);
+    const player = link.players.get(interaction.guildId);
 
     if (!player) {
       await interaction.reply({
@@ -58,7 +58,7 @@ export const clear: AppCommand = {
         });
         break;
       case 'effect':
-        await player.filters.clearFilters();
+        player.filters.resetFilters();
         await interaction.reply({
           ephemeral: true,
           content: 'Effects cleared.'

@@ -6,7 +6,7 @@ export const disconnect: AppCommand = {
   data: new SlashCommandBuilder()
     .setName('disconnect')
     .setDescription('Disconnect the player from the voice channel.'),
-  execute: async ({ magma }, interaction) => {
+  execute: async ({ link }, interaction) => {
     if (!interaction.guild || !interaction.guildId) {
       await interaction.reply({
         content: `You are not in a guild.`,
@@ -29,7 +29,7 @@ export const disconnect: AppCommand = {
       return;
     }
 
-    const player = magma.players.get(interaction.guildId);
+    const player = link.players.get(interaction.guildId);
 
     if (!player) {
       await interaction.reply({

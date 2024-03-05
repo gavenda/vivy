@@ -1,13 +1,14 @@
-import { SlashCommandBuilder } from 'discord.js';
-import { AppCommand } from './command';
 import { hasVoiceState } from '@/utils/has-voice-state';
+import { SlashCommandBuilder } from 'discord.js';
+import { MoonlinkTrack } from 'moonlink.js';
+import { AppCommand } from './command';
 
 export const skip: AppCommand = {
   // prettier-ignore
   data: new SlashCommandBuilder()
     .setName('skip')
     .setDescription('Skip the currently playing music.'),
-  execute: async ({ magma }, interaction) => {
+  execute: async ({ link }, interaction) => {
     if (!interaction.guild || !interaction.guildId) {
       await interaction.reply({
         content: `You are not in a guild.`,
@@ -30,7 +31,7 @@ export const skip: AppCommand = {
       return;
     }
 
-    const player = magma.players.get(interaction.guildId);
+    const player = link.players.get(interaction.guildId);
 
     if (!player) {
       await interaction.reply({
@@ -40,7 +41,7 @@ export const skip: AppCommand = {
       return;
     }
 
-    if (!player.queue.current) {
+    if (!player.current) {
       await interaction.reply({
         ephemeral: true,
         content: 'There is nothing playing.'
@@ -48,11 +49,13 @@ export const skip: AppCommand = {
       return;
     }
 
+    const track = player.current as MoonlinkTrack;
+
     await interaction.reply({
       ephemeral: true,
-      content: `Skipped \`${player.queue.current.title}\``
+      content: `Skipped \`${track.title}\``
     });
 
-    player.stop();
+    await player.skip();
   }
 };
