@@ -139,7 +139,6 @@ const playMusic = async (options: {
     guildId: interaction.guild.id,
     voiceChannel: interaction.member.voice.channel.id,
     textChannel: interaction.channelId,
-    autoLeave: true,
     autoPlay: false,
     volume: 100
   });
