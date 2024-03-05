@@ -1,10 +1,10 @@
 import { SpotifyApi } from '@spotify/web-api-ts-sdk';
 import { ActivityType, Client, Events, GatewayIntentBits } from 'discord.js';
 import { createClient } from 'redis';
-import { AppContext } from './app.context';
-import { updatePlayer } from './app.player';
+import { AppContext } from './context';
 import { events } from './events';
 import { logger } from './logger';
+import { updatePlayer } from './player';
 // @ts-expect-error no type definitions
 import * as dotenv from '@dotenvx/dotenvx';
 import {
@@ -68,7 +68,6 @@ const client = new Client({
 });
 
 const linkOptions: IOptions = {
-  destroyPlayersStopped: true,
   autoResume: true,
   resume: true,
   previousTracksInArray: false
@@ -127,6 +126,22 @@ link.on('nodeError', (node, error) => {
   const { host } = node;
   logger.info(`Error on lavalink node`, { host, error });
 });
+
+link.on('nodeReconnect', (node) => {
+  const { host } = node;
+  logger.info(`Node reconnected`, { host });
+});
+
+link.on('nodeResumed', (node) => {
+  const { host } = node;
+  logger.info(`Node resumed`, { host });
+});
+
+link.on('nodeDestroy', (node) => {
+  const { host } = node;
+  logger.info(`Node destroyed`, { host });
+});
+
 // eslint-disable-next-line @typescript-eslint/no-misused-promises
 link.on('trackStart', async (player, track: MoonlinkTrack) => {
   logger.debug('Track start', { title: track.title });
@@ -142,13 +157,15 @@ link.on('queueEnd', async (player) => {
   logger.debug('Queue end');
   await updatePlayer(context, player.guildId);
 });
-
-link.on('trackError', (_player, track: MoonlinkTrack) => {
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
+link.on('trackError', async (player, track: MoonlinkTrack) => {
   logger.error('Track error', { title: track.title });
+  await player.skip();
 });
-
-link.on('trackStuck', (_player, track: MoonlinkTrack) => {
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
+link.on('trackStuck', async (player, track: MoonlinkTrack) => {
   logger.error('Track stuck', { title: track.title });
+  await player.skip();
 });
 
 // Register events

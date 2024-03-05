@@ -1,39 +1,8 @@
+import { AppContext } from '@app/context';
+import { AppEmoji } from '@app/emojis';
+import { chunk, msToTime, trimEllipse } from '@app/utils';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
-import { AppContext } from './app.context';
-import { AppEmoji } from './app.emojis';
-import { logger } from './logger';
-import { msToTime } from './utils/ms-to-time';
-import { chunk } from './utils/chunk';
-import { trimEllipse } from './utils/trim-ellipses';
 import { MoonlinkTrack } from 'moonlink.js';
-
-export const updatePlayer = async (context: AppContext, guildId: string) => {
-  const { client, redis } = context;
-  const player = await redis.get(`player:${guildId}`);
-
-  if (!player) return;
-
-  try {
-    const [channelId, messageId] = player.split(':');
-    const channel =
-      client.channels.cache.get(channelId) ?? (await client.channels.fetch(channelId));
-
-    if (channel?.isTextBased()) {
-      const message =
-        channel.messages.cache.get(messageId) ?? (await channel.messages.fetch(messageId));
-
-      const playerEmbed = createPlayerEmbed(context, guildId);
-      const playerComponents = createPlayerComponents(context, guildId);
-
-      await message.edit({
-        embeds: [playerEmbed],
-        components: playerComponents
-      });
-    }
-  } catch (error) {
-    logger.error(`Unable to send player update`, { guildId, error });
-  }
-};
 
 export const createPlayerQueue = ({ link }: AppContext, guildId: string, pageIndex = 0) => {
   const player = link.players.get(guildId);
@@ -108,7 +77,7 @@ export const createPlayerEmbed = (context: AppContext, guildId: string, pageInde
       },
       {
         name: 'Volume',
-        value: player?.filters.volume ? `${player?.filters.volume}%` : '-',
+        value: player?.filters.volume ? `${Math.round(player?.filters.volume * 100)}%` : '100%',
         inline: true
       }
     );

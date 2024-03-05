@@ -1,12 +1,13 @@
+import { hasVoiceState } from '@app/utils';
 import { SlashCommandBuilder, SlashCommandNumberOption } from 'discord.js';
 import { AppCommand } from './command';
-import { hasVoiceState } from '@/utils/has-voice-state';
 
 export const volume: AppCommand = {
   data: new SlashCommandBuilder()
     .addNumberOption(
       new SlashCommandNumberOption()
         .setName('volume')
+        .setRequired(true)
         .setDescription('The volume amount (maximum of 100, minimum of 0).')
     )
     .setName('volume')
@@ -62,7 +63,7 @@ export const volume: AppCommand = {
       return;
     }
 
-    player.filters.setVolume(volume);
+    player.filters.setVolume(volume / 100);
 
     await interaction.reply({
       ephemeral: true,

@@ -1,4 +1,4 @@
-import { createPlayerEmbed } from '@/app.player';
+import { createPlayerEmbed } from '@app/player';
 import { SlashCommandBuilder } from 'discord.js';
 import { AppCommand } from './command';
 

@@ -1,4 +1,4 @@
-import { hasVoiceState } from '@/utils/has-voice-state';
+import { hasVoiceState } from '@app/utils';
 import { SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
 import { AppCommand } from './command';
 

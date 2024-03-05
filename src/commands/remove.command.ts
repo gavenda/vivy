@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, SlashCommandIntegerOption } from 'discord.js';
 import { AppCommand } from './command';
-import { hasVoiceState } from '@/utils/has-voice-state';
+import { hasVoiceState } from '@app/utils';
 
 export const remove: AppCommand = {
   data: new SlashCommandBuilder()
@@ -50,9 +50,40 @@ export const remove: AppCommand = {
       return;
     }
 
-    await interaction.reply({
-      ephemeral: true,
-      content: 'Not yet implemented.'
-    });
+    const from = Math.max(0, interaction.options.getInteger('from', true) - 1);
+    const to = interaction.options.getInteger('to');
+
+    if (from >= player.queue.size) {
+      await interaction.reply({
+        ephemeral: true,
+        content: `Position should not be greater than or equal to queue size.`
+      });
+      return;
+    }
+
+    if (to) {
+      if (from >= to) {
+        await interaction.reply({
+          ephemeral: true,
+          content: `Minimum position should not be greater than maximimum.`
+        });
+        return;
+      }
+
+      player.queue.setQueue(player.queue.getQueue().slice(from, to));
+
+      await interaction.reply({
+        ephemeral: true,
+        content: `Removed music \`${from}\` to \`${to}\` from queue.`
+      });
+    } else {
+      const track = player.queue.getQueue()[from];
+      player.queue.remove(from);
+
+      await interaction.reply({
+        ephemeral: true,
+        content: `Removed \`${track.title}\` from queue.`
+      });
+    }
   }
 };

@@ -1,8 +1,8 @@
-import { commands } from '@/commands';
-import { logger } from '@/logger';
+import { commands } from '@app/commands';
+import { logger } from '@app/logger';
+import { updatePlayer } from '@app/player';
 import { Events } from 'discord.js';
 import { AppEvent } from './event';
-import { updatePlayer } from '@/app.player';
 
 export const chatInputCommandInteraction: AppEvent<Events.InteractionCreate> = {
   event: Events.InteractionCreate,

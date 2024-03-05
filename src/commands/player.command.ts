@@ -1,7 +1,7 @@
+import { logger } from '@app/logger';
+import { createPlayerComponents, createPlayerEmbed } from '@app/player';
 import { SlashCommandBuilder } from 'discord.js';
 import { AppCommand } from './command';
-import { createPlayerEmbed, createPlayerComponents } from '@/app.player';
-import { logger } from '@/logger';
 
 export const player: AppCommand = {
   data: new SlashCommandBuilder()

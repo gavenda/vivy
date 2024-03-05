@@ -1,6 +1,6 @@
-import { AppContext } from '@/app.context';
-import { logger } from '@/logger';
-import { hasVoiceState } from '@/utils/has-voice-state';
+import { AppContext } from '@app/context';
+import { logger } from '@app/logger';
+import { hasVoiceState } from '@app/utils';
 import {
   ChatInputCommandInteraction,
   SlashCommandBuilder,
@@ -8,8 +8,8 @@ import {
   SlashCommandSubcommandBuilder,
   SlashCommandSubcommandGroupBuilder
 } from 'discord.js';
-import { AppCommand } from './command';
 import { MoonlinkPlayer } from 'moonlink.js';
+import { AppCommand } from './command';
 
 export const effect: AppCommand = {
   data: new SlashCommandBuilder()
