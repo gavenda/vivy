@@ -15,7 +15,6 @@ import {
   MoonlinkTrack,
   VoicePacket
 } from 'moonlink.js';
-import { Payload } from './payload';
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
 dotenv.config();
@@ -69,6 +68,8 @@ const client = new Client({
 });
 
 const linkOptions: IOptions = {
+  destroyPlayersStopped: true,
+  autoResume: true,
   resume: true,
   previousTracksInArray: false
 };
@@ -84,11 +85,11 @@ const linkNodes: INode[] = [
   }
 ];
 
-const sendVoiceUpdate = (guildId: string, payload: Payload) => {
+const sendVoiceUpdate = (guildId: string, payload: string) => {
   const guild = client.guilds.cache.get(guildId);
 
   if (guild) {
-    guild.shard.send(payload);
+    guild.shard.send(JSON.parse(payload));
   } else {
     logger.error('Unable to send payload to guild', { guildId });
   }

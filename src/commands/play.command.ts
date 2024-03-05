@@ -140,6 +140,7 @@ const playMusic = async (options: {
     voiceChannel: interaction.member.voice.channel.id,
     textChannel: interaction.channelId,
     autoLeave: true,
+    autoPlay: false,
     volume: 100
   });
 
@@ -162,7 +163,7 @@ const playMusic = async (options: {
     await handleYoutube({ query, player, context, interaction, queue });
   }
 
-  if (!player.playing && !player.paused && player.current) {
+  if (!player.playing && !player.paused && !player.current) {
     await player.play();
   }
 };

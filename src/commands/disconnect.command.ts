@@ -39,7 +39,7 @@ export const disconnect: AppCommand = {
       return;
     }
 
-    player.disconnect();
+    player.connect({});
 
     await interaction.reply({
       ephemeral: true,

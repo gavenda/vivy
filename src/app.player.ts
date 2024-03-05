@@ -63,7 +63,7 @@ export const createPlayerQueue = ({ link }: AppContext, guildId: string, pageInd
 export const createPlayerEmbed = (context: AppContext, guildId: string, pageIndex: number = 0) => {
   const { link, client } = context;
   const player = link.players.get(guildId);
-  const track = player?.current as MoonlinkTrack;
+  const track = player?.current as MoonlinkTrack | undefined;
   const requester = String(track?.requester ?? '-');
   const duration = msToTime(Math.max(0, track?.duration ?? 0));
   const position = msToTime(Math.max(0, (track?.duration ?? 0) - (track?.position ?? 0) ?? 0));
