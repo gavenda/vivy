@@ -7,7 +7,7 @@ import {
   handleSpotifyPlaylist,
   handleSpotifyTrack
 } from '@app/spotify/handlers';
-import { hasVoiceState, isSpotify, trimEllipse } from '@app/utils';
+import { hasVoiceState, isSpotify, sleep, trimEllipse } from '@app/utils';
 import {
   ChatInputCommandInteraction,
   SlashCommandBuilder,
@@ -169,13 +169,17 @@ const playMusic = async (options: {
   }
 };
 
-const handleYoutube = async (options: {
-  query: string;
-  player: MoonlinkPlayer;
-  context: AppContext;
-  interaction: ChatInputCommandInteraction;
-  queue: QueueType;
-}) => {
+const handleYoutube = async (
+  options: {
+    query: string;
+    player: MoonlinkPlayer;
+    context: AppContext;
+    interaction: ChatInputCommandInteraction;
+    queue: QueueType;
+  },
+  retry = true,
+  retryCount = 5
+) => {
   const { link } = options.context;
   const { query, interaction, queue, player } = options;
 
@@ -187,11 +191,19 @@ const handleYoutube = async (options: {
 
   switch (result.loadType) {
     case 'error': {
-      // Responding with an error message if loading fails
-      await interaction.followUp({
-        ephemeral: true,
-        content: `There was an error looking up the music. Please try again.`
-      });
+      // Attempt to retry if search fails
+      if (retry) {
+        const count = retryCount + 1;
+        await sleep(1000);
+        await handleYoutube(options, count !== 5, count);
+      } else {
+        logger.debug('Give up in searching track', { retryCount });
+        // Responding with an error message if loading fails
+        await interaction.followUp({
+          ephemeral: true,
+          content: `There was an error looking up the music. Please try again.`
+        });
+      }
       break;
     }
     case 'empty': {

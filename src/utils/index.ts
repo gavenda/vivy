@@ -4,3 +4,4 @@ export * from './is-spotify';
 export * from './is-valid-url';
 export * from './ms-to-time';
 export * from './trim-ellipses';
+export * from './sleep';
