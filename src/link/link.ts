@@ -13,6 +13,17 @@ import { LavalinkNode, LavalinkNodeOptions } from './node';
 import { LoadResultType } from './payload';
 import { Player, PlayerOptions } from './player';
 
+export enum LavalinkSource {
+  YOUTUBE = 'ytsearch',
+  YOUTUBE_MUSIC = 'ytmsearch'
+}
+
+export interface SearchOptions<UserData> {
+  query: string;
+  userData: UserData;
+  source?: LavalinkSource;
+}
+
 export interface Lavalink<UserData> {
   on<E extends keyof LavalinkEvents<UserData>>(event: E, listener: LavalinkEvents<UserData>[E]): this;
   emit<E extends keyof LavalinkEvents<UserData>>(event: E, ...args: Parameters<LavalinkEvents<UserData>[E]>): boolean;
@@ -32,6 +43,7 @@ export class Lavalink<UserData> extends EventEmitter {
   nodes: LavalinkNode<UserData>[] = [];
   options: LavalinkOptions;
   sendVoiceUpdate: SendVoiceUpdate;
+  userId?: string;
 
   constructor(options: LavalinkOptions) {
     super();
@@ -77,6 +89,8 @@ export class Lavalink<UserData> extends EventEmitter {
   }
 
   init(userId: string) {
+    this.userId = userId;
+
     for (const nodeOptions of this.options.nodes) {
       const node = new LavalinkNode<UserData>(this, nodeOptions);
       this.nodes.push(node);
@@ -103,12 +117,18 @@ export class Lavalink<UserData> extends EventEmitter {
 
   async handleVoiceStateUpdate(data: GatewayVoiceStateUpdateDispatch) {
     if (!data.d.guild_id) return;
+    if (data.d.user_id !== this.userId) return;
 
     const player = this.players.get(data.d.guild_id);
 
     if (!player) return;
 
     player.voice.sessionId = data.d.session_id;
+
+    if (data.d.channel_id) {
+      this.emit('playerMove', player, player.voiceChannelId, data.d.channel_id);
+      player.voiceChannelId = data.d.channel_id;
+    }
 
     if (!player.voice.token) return;
     if (!player.voice.endpoint) return;
@@ -142,7 +162,14 @@ export class Lavalink<UserData> extends EventEmitter {
     });
   }
 
-  async search(query: string, userData: UserData, source = 'ytsearch') {
+  async search(options: SearchOptions<UserData>) {
+    const { query, userData } = options;
+    let { source } = options;
+
+    if (!source) {
+      source = LavalinkSource.YOUTUBE_MUSIC;
+    }
+
     const identifier = `${source}:${query}`;
     const result = isValidHttpUrl(query)
       ? await this.availableNode().loadTrack(query)

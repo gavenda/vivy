@@ -38,8 +38,6 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
     let pageIndex = Number(await redis.get(pageKey));
     const pageSize = chunkSize(player.queue.size, 15);
 
-    logger.debug(`Page index: ${pageIndex}, page size: ${pageSize}`);
-
     switch (buttonId) {
       case 'play-toggle': {
         if (player.playing) {

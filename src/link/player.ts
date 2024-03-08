@@ -1,9 +1,9 @@
 import { GatewayOpcodes } from 'discord.js';
+import { LavalinkFilter } from './filter';
 import { Lavalink } from './link';
 import { LavalinkNode } from './node';
 import { Track, UpdatePlayerOptions, VoiceState } from './payload';
 import { TrackQueue } from './queue';
-import { LavalinkFilter } from './filter';
 
 export enum RepeatMode {
   TRACK = 'track',
@@ -52,23 +52,30 @@ export class Player<UserData> {
   }
 
   async play(track: Track<UserData> | null = null) {
+    // Check if given null, otherwise take from queue
     if (!track) {
       track = this.queue.dequeue();
     }
-    if (track) {
-      this.queue.current = track;
-      await this.node.rest.updatePlayer(this.guildId, { track });
-      this.playing = true;
+    // Take from queue check, still null, stop playing
+    if (!track) {
+      await this.stop();
+      return;
     }
+
+    await this.node.rest.updatePlayer(this.guildId, { track });
+    this.playing = true;
   }
 
   async skip() {
-    const track = this.queue.dequeue();
-
-    if (!track) {
-      await this.stop();
+    if (this.repeatMode === RepeatMode.TRACK && this.queue.current) {
+      await this.play(this.queue.current);
+    } else if (this.repeatMode === RepeatMode.QUEUE && this.queue.current) {
+      this.queue.enqueue(this.queue.current);
+      await this.play(this.queue.dequeue());
+    } else if (this.queue.next) {
+      await this.play(this.queue.dequeue());
     } else {
-      await this.node.rest.updatePlayer(this.guildId, { track }, true);
+      await this.stop();
     }
   }
 

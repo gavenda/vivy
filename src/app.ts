@@ -8,7 +8,7 @@ import { updatePlayer } from './player';
 import { Requester } from './requester';
 // @ts-expect-error no type definitions
 import * as dotenv from '@dotenvx/dotenvx';
-import { Lavalink, LavalinkNode, Track } from './link';
+import { Lavalink } from './link';
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
 dotenv.config();
@@ -97,7 +97,7 @@ client.on(Events.Error, (error) => {
 const context: AppContext = { client, redis, link, spotify };
 
 // link events
-link.on('nodeReady', (node: LavalinkNode<Requester>) => {
+link.on('nodeReady', (node) => {
   const { host } = node.options;
   logger.info(`Connected to lavalink node`, { host });
 });
@@ -107,13 +107,13 @@ link.on('nodeError', (node, error) => {
   logger.info(`Error on lavalink node`, { host, error });
 });
 
-link.on('trackStart', async (player, track: Track<Requester>) => {
+link.on('trackStart', async (player, track) => {
   logger.debug('Track start', { title: track.info.title });
   await updatePlayer(context, player.guildId);
 });
 
-link.on('trackEnd', async (player, track: Track<Requester>) => {
-  logger.debug('Track end', { title: track.info.title });
+link.on('trackEnd', async (player, track, reason) => {
+  logger.debug('Track end', { title: track.info.title, reason });
   await updatePlayer(context, player.guildId);
 });
 
@@ -122,12 +122,12 @@ link.on('queueEnd', async (player) => {
   await updatePlayer(context, player.guildId);
 });
 
-link.on('trackError', async (player, track: Track<Requester>) => {
+link.on('trackError', async (player, track) => {
   logger.error('Track error', { title: track.info.title });
   await player.skip();
 });
 
-link.on('trackStuck', async (player, track: Track<Requester>) => {
+link.on('trackStuck', async (player, track) => {
   logger.error('Track stuck', { title: track.info.title });
   await player.skip();
 });

@@ -11,8 +11,8 @@ import {
   StatsPayload,
   UpdatePlayerOptions
 } from './payload';
-import { LavalinkRestApi } from './rest';
 import { RepeatMode } from './player';
+import { LavalinkRestApi } from './rest';
 
 export interface LavalinkNodeOptions {
   host: string;
@@ -151,43 +151,52 @@ export class LavalinkNode<UserData> {
     if (!player) return;
 
     switch (payload.type) {
-      case EventType.TRACK_START:
+      case EventType.TRACK_START: {
         player.playing = true;
         player.queue.current = payload.track;
         this.link.emit('trackStart', player, payload.track);
         break;
-      case EventType.TRACK_END:
+      }
+      case EventType.TRACK_END: {
         player.playing = false;
         player.queue.previous = payload.track;
         player.queue.current = null;
 
-        if (player.repeatMode === RepeatMode.TRACK) {
+        this.link.emit('trackEnd', player, payload.track, payload.reason);
+
+        if (payload.reason === 'replaced') return;
+
+        if (player.repeatMode === RepeatMode.TRACK && player.queue.current) {
           await player.play(payload.track);
-        } else if (player.queue.next) {
-          await player.play(player.queue.next);
-        } else if (player.repeatMode === RepeatMode.QUEUE) {
+        } else if (player.repeatMode === RepeatMode.QUEUE && player.queue.current) {
           player.queue.enqueue(payload.track);
+          await player.play(player.queue.dequeue());
+        } else if (player.queue.next) {
+          await player.play(player.queue.dequeue());
         } else {
           this.link.emit('queueEnd', player);
+          player.playing = false;
         }
-
-        this.link.emit('trackEnd', player, payload.track);
         break;
-      case EventType.TRACK_EXCEPTION:
+      }
+      case EventType.TRACK_EXCEPTION: {
         player.playing = false;
         player.queue.current = null;
         await player.stop();
         this.link.emit('trackError', player, payload.track, payload.error, payload.exception);
         break;
-      case EventType.TRACK_STUCK:
+      }
+      case EventType.TRACK_STUCK: {
         player.playing = false;
         player.queue.current = null;
         await player.stop();
         this.link.emit('trackStuck', player, payload.track, payload.thresholdMs);
         break;
-      case EventType.WEBSOCKET_CLOSED:
+      }
+      case EventType.WEBSOCKET_CLOSED: {
         this.link.emit('playerSocketClosed', player);
         break;
+      }
     }
   }
 

@@ -22,10 +22,12 @@ export const handleTracks = async (options: {
 
   player.queue.enqueue(...tracks);
 
-  await interaction.followUp({
-    ephemeral: true,
-    content: `Queued \`${name}\`.`
-  });
+  if (!interaction.replied) {
+    await interaction.followUp({
+      ephemeral: true,
+      content: `Queued \`${name}\`.`
+    });
+  }
 
   if (!player.queue.current) {
     await player.play();

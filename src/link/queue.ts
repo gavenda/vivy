@@ -43,6 +43,7 @@ export class TrackQueue<UserData> {
    */
   enqueueNext(track: Track<UserData>) {
     this.tracks.unshift(track);
+    this.offset = 0;
     return this;
   }
 

@@ -1,7 +1,9 @@
 import { AppContext } from '@app/context';
+import { LoadResultType, Player } from '@app/link';
 import { logger } from '@app/logger';
 import { QueueType } from '@app/player';
 import { handleSearch, handleTrack, handleTracks } from '@app/player/handlers';
+import { Requester } from '@app/requester';
 import { handleSpotifyAlbum, handleSpotifyPlaylist, handleSpotifyTrack } from '@app/spotify/handlers';
 import { hasVoiceState, isSpotify, sleep, trimEllipse } from '@app/utils';
 import {
@@ -12,8 +14,14 @@ import {
 } from 'discord.js';
 import { parse as parseSpotifyUri } from 'spotify-uri';
 import { AppCommand } from './command';
-import { LoadResultType, Player } from '@app/link';
-import { Requester } from '@app/requester';
+
+export interface PlayWorkerOptions {
+  query: string;
+  player: Player<Requester>;
+  context: AppContext;
+  interaction: ChatInputCommandInteraction;
+  queue: QueueType;
+}
 
 export const play: AppCommand = {
   data: new SlashCommandBuilder()
@@ -135,10 +143,10 @@ const playMusic = async (options: {
     voiceChannelId: interaction.member.voice.channel.id
   });
 
-  logger.debug(`Connecting to voice channel: ${interaction.member.voice.channel.name}`);
   // Connect to the voice channel if not connected
   if (!player.connected) {
     await player.connect();
+    logger.debug(`Connected to voice channel: ${interaction.member.voice.channel.name}`);
   }
 
   if (isSpotify(query)) {
@@ -162,15 +170,20 @@ const handleYoutube = async (
   const { link } = options.context;
   const { query, interaction, queue, player } = options;
 
-  const result = await link.search(query, { requester: `<@${interaction.user.id}>` });
+  const result = await link.search({
+    query,
+    userData: { requester: `<@${interaction.user.id}>` }
+  });
 
   switch (result.loadType) {
     case LoadResultType.ERROR: {
       // Attempt to retry if search fails
       if (retry) {
         logger.debug('Error in track lookup, attempting to retry', { retryCount });
-        await sleep(1000);
-        await handleYoutube(options, retryCount !== 0, retryCount - 1);
+
+        setTimeout(async () => {
+          await handleYoutube(options, retryCount !== 0, retryCount - 1);
+        }, 1000);
       } else {
         logger.debug('Give up in searching track', { retryCount });
         // Responding with an error message if loading fails

@@ -1,12 +1,12 @@
 import { Awaitable } from '@app/utils/awaitable';
 import { LavalinkNode } from './node';
-import { Exception } from './payload';
+import { Exception, TrackEndReason } from './payload';
 import { Track } from './payload/track';
 import { Player } from './player';
 
 export interface LavalinkEvents<UserData> {
   trackStart: (player: Player<UserData>, track: Track<UserData>) => Awaitable<void>;
-  trackEnd: (player: Player<UserData>, track: Track<UserData>) => Awaitable<void>;
+  trackEnd: (player: Player<UserData>, track: Track<UserData>, reason: TrackEndReason) => Awaitable<void>;
   trackStuck: (player: Player<UserData>, track: Track<UserData>, thresholdMs: number) => Awaitable<void>;
   trackError: (
     player: Player<UserData>,
