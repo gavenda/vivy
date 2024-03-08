@@ -132,7 +132,7 @@ export class TrackQueue<UserData> {
     return (
       current +
       this.tracks
-        .filter((track) => !track.info.isSeekable)
+        .filter((track) => track.info.isSeekable)
         .reduce((accumulator, track) => accumulator + track.info.length, 0)
     );
   }
