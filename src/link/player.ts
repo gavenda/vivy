@@ -41,6 +41,10 @@ export class Player<UserData> {
     this.link.emit('playerCreate', this);
   }
 
+  get duration(): number {
+    return this.queue.duration;
+  }
+
   async destroy() {
     await this.node.destroyPlayer(this.guildId);
     this.link.players.delete(this.guildId);

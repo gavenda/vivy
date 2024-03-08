@@ -125,6 +125,15 @@ export class TrackQueue<UserData> {
   }
 
   /**
+   * Total duration of the tracks in the queue.
+   */
+  get duration(): number {
+    return this.tracks
+      .filter((track) => !track.info.isSeekable)
+      .reduce((accumulator, track) => accumulator + track.info.length, 0);
+  }
+
+  /**
    * Clears the queue.
    */
   clear() {

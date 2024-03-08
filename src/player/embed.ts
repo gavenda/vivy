@@ -32,8 +32,8 @@ export const createPlayerEmbed = (context: AppContext, guildId: string, pageInde
   const player = link.players.get(guildId);
   const track = player?.queue.current;
   const requester = String(track?.userData.requester ?? '-');
-  const duration = msToTime(Math.max(0, track?.info.length ?? 0));
-  const position = msToTime(Math.max(0, (track?.info.length ?? 0) - (track?.info.position ?? 0) ?? 0));
+  const duration = msToTime(Math.max(0, player?.duration ?? 0));
+  const position = msToTime(Math.max(0, player?.position ?? 0));
   const queue = createPlayerQueue(context, guildId, pageIndex);
 
   const queueEmbed = new EmbedBuilder()
