@@ -44,7 +44,7 @@ export class Player<UserData> {
   playing: boolean = false;
   volume = 1.0;
   filter = new LavalinkFilter(this);
-  saveTimeoutId: NodeJS.Timeout;
+  saveIntervalId: NodeJS.Timeout;
 
   constructor(link: Lavalink<UserData>, node: LavalinkNode<UserData>, options: PlayerOptions) {
     this.link = link;
@@ -53,9 +53,9 @@ export class Player<UserData> {
     this.voiceChannelId = options.voiceChannelId;
     this.queue = new TrackQueue([], { link, guildId: options.guildId });
     // Save state every minute
-    this.saveTimeoutId = setTimeout(() => {
-      this.queue.save();
-      this.save();
+    this.saveIntervalId = setInterval(async () => {
+      await this.queue.save();
+      await this.save();
     }, 60000);
   }
 
@@ -77,6 +77,7 @@ export class Player<UserData> {
   async destroy() {
     await this.node.destroyPlayer(this.guildId);
     this.link.emit('playerDestroy', this);
+    clearTimeout(this.saveIntervalId);
   }
 
   async update(options: UpdatePlayerOptions<UserData>) {

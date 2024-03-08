@@ -228,9 +228,9 @@ export class LavalinkNode<UserData> {
           this.link.emit('queueEnd', player);
 
           // If nothing is playing after 30 seconds, disconnect
-          setTimeout(() => {
+          setTimeout(async () => {
             if (!player.playing && player.queue.isEmpty) {
-              player.disconnect();
+              await player.disconnect();
             }
           }, 30000);
         }
