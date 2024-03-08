@@ -1,4 +1,4 @@
-import { Exception } from '.';
+import { Exception } from './payload';
 
 export interface Track<UserData> {
   encoded: string | null;

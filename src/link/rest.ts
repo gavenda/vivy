@@ -1,4 +1,4 @@
-import { LavalinkTrackLoadResult, UpdatePlayerOptions } from './payload';
+import { LavalinkTrackLoadResult, UpdatePlayerOptions, UpdateSession } from './payload';
 
 export interface LavalinkRestApiOptions {
   host: string;
@@ -30,6 +30,22 @@ export class LavalinkRestApi<UserData> {
     return new URL(`/v4/sessions/${this.sessionId}/players/${guildId}`, this.restUrl);
   }
 
+  async updateSession(options: UpdateSession): Promise<UpdateSession> {
+    const { authorization } = this.options;
+    const url = new URL(`/v4/sessions/${this.sessionId}`, this.restUrl);
+
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        Authorization: authorization,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(options)
+    });
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    return response.json() as Promise<UpdateSession>;
+  }
+
   async updatePlayer(guildId: string, options: UpdatePlayerOptions<UserData>, noReplace = false) {
     const { authorization } = this.options;
     const url = this.buildUpdatePlayerUrl(guildId);
@@ -56,7 +72,7 @@ export class LavalinkRestApi<UserData> {
     });
   }
 
-  async loadTracks(identifier: string) {
+  async loadTracks(identifier: string): Promise<LavalinkTrackLoadResult<UserData>> {
     const { authorization } = this.options;
     const headers = { Authorization: authorization };
     const loadTracksUrl = new URL('/v4/loadtracks', this.restUrl);
@@ -65,8 +81,6 @@ export class LavalinkRestApi<UserData> {
 
     const response = await fetch(loadTracksUrl, { headers });
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const body: LavalinkTrackLoadResult<UserData> = await response.json();
-
-    return body;
+    return response.json() as Promise<LavalinkTrackLoadResult<UserData>>;
   }
 }

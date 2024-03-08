@@ -41,6 +41,7 @@ export interface LavalinkOptions {
 export class Lavalink<UserData> extends EventEmitter {
   players = new Map<string, Player<UserData>>();
   nodes: LavalinkNode<UserData>[] = [];
+  redis: ReturnType<typeof createClient>;
   options: LavalinkOptions;
   sendVoiceUpdate: SendVoiceUpdate;
   userId?: string;
@@ -49,7 +50,16 @@ export class Lavalink<UserData> extends EventEmitter {
     super();
 
     this.options = options;
+    this.redis = options.redis;
     this.sendVoiceUpdate = options.sendVoiceUpdate;
+  }
+
+  deletePlayersByNodeId(nodeId: string) {
+    for (const [guildId, player] of this.players.entries()) {
+      if (player.node.nodeId === nodeId) {
+        this.players.delete(guildId);
+      }
+    }
   }
 
   connectedNodes() {
@@ -88,13 +98,13 @@ export class Lavalink<UserData> extends EventEmitter {
     }
   }
 
-  init(userId: string) {
+  async init(userId: string) {
     this.userId = userId;
 
     for (const nodeOptions of this.options.nodes) {
-      const node = new LavalinkNode<UserData>(this, nodeOptions);
+      const node = new LavalinkNode<UserData>(this, userId, nodeOptions);
       this.nodes.push(node);
-      node.connect(userId);
+      await node.connect();
     }
   }
 
@@ -123,12 +133,16 @@ export class Lavalink<UserData> extends EventEmitter {
 
     if (!player) return;
 
-    player.voice.sessionId = data.d.session_id;
-
-    if (data.d.channel_id) {
+    if (data.d.channel_id && data.d.channel_id !== player.voiceChannelId) {
       this.emit('playerMove', player, player.voiceChannelId, data.d.channel_id);
       player.voiceChannelId = data.d.channel_id;
     }
+    if (!data.d.channel_id) {
+      player.voice = {};
+      player.connected = false;
+    }
+
+    player.voice.sessionId = data.d.session_id;
 
     if (!player.voice.token) return;
     if (!player.voice.endpoint) return;

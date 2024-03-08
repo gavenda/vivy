@@ -7,7 +7,6 @@ import { lookupTrack } from '@app/player/lookup';
 import { Requester } from '@app/requester';
 import { ChatInputCommandInteraction } from 'discord.js';
 import { ParsedSpotifyUri } from 'spotify-uri';
-import { Worker } from 'worker_threads';
 
 export const handleSpotifyPlaylist = async (options: {
   context: AppContext;

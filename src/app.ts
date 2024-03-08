@@ -99,12 +99,32 @@ const context: AppContext = { client, redis, link, spotify };
 // link events
 link.on('nodeReady', (node) => {
   const { host } = node.options;
-  logger.info(`Connected to lavalink node`, { host });
+  logger.info(`Connected to node`, { host });
 });
 
 link.on('nodeError', (node, error) => {
   const { host } = node.options;
-  logger.info(`Error on lavalink node`, { host, error });
+  logger.info(`Error on node`, { host, error });
+});
+
+link.on('nodeResumed', (node) => {
+  const { host } = node.options;
+  logger.info(`Session resumed`, { host });
+});
+
+link.on('nodeDisconnected', (node) => {
+  const { host } = node.options;
+  logger.info(`Disconnected from node`, { host });
+});
+
+link.on('playerMove', (player, oldVoiceChannelId, newVoiceChannelId) => {
+  const { guildId } = player;
+  logger.debug('Player moved', { guildId, oldVoiceChannelId, newVoiceChannelId });
+});
+
+link.on('playerSocketClosed', (player, code, byRemote, reason) => {
+  const { guildId } = player;
+  logger.debug('Player socket closed', { guildId, code, byRemote, reason });
 });
 
 link.on('trackStart', async (player, track) => {
@@ -123,12 +143,12 @@ link.on('queueEnd', async (player) => {
 });
 
 link.on('trackError', async (player, track) => {
-  logger.error('Track error', { title: track.info.title });
+  logger.debug('Track error', { title: track.info.title });
   await player.skip();
 });
 
 link.on('trackStuck', async (player, track) => {
-  logger.error('Track stuck', { title: track.info.title });
+  logger.debug('Track stuck', { title: track.info.title });
   await player.skip();
 });
 

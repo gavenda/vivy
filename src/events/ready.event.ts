@@ -9,7 +9,7 @@ export const readyEvent: AppEvent<Events.ClientReady> = {
     logger.info(`Ready! Logged in`, { user: client.user.tag });
 
     // Init link
-    link.init(client.user.id);
+    await link.init(client.user.id);
 
     // Cleanup legacy players
     const legacyPlayersKey = `player:legacy`;

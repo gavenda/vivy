@@ -5,7 +5,7 @@ import { QueueType } from '@app/player';
 import { handleSearch, handleTrack, handleTracks } from '@app/player/handlers';
 import { Requester } from '@app/requester';
 import { handleSpotifyAlbum, handleSpotifyPlaylist, handleSpotifyTrack } from '@app/spotify/handlers';
-import { hasVoiceState, isSpotify, sleep, trimEllipse } from '@app/utils';
+import { hasVoiceState, isSpotify, trimEllipse } from '@app/utils';
 import {
   ChatInputCommandInteraction,
   SlashCommandBuilder,

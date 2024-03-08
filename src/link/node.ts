@@ -19,6 +19,7 @@ export interface LavalinkNodeOptions {
   port: number;
   authorization: string;
   secure: boolean;
+  reconnectTimeout?: number;
 }
 
 export class LavalinkNode<UserData> {
@@ -42,11 +43,18 @@ export class LavalinkNode<UserData> {
   options: LavalinkNodeOptions;
   link: Lavalink<UserData>;
   rest: LavalinkRestApi<UserData>;
+  nodeId: string;
+  userId: string;
   sessionId: string | null = null;
+  reconnectTimeout: number;
+  resume = false;
 
-  constructor(link: Lavalink<UserData>, options: LavalinkNodeOptions) {
+  constructor(link: Lavalink<UserData>, userId: string, options: LavalinkNodeOptions) {
     this.link = link;
+    this.userId = userId;
     this.options = options;
+    this.nodeId = options.host;
+    this.reconnectTimeout = options.reconnectTimeout ?? 60000;
     this.rest = new LavalinkRestApi(options);
   }
 
@@ -58,13 +66,20 @@ export class LavalinkNode<UserData> {
     return this.options.authorization;
   }
 
-  connect(userId: string) {
+  async connect() {
     const { authorization, host, port, secure } = this.options;
-    const headers = {
+
+    const previousSessionId = await this.link.redis.get(`lavalink:session:${host}`);
+
+    const headers: Record<string, string> = {
       Authorization: authorization,
-      'User-Id': userId,
+      'User-Id': this.userId,
       'Client-Name': 'Vivy/1.0'
     };
+
+    if (this.resume && previousSessionId) {
+      headers['Session-Id'] = previousSessionId;
+    }
 
     const websocketUrl = `ws://${host}/`;
     const socketUrl = new URL('/v4/websocket', websocketUrl);
@@ -82,6 +97,10 @@ export class LavalinkNode<UserData> {
   private onWebSocketClose() {
     this.sessionId = null;
     this.rest.sessionId = null;
+    this.link.emit('nodeDisconnected', this);
+
+    // Reconnection attempt
+    setTimeout(() => this.connect(), this.reconnectTimeout);
   }
 
   private onWebSocketError(error: Error) {
@@ -95,7 +114,7 @@ export class LavalinkNode<UserData> {
 
     switch (payload.op) {
       case OpCode.READY:
-        this.handleReady(payload);
+        await this.handleReady(payload);
         break;
       case OpCode.STATS:
         this.handleStats(payload);
@@ -113,10 +132,29 @@ export class LavalinkNode<UserData> {
     this.link.emit('nodeConnected', this);
   }
 
-  private handleReady(payload: ReadyPayload) {
+  private async handleReady(payload: ReadyPayload) {
+    const { host } = this.options;
     this.sessionId = payload.sessionId;
     this.rest.sessionId = payload.sessionId;
-    this.link.emit('nodeReady', this);
+
+    // Save session id to redis
+    await this.link.redis.set(`lavalink:session:${host}`, payload.sessionId);
+
+    if (payload.resumed) {
+      this.link.emit('nodeResumed', this);
+    } else {
+      this.link.emit('nodeReady', this);
+
+      // Destroy any existing players in case of a failed resume.
+      this.link.deletePlayersByNodeId(this.nodeId);
+      // Enable resume
+      this.resume = true;
+      // Tell lavalink we'll resume when we somehow disconnect
+      await this.rest.updateSession({
+        resuming: true,
+        timeout: 300
+      });
+    }
   }
 
   private handleStats(payload: StatsPayload) {
@@ -194,7 +232,7 @@ export class LavalinkNode<UserData> {
         break;
       }
       case EventType.WEBSOCKET_CLOSED: {
-        this.link.emit('playerSocketClosed', player);
+        this.link.emit('playerSocketClosed', player, payload.code, payload.byRemote, payload.reason);
         break;
       }
     }
