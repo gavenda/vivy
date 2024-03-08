@@ -1,12 +1,13 @@
+import { Player, Track } from '@app/link';
 import { QueueType } from '@app/player';
+import { Requester } from '@app/requester';
 import { ChatInputCommandInteraction } from 'discord.js';
-import { MoonlinkPlayer, MoonlinkTrack } from 'moonlink.js';
 
 export const handleTracks = async (options: {
-  tracks: MoonlinkTrack[];
+  tracks: Track<Requester>[];
   name: string;
   queue: QueueType;
-  player: MoonlinkPlayer;
+  player: Player<Requester>;
   interaction: ChatInputCommandInteraction;
 }) => {
   const { tracks, queue, interaction, player, name } = options;
@@ -19,16 +20,14 @@ export const handleTracks = async (options: {
     return;
   }
 
-  for (const track of tracks) {
-    player.queue.add(track);
-  }
+  player.queue.enqueue(...tracks);
 
   await interaction.followUp({
     ephemeral: true,
     content: `Queued \`${name}\`.`
   });
 
-  if (player.queue.size <= 0 && !player.current) {
+  if (!player.queue.current) {
     await player.play();
   }
 };

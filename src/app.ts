@@ -1,20 +1,14 @@
 import { SpotifyApi } from '@spotify/web-api-ts-sdk';
-import { ActivityType, Client, Events, GatewayIntentBits } from 'discord.js';
+import { ActivityType, Client, Events, GatewayIntentBits, GatewayReceivePayload } from 'discord.js';
 import { createClient } from 'redis';
 import { AppContext } from './context';
 import { events } from './events';
 import { logger } from './logger';
 import { updatePlayer } from './player';
+import { Requester } from './requester';
 // @ts-expect-error no type definitions
 import * as dotenv from '@dotenvx/dotenvx';
-import {
-  INode,
-  IOptions,
-  MoonlinkManager,
-  MoonlinkNode,
-  MoonlinkTrack,
-  VoicePacket
-} from 'moonlink.js';
+import { Lavalink, LavalinkNode, Track } from './link';
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
 dotenv.config();
@@ -53,10 +47,7 @@ const redis = createClient({
 });
 
 // Create spotify client
-const spotify = SpotifyApi.withClientCredentials(
-  process.env.SPOTIFY_CLIENT_ID,
-  process.env.SPOTIFY_CLIENT_SECRET
-);
+const spotify = SpotifyApi.withClientCredentials(process.env.SPOTIFY_CLIENT_ID, process.env.SPOTIFY_CLIENT_SECRET);
 
 // Create discord client
 const client = new Client({
@@ -67,35 +58,25 @@ const client = new Client({
   }
 });
 
-const linkOptions: IOptions = {
-  autoResume: true,
-  resume: true,
-  previousTracksInArray: false
-};
+// Configure lava link
+const link = new Lavalink<Requester>({
+  redis,
+  nodes: [
+    {
+      host: process.env.LAVA_HOST,
+      port: Number(process.env.LAVA_PORT),
+      secure: true,
+      authorization: process.env.LAVA_PASS
+    }
+  ],
+  sendVoiceUpdate: (guildId, data) => {
+    const guild = client.guilds.cache.get(guildId);
 
-const linkNodes: INode[] = [
-  {
-    host: process.env.LAVA_HOST,
-    port: Number(process.env.LAVA_PORT),
-    password: process.env.LAVA_PASS,
-    secure: true,
-    retryAmount: 100,
-    retryDelay: 5000
+    if (guild) {
+      guild.shard.send(data);
+    }
   }
-];
-
-const sendVoiceUpdate = (guildId: string, payload: string) => {
-  const guild = client.guilds.cache.get(guildId);
-
-  if (guild) {
-    guild.shard.send(JSON.parse(payload));
-  } else {
-    logger.error('Unable to send payload to guild', { guildId });
-  }
-};
-
-// Configure magmastream
-const link = new MoonlinkManager(linkNodes, linkOptions, sendVoiceUpdate);
+});
 
 // Handle redis errors
 redis.on('error', (error) => {
@@ -104,8 +85,8 @@ redis.on('error', (error) => {
 });
 
 // Handle raw packets
-client.on(Events.Raw, (data: VoicePacket) => {
-  link.packetUpdate(data);
+client.on('raw', async (data: GatewayReceivePayload) => {
+  await link.handleRawData(data);
 });
 
 // Handle application errors
@@ -116,55 +97,38 @@ client.on(Events.Error, (error) => {
 const context: AppContext = { client, redis, link, spotify };
 
 // link events
-link.on('nodeReady', (node: MoonlinkNode) => {
-  const { host } = node;
+link.on('nodeReady', (node: LavalinkNode<Requester>) => {
+  const { host } = node.options;
   logger.info(`Connected to lavalink node`, { host });
 });
 
 link.on('nodeError', (node, error) => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { host } = node;
+  const { host } = node.options;
   logger.info(`Error on lavalink node`, { host, error });
 });
 
-link.on('nodeReconnect', (node) => {
-  const { host } = node;
-  logger.info(`Node reconnected`, { host });
-});
-
-link.on('nodeResumed', (node) => {
-  const { host } = node;
-  logger.info(`Node resumed`, { host });
-});
-
-link.on('nodeDestroy', (node) => {
-  const { host } = node;
-  logger.info(`Node destroyed`, { host });
-});
-
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-link.on('trackStart', async (player, track: MoonlinkTrack) => {
-  logger.debug('Track start', { title: track.title });
+link.on('trackStart', async (player, track: Track<Requester>) => {
+  logger.debug('Track start', { title: track.info.title });
   await updatePlayer(context, player.guildId);
 });
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-link.on('trackEnd', async (player, track: MoonlinkTrack) => {
-  logger.debug('Track end', { title: track.title });
+
+link.on('trackEnd', async (player, track: Track<Requester>) => {
+  logger.debug('Track end', { title: track.info.title });
   await updatePlayer(context, player.guildId);
 });
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
+
 link.on('queueEnd', async (player) => {
   logger.debug('Queue end');
   await updatePlayer(context, player.guildId);
 });
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-link.on('trackError', async (player, track: MoonlinkTrack) => {
-  logger.error('Track error', { title: track.title });
+
+link.on('trackError', async (player, track: Track<Requester>) => {
+  logger.error('Track error', { title: track.info.title });
   await player.skip();
 });
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-link.on('trackStuck', async (player, track: MoonlinkTrack) => {
-  logger.error('Track stuck', { title: track.title });
+
+link.on('trackStuck', async (player, track: Track<Requester>) => {
+  logger.error('Track stuck', { title: track.info.title });
   await player.skip();
 });
 
@@ -182,7 +146,6 @@ for (const { once, event, execute } of events) {
 }
 
 // Graceful disconnect
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
 process.on('SIGINT', async () => {
   logger.info('Received SIGINT, cleaning up');
   if (redis.isReady) {

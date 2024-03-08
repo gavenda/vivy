@@ -1,6 +1,5 @@
 import { hasVoiceState } from '@app/utils';
 import { SlashCommandBuilder } from 'discord.js';
-import { MoonlinkTrack } from 'moonlink.js';
 import { AppCommand } from './command';
 
 export const skip: AppCommand = {
@@ -41,7 +40,7 @@ export const skip: AppCommand = {
       return;
     }
 
-    if (!player.current) {
+    if (!player.queue.current) {
       await interaction.reply({
         ephemeral: true,
         content: 'There is nothing playing.'
@@ -49,11 +48,11 @@ export const skip: AppCommand = {
       return;
     }
 
-    const track = player.current as MoonlinkTrack;
+    const track = player.queue.current;
 
     await interaction.reply({
       ephemeral: true,
-      content: `Skipped \`${track.title}\``
+      content: `Skipped \`${track.info.title}\``
     });
 
     await player.skip();

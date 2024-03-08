@@ -3,6 +3,7 @@ import { createPlayerComponents, createPlayerEmbed } from '@app/player';
 import { chunkSize } from '@app/utils';
 import { Events } from 'discord.js';
 import { AppEvent } from './event';
+import { RepeatMode } from '@app/link';
 
 export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
   event: Events.InteractionCreate,
@@ -29,7 +30,7 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
     }
 
     const [, buttonId] = interaction.customId.split(':');
-    const volume = player.filters.volume ?? 1;
+    const volume = player.volume;
 
     logger.debug('Received player button interaction', { buttonId });
 
@@ -57,19 +58,19 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
         break;
       }
       case 'volume-down': {
-        player.filters.setVolume(Math.min(1, Math.max(0, volume - 0.1)));
+        await player.setVolume(Math.min(1, Math.max(0, volume - 0.1)));
         break;
       }
       case 'volume-up': {
-        player.filters.setVolume(Math.min(1, Math.max(0, volume + 0.1)));
+        await player.setVolume(Math.min(1, Math.max(0, volume + 0.1)));
         break;
       }
       case 'repeat-track': {
-        player.setLoop(player.loop === 1 ? 0 : 1);
+        player.repeatMode = player.repeatMode === RepeatMode.TRACK ? RepeatMode.OFF : RepeatMode.TRACK;
         break;
       }
       case 'repeat-queue': {
-        player.setLoop(player.loop === 2 ? 0 : 2);
+        player.repeatMode = player.repeatMode === RepeatMode.QUEUE ? RepeatMode.OFF : RepeatMode.QUEUE;
         break;
       }
       case 'stop': {

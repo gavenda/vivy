@@ -1,6 +1,8 @@
 import { AppEmoji } from '@app/emojis';
+import { Player, SearchLoadResult } from '@app/link';
 import { logger } from '@app/logger';
 import { QueueType } from '@app/player';
+import { Requester } from '@app/requester';
 import { trimEllipse } from '@app/utils/trim-ellipses';
 import {
   ActionRowBuilder,
@@ -9,13 +11,12 @@ import {
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder
 } from 'discord.js';
-import { MoonlinkPlayer, SearchResult } from 'moonlink.js';
 import { handleTrack } from './track.handler';
 
 export const handleSearch = async (options: {
-  result: SearchResult;
+  result: SearchLoadResult<Requester>;
   interaction: ChatInputCommandInteraction;
-  player: MoonlinkPlayer;
+  player: Player<Requester>;
   queue: QueueType;
 }) => {
   const { result, interaction, player, queue } = options;
@@ -24,12 +25,12 @@ export const handleSearch = async (options: {
     .setCustomId(`select:music`)
     .setPlaceholder('Please select music to play');
 
-  for (const [index, track] of result.tracks.entries()) {
+  for (const [index, track] of result.data.entries()) {
     selectMusicMenu.addOptions(
       new StringSelectMenuOptionBuilder()
-        .setLabel(trimEllipse(track.title, 100))
-        .setDescription(trimEllipse(track.author, 100))
-        .setValue(track.identifier)
+        .setLabel(trimEllipse(track.info.title, 100))
+        .setDescription(trimEllipse(track.info.author, 100))
+        .setValue(track.info.identifier)
         .setEmoji(index === 0 ? AppEmoji.Preferred : AppEmoji.MusicNote)
     );
   }
@@ -47,7 +48,7 @@ export const handleSearch = async (options: {
       time: 60_000
     });
     const selectedIdentifier = selectTrack.values[0];
-    const selectedTrack = result.tracks.find((track) => track.identifier === selectedIdentifier);
+    const selectedTrack = result.data.find((track) => track.info.identifier === selectedIdentifier);
 
     if (!selectedTrack) {
       await interaction.editReply({

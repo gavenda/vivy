@@ -70,19 +70,28 @@ export const remove: AppCommand = {
         return;
       }
 
-      player.queue.setQueue(player.queue.getQueue().slice(from, to));
+      player.queue.slice(from, to);
 
       await interaction.reply({
         ephemeral: true,
         content: `Removed music \`${from}\` to \`${to}\` from queue.`
       });
     } else {
-      const track = player.queue.getQueue()[from];
-      player.queue.remove(from);
+      const track = player.queue.peek(from);
+
+      if (!track) {
+        await interaction.reply({
+          ephemeral: true,
+          content: `Invalid range given.`
+        });
+        return;
+      }
+
+      player.queue.slice(from);
 
       await interaction.reply({
         ephemeral: true,
-        content: `Removed \`${track.title}\` from queue.`
+        content: `Removed \`${track.info.title}\` from queue.`
       });
     }
   }

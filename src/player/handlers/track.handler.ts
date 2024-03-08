@@ -1,12 +1,13 @@
+import { Player, Track } from '@app/link';
 import { logger } from '@app/logger';
 import { QueueType } from '@app/player';
+import { Requester } from '@app/requester';
 import { ChatInputCommandInteraction } from 'discord.js';
-import { MoonlinkPlayer, MoonlinkTrack } from 'moonlink.js';
 
 export const handleTrack = async (options: {
   interaction: ChatInputCommandInteraction;
-  track: MoonlinkTrack;
-  player: MoonlinkPlayer;
+  track: Track<Requester>;
+  player: Player<Requester>;
   queue: QueueType;
 }) => {
   const { interaction, track, player, queue } = options;
@@ -15,34 +16,33 @@ export const handleTrack = async (options: {
 
   switch (queue) {
     case 'later': {
-      if (player.queue.size <= 0 && !player.current) {
+      if (!player.queue.current) {
         await player.play(track);
       } else {
-        player.queue.add(track);
+        player.queue.enqueue(track);
       }
       break;
     }
     case 'next': {
-      if (player.queue.size <= 0 && !player.current) {
+      if (!player.queue.current) {
         await player.play(track);
       } else {
-        player.queue.add(track, 1);
+        player.queue.enqueueNext(track);
       }
       break;
     }
     case 'now': {
       await player.play(track);
 
-      if (player.previous) {
-        const previousTrack = player.previous as MoonlinkTrack;
-        player.queue.add(previousTrack, 1);
+      if (player.queue.previous) {
+        player.queue.enqueueNext(player.queue.previous);
       }
       break;
     }
   }
 
   await interaction.editReply({
-    content: `Queued \`${track.title}\`.`,
+    content: `Queued \`${track.info.title}\`.`,
     components: []
   });
 };

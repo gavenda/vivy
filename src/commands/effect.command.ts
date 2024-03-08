@@ -8,8 +8,9 @@ import {
   SlashCommandSubcommandBuilder,
   SlashCommandSubcommandGroupBuilder
 } from 'discord.js';
-import { MoonlinkPlayer } from 'moonlink.js';
 import { AppCommand } from './command';
+import { Requester } from '@app/requester';
+import { Player } from '@app/link';
 
 export const effect: AppCommand = {
   data: new SlashCommandBuilder()
@@ -101,7 +102,7 @@ export const effect: AppCommand = {
 
 const handleFilter = async (options: {
   context: AppContext;
-  player: MoonlinkPlayer;
+  player: Player<Requester>;
   interaction: ChatInputCommandInteraction;
 }) => {
   const { interaction, player } = options;
@@ -126,11 +127,11 @@ const handleFilter = async (options: {
         return;
       }
 
-      player.filters.setTimescale({ rate: speed / 100 });
+      await player.filter.setTimescale({ rate: speed / 100 });
       break;
     }
     case 'karaoke': {
-      player.filters.setKaraoke({
+      await player.filter.setKaraoke({
         level: 1.0,
         monoLevel: 1.0,
         filterBand: 220.0,
@@ -151,7 +152,7 @@ const handleFilter = async (options: {
 
 const handleEqualizer = async (options: {
   context: AppContext;
-  player: MoonlinkPlayer;
+  player: Player<Requester>;
   interaction: ChatInputCommandInteraction;
 }) => {
   const { interaction, player } = options;
@@ -159,7 +160,7 @@ const handleEqualizer = async (options: {
 
   switch (subcommand) {
     case 'rock': {
-      player.filters.setEqualizer([
+      await player.filter.setEqualizer([
         { band: 0, gain: 0.3 },
         { band: 1, gain: 0.25 },
         { band: 2, gain: 0.2 },
@@ -179,7 +180,7 @@ const handleEqualizer = async (options: {
       break;
     }
     case 'pop': {
-      player.filters.setEqualizer([
+      await player.filter.setEqualizer([
         { band: 0, gain: -0.25 },
         { band: 1, gain: 0.48 },
         { band: 2, gain: 0.59 },

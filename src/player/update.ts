@@ -10,12 +10,10 @@ export const updatePlayer = async (context: AppContext, guildId: string) => {
 
   try {
     const [channelId, messageId] = player.split(':');
-    const channel =
-      client.channels.cache.get(channelId) ?? (await client.channels.fetch(channelId));
+    const channel = client.channels.cache.get(channelId) ?? (await client.channels.fetch(channelId));
 
     if (channel?.isTextBased()) {
-      const message =
-        channel.messages.cache.get(messageId) ?? (await channel.messages.fetch(messageId));
+      const message = channel.messages.cache.get(messageId) ?? (await channel.messages.fetch(messageId));
 
       const playerEmbed = createPlayerEmbed(context, guildId);
       const playerComponents = createPlayerComponents(context, guildId);

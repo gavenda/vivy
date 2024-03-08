@@ -5,7 +5,8 @@ const CustomRules = {
   rules: {
     '@typescript-eslint/no-unsafe-argument': 'warn',
     '@typescript-eslint/no-explicit-any': 'warn',
-    '@typescript-eslint/no-unsafe-member-access': 'warn'
+    '@typescript-eslint/no-unsafe-member-access': 'warn',
+    '@typescript-eslint/no-misused-promises': 'off'
   }
 };
 

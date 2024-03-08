@@ -4,9 +4,7 @@ import { SlashCommandBuilder } from 'discord.js';
 import { AppCommand } from './command';
 
 export const player: AppCommand = {
-  data: new SlashCommandBuilder()
-    .setName('player')
-    .setDescription('Creates a music player in this channel.'),
+  data: new SlashCommandBuilder().setName('player').setDescription('Creates a music player in this channel.'),
   execute: async (context, interaction) => {
     if (!interaction.guild || !interaction.guildId) {
       await interaction.reply({

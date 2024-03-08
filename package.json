@@ -22,14 +22,15 @@
   "dependencies": {
     "@spotify/web-api-ts-sdk": "^1.2.0",
     "discord.js": "^14.14.1",
-    "moonlink.js": "^3.5.5",
     "redis": "^4.6.13",
     "spotify-uri": "^4.0.1",
-    "winston": "^3.12.0"
+    "winston": "^3.12.0",
+    "ws": "^8.16.0"
   },
   "devDependencies": {
     "@dotenvx/dotenvx": "^0.24.0",
     "@types/node": "^20.11.24",
+    "@types/ws": "^8.5.10",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",

@@ -1,19 +1,14 @@
 import { hasVoiceState } from '@app/utils/has-voice-state';
 import { SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
 import { AppCommand } from './command';
+import { RepeatMode } from '@app/link';
 
 export const loop: AppCommand = {
   data: new SlashCommandBuilder()
     .addSubcommand(
-      new SlashCommandSubcommandBuilder()
-        .setName('track')
-        .setDescription('Loop the current playing music.')
+      new SlashCommandSubcommandBuilder().setName('track').setDescription('Loop the current playing music.')
     )
-    .addSubcommand(
-      new SlashCommandSubcommandBuilder()
-        .setName('queue')
-        .setDescription('Loop the entire music queue.')
-    )
+    .addSubcommand(new SlashCommandSubcommandBuilder().setName('queue').setDescription('Loop the entire music queue.'))
     .setName('loop')
     .setDescription('Loop the music queue.'),
   execute: async ({ link }, interaction) => {
@@ -53,7 +48,7 @@ export const loop: AppCommand = {
 
     switch (subcommand) {
       case 'track':
-        player.setLoop(1);
+        player.repeatMode = RepeatMode.TRACK;
 
         await interaction.reply({
           ephemeral: true,
@@ -61,7 +56,7 @@ export const loop: AppCommand = {
         });
         break;
       case 'queue':
-        player.setLoop(2);
+        player.repeatMode = RepeatMode.QUEUE;
 
         await interaction.reply({
           ephemeral: true,

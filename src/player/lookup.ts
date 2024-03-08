@@ -1,8 +1,9 @@
 import { AppContext } from '@app/context';
+import { LoadResultType, Track } from '@app/link';
 import { logger } from '@app/logger';
+import { Requester } from '@app/requester';
 import { sleep } from '@app/utils';
 import { ChatInputCommandInteraction } from 'discord.js';
-import { MoonlinkTrack } from 'moonlink.js';
 
 export const lookupTrack = async (
   options: {
@@ -12,32 +13,30 @@ export const lookupTrack = async (
   },
   retry = true,
   retryCount = 5
-): Promise<MoonlinkTrack | null> => {
+): Promise<Track<Requester> | null> => {
   const { link } = options.context;
   const { query, interaction } = options;
-  const result = await link.search({
-    query,
-    source: 'youtube',
-    requester: `<@${interaction.user.id}>`
-  });
+  const result = await link.search(query, { requester: `<@${interaction.user.id}>` });
 
   switch (result.loadType) {
-    case 'error': {
+    case LoadResultType.ERROR: {
       if (retry) {
-        const count = retryCount + 1;
-        logger.debug('Error in track lookup, attempting to retry', { count });
+        logger.debug('Error in track lookup, attempting to retry', { retryCount });
         await sleep(1000);
-        return await lookupTrack(options, count !== 5, count);
+        return await lookupTrack(options, retryCount !== 0, retryCount - 1);
       }
       logger.warn('Lookup error', { query });
       return null;
     }
-    case 'empty': {
+    case LoadResultType.PLAYLIST: {
+      return result.data.tracks[result.data.info.selectedTrack];
+    }
+    case LoadResultType.EMPTY: {
       logger.warn('Lookup returned', { query });
       return null;
     }
-    case 'search': {
-      return result.tracks[0];
+    case LoadResultType.SEARCH: {
+      return result.data[0];
     }
   }
 
