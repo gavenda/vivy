@@ -19,7 +19,7 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
       return;
     }
     const { link, redis } = context;
-    const player = link.players.get(interaction.guild.id);
+    const player = link.getPlayer(interaction.guild.id);
 
     if (!player) {
       await interaction.reply({

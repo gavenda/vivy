@@ -11,8 +11,9 @@ import {
   StatsPayload,
   UpdatePlayerOptions
 } from './payload';
-import { RepeatMode } from './player';
+import { PlayerState, RepeatMode } from './player';
 import { LavalinkRestApi } from './rest';
+import { Player, PlayerOptions } from './player';
 
 export interface LavalinkNodeOptions {
   host: string;
@@ -45,9 +46,11 @@ export class LavalinkNode<UserData> {
   rest: LavalinkRestApi<UserData>;
   nodeId: string;
   userId: string;
-  sessionId: string | null = null;
   reconnectTimeout: number;
+  sessionId: string | null = null;
+  players = new Map<string, Player<UserData>>();
   resume = false;
+  hasDisconnected = false;
 
   constructor(link: Lavalink<UserData>, userId: string, options: LavalinkNodeOptions) {
     this.link = link;
@@ -97,6 +100,7 @@ export class LavalinkNode<UserData> {
   private onWebSocketClose() {
     this.sessionId = null;
     this.rest.sessionId = null;
+    this.hasDisconnected = true;
     this.link.emit('nodeDisconnected', this);
 
     // Reconnection attempt
@@ -141,20 +145,29 @@ export class LavalinkNode<UserData> {
     await this.link.redis.set(`lavalink:session:${host}`, payload.sessionId);
 
     if (payload.resumed) {
-      this.link.emit('nodeResumed', this);
+      if (this.hasDisconnected) {
+        // We have resumed a disconnected session
+        this.link.emit('nodeResumed', this);
+      } else {
+        // This is a completely new session (meaning our discord ws disconnected), sync
+        await this.syncPlayers();
+      }
     } else {
-      this.link.emit('nodeReady', this);
-
       // Destroy any existing players in case of a failed resume.
-      this.link.deletePlayersByNodeId(this.nodeId);
-      // Enable resume
-      this.resume = true;
+      await this.destroyPlayers();
       // Tell lavalink we'll resume when we somehow disconnect
       await this.rest.updateSession({
         resuming: true,
         timeout: 300
       });
+      // Enable resume
+      this.resume = true;
+      // Sync players
+      await this.syncPlayers();
     }
+
+    // We are now ready
+    this.link.emit('nodeReady', this);
   }
 
   private handleStats(payload: StatsPayload) {
@@ -164,7 +177,7 @@ export class LavalinkNode<UserData> {
   }
 
   private handlePlayerUpdate(payload: PlayerUpdatePayload) {
-    const player = this.link.players.get(payload.guildId);
+    const player = this.players.get(payload.guildId);
 
     if (!player) return;
 
@@ -184,7 +197,7 @@ export class LavalinkNode<UserData> {
   }
 
   private async handleEvent(payload: LavalinkEventReceivePayload<UserData>) {
-    const player = this.link.players.get(payload.guildId);
+    const player = this.players.get(payload.guildId);
 
     if (!player) return;
 
@@ -212,8 +225,14 @@ export class LavalinkNode<UserData> {
         } else if (player.queue.next) {
           await player.play(player.queue.dequeue());
         } else {
-          await player.disconnect();
           this.link.emit('queueEnd', player);
+
+          // If nothing is playing after 30 seconds, disconnect
+          setTimeout(() => {
+            if (!player.playing && player.queue.isEmpty) {
+              player.disconnect();
+            }
+          }, 30000);
         }
         break;
       }
@@ -238,12 +257,99 @@ export class LavalinkNode<UserData> {
     }
   }
 
+  private async syncPlayers() {
+    const redis = this.link.redis;
+    const host = this.options.host;
+    const playerStateKeys = await redis.keys(`player:state:${host}:*`);
+
+    for (const playerStateKey of playerStateKeys) {
+      const [, , , guildId] = playerStateKey.split(':');
+      await this.restorePlayer(guildId);
+    }
+  }
+
+  async restorePlayer(guildId: string) {
+    const redis = this.link.redis;
+    const host = this.options.host;
+
+    const stateStr = await redis.get(`player:state:${host}:${guildId}`);
+    if (!stateStr) return;
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const state: PlayerState = JSON.parse(stateStr);
+
+    // Restore player instance
+    const player = new Player(this.link, this, {
+      voiceChannelId: state.voiceChannelId,
+      guildId: state.guildId
+    });
+
+    // Begin sync
+    player.repeatMode = state.repeatMode;
+
+    // Sync volume
+    await player.setVolume(state.volume);
+
+    // Sync voice state
+    if (state.voice.endpoint && state.voice.sessionId && state.voice.token) {
+      await player.update({
+        voice: {
+          endpoint: state.voice.endpoint,
+          sessionId: state.voice.sessionId,
+          token: state.voice.token
+        }
+      });
+    }
+
+    // Calling init to restore queue
+    await player.init();
+    // Add to map
+    this.players.set(guildId, player);
+
+    // Sync playing state
+    if (state.playing) {
+      await player.connect();
+      await player.play(player.queue.current);
+      await player.update({ position: state.position });
+    }
+  }
+
+  async createPlayer(options: PlayerOptions) {
+    // Check existing players
+    if (this.players.has(options.guildId)) {
+      const player = this.players.get(options.guildId);
+
+      if (!player) {
+        throw new Error('Possible race condition occured');
+      }
+
+      if (player.voiceChannelId !== options.voiceChannelId) {
+        player.voiceChannelId = options.voiceChannelId;
+      }
+
+      return player;
+    } else {
+      const player = new Player(this.link, this, options);
+      await player.init();
+      this.players.set(options.guildId, player);
+      return player;
+    }
+  }
+
   async loadTrack(identifier: string) {
     return this.rest.loadTracks(identifier);
   }
 
+  async destroyPlayers() {
+    for (const player of this.players.values()) {
+      await this.rest.destroyPlayer(player.guildId);
+    }
+    this.players.clear();
+  }
+
   async destroyPlayer(guildId: string) {
     await this.rest.destroyPlayer(guildId);
+    this.players.delete(guildId);
   }
 
   async updatePlayer(guildId: string, options: UpdatePlayerOptions<UserData>) {

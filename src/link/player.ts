@@ -16,9 +16,23 @@ export interface PlayerOptions {
   voiceChannelId: string;
 }
 
+/**
+ * An interface that can be safely stored as json.
+ */
+export interface PlayerState {
+  guildId: string;
+  voiceChannelId: string;
+  voice: Partial<VoiceState>;
+  repeatMode: RepeatMode;
+  playing: boolean;
+  volume: number;
+  position: number;
+}
+
 export class Player<UserData> {
   link: Lavalink<UserData>;
   node: LavalinkNode<UserData>;
+  queue: TrackQueue<UserData>;
   guildId: string;
   voiceChannelId: string;
   voice: Partial<VoiceState> = {};
@@ -29,16 +43,26 @@ export class Player<UserData> {
   repeatMode: RepeatMode = RepeatMode.OFF;
   playing: boolean = false;
   volume = 1.0;
-  queue = new TrackQueue<UserData>();
   filter = new LavalinkFilter(this);
+  saveTimeoutId: NodeJS.Timeout;
 
   constructor(link: Lavalink<UserData>, node: LavalinkNode<UserData>, options: PlayerOptions) {
     this.link = link;
     this.node = node;
     this.guildId = options.guildId;
     this.voiceChannelId = options.voiceChannelId;
+    this.queue = new TrackQueue([], { link, guildId: options.guildId });
+    // Save state every minute
+    this.saveTimeoutId = setTimeout(() => {
+      this.queue.save();
+      this.save();
+    }, 60000);
+  }
+
+  async init() {
+    await this.queue.sync();
     // Emit creation
-    this.link.emit('playerCreate', this);
+    this.link.emit('playerInit', this);
   }
 
   get remaining(): number {
@@ -52,7 +76,6 @@ export class Player<UserData> {
 
   async destroy() {
     await this.node.destroyPlayer(this.guildId);
-    this.link.players.delete(this.guildId);
     this.link.emit('playerDestroy', this);
   }
 
@@ -132,6 +155,42 @@ export class Player<UserData> {
         channel_id: null,
         self_mute: false,
         self_deaf: false
+      }
+    });
+  }
+
+  get stateKey(): string {
+    return `player:state:${this.node.options.host}:${this.guildId}`;
+  }
+
+  get state(): PlayerState {
+    return {
+      playing: this.playing,
+      voiceChannelId: this.voiceChannelId,
+      repeatMode: this.repeatMode,
+      volume: this.volume,
+      guildId: this.guildId,
+      voice: this.voice,
+      position: this.position
+    };
+  }
+
+  async save() {
+    const redis = this.link.redis;
+    const stateStr = JSON.stringify(this.state);
+    await redis.set(this.stateKey, stateStr);
+  }
+
+  async syncVoiceState(voice: Partial<VoiceState>) {
+    if (!voice.endpoint) return;
+    if (!voice.sessionId) return;
+    if (!voice.token) return;
+
+    await this.update({
+      voice: {
+        endpoint: voice.endpoint,
+        sessionId: voice.sessionId,
+        token: voice.token
       }
     });
   }

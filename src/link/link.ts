@@ -11,7 +11,7 @@ import { createClient } from 'redis';
 import { LavalinkEvents } from './link.events';
 import { LavalinkNode, LavalinkNodeOptions } from './node';
 import { LoadResultType } from './payload';
-import { Player, PlayerOptions } from './player';
+import { PlayerOptions } from './player';
 
 export enum LavalinkSource {
   YOUTUBE = 'ytsearch',
@@ -39,7 +39,6 @@ export interface LavalinkOptions {
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export class Lavalink<UserData> extends EventEmitter {
-  players = new Map<string, Player<UserData>>();
   nodes: LavalinkNode<UserData>[] = [];
   redis: ReturnType<typeof createClient>;
   options: LavalinkOptions;
@@ -54,16 +53,13 @@ export class Lavalink<UserData> extends EventEmitter {
     this.sendVoiceUpdate = options.sendVoiceUpdate;
   }
 
-  deletePlayersByNodeId(nodeId: string) {
-    for (const [guildId, player] of this.players.entries()) {
-      if (player.node.nodeId === nodeId) {
-        this.players.delete(guildId);
-      }
-    }
-  }
-
   connectedNodes() {
     return this.nodes.filter((node) => node.connected);
+  }
+
+  getPlayer(guildId: string) {
+    const node = this.nodes.find((node) => node.players.has(guildId));
+    return node?.players.get(guildId);
   }
 
   availableNode() {
@@ -76,26 +72,9 @@ export class Lavalink<UserData> extends EventEmitter {
     return connectedNodes[Math.floor(Math.random() * connectedNodes.length)];
   }
 
-  createPlayer(options: PlayerOptions): Player<UserData> {
+  async createPlayer(options: PlayerOptions) {
     const node = this.availableNode();
-    // Check existing players
-    if (this.players.has(options.guildId)) {
-      const player = this.players.get(options.guildId);
-
-      if (!player) {
-        throw new Error('Possible race condition occured');
-      }
-
-      if (player.voiceChannelId !== options.voiceChannelId) {
-        player.voiceChannelId = options.voiceChannelId;
-      }
-
-      return player;
-    } else {
-      const player = new Player(this, node, options);
-      this.players.set(options.guildId, player);
-      return player;
-    }
+    return node.createPlayer(options);
   }
 
   async init(userId: string) {
@@ -129,7 +108,7 @@ export class Lavalink<UserData> extends EventEmitter {
     if (!data.d.guild_id) return;
     if (data.d.user_id !== this.userId) return;
 
-    const player = this.players.get(data.d.guild_id);
+    const player = this.getPlayer(data.d.guild_id);
 
     if (!player) return;
 
@@ -137,9 +116,11 @@ export class Lavalink<UserData> extends EventEmitter {
       this.emit('playerMove', player, player.voiceChannelId, data.d.channel_id);
       player.voiceChannelId = data.d.channel_id;
     }
+
     if (!data.d.channel_id) {
       player.voice = {};
       player.connected = false;
+      this.emit('playerDisconnect', player);
     }
 
     player.voice.sessionId = data.d.session_id;
@@ -151,13 +132,13 @@ export class Lavalink<UserData> extends EventEmitter {
       voice: {
         token: player.voice.token,
         endpoint: player.voice.endpoint,
-        sessionId: player.voice.sessionId
+        sessionId: data.d.session_id
       }
     });
   }
 
   async handleVoiceServerUpdate(data: GatewayVoiceServerUpdateDispatch) {
-    const player = this.players.get(data.d.guild_id);
+    const player = this.getPlayer(data.d.guild_id);
 
     if (!player) return;
     if (!data.d.endpoint) return;

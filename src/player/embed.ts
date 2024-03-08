@@ -5,7 +5,7 @@ import { chunk, msToTime, trimEllipse } from '@app/utils';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
 
 export const createPlayerQueue = ({ link }: AppContext, guildId: string, pageIndex = 0) => {
-  const player = link.players.get(guildId);
+  const player = link.getPlayer(guildId);
   const queue: string[] = [];
 
   if (player && player.queue.size > 0) {
@@ -29,7 +29,7 @@ export const createPlayerQueue = ({ link }: AppContext, guildId: string, pageInd
 
 export const createPlayerEmbed = (context: AppContext, guildId: string, pageIndex: number = 0) => {
   const { link, client } = context;
-  const player = link.players.get(guildId);
+  const player = link.getPlayer(guildId);
   const track = player?.queue.current;
   const requester = String(track?.userData.requester ?? '-');
   const duration = msToTime(player?.duration ?? 0);
@@ -84,7 +84,7 @@ export const createPlayerEmbed = (context: AppContext, guildId: string, pageInde
 };
 
 export const createPlayerComponents = ({ link }: AppContext, guildId: string) => {
-  const player = link.players.get(guildId);
+  const player = link.getPlayer(guildId);
   const playing = player?.playing ?? false;
   const disablePagination = (player?.queue?.size ?? 0) < 15;
 

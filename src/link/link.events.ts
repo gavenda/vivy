@@ -16,7 +16,7 @@ export interface LavalinkEvents<UserData> {
   ) => Awaitable<void>;
   queueEnd: (player: Player<UserData>) => Awaitable<void>;
   playerConnected: (player: Player<UserData>) => Awaitable<void>;
-  playerCreate: (player: Player<UserData>) => Awaitable<void>;
+  playerInit: (player: Player<UserData>) => Awaitable<void>;
   playerMove: (player: Player<UserData>, oldVoiceChannelId: string, newVoiceChannelId: string) => Awaitable<void>;
   playerDisconnect: (player: Player<UserData>) => Awaitable<void>;
   playerDestroy: (player: Player<UserData>) => Awaitable<void>;

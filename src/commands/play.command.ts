@@ -138,7 +138,7 @@ const playMusic = async (options: {
   const { link } = context;
   const query = interaction.options.getString('query', true);
 
-  const player = link.createPlayer({
+  const player = await link.createPlayer({
     guildId: interaction.guild.id,
     voiceChannelId: interaction.member.voice.channel.id
   });

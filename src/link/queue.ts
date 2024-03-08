@@ -1,4 +1,17 @@
+import { Lavalink } from './link';
 import { Track } from './payload';
+
+export interface TrackState<UserData> {
+  current: Track<UserData> | null;
+  previous: Track<UserData> | null;
+  tracks: Track<UserData>[];
+  offset: number;
+}
+
+export interface TrackQueueOptions<UserData> {
+  link: Lavalink<UserData>;
+  guildId: string;
+}
 
 /**
  * @license MIT
@@ -14,11 +27,20 @@ export class TrackQueue<UserData> {
   current: Track<UserData> | null = null;
   previous: Track<UserData> | null = null;
 
+  link: Lavalink<UserData>;
+  guildId: string;
+
   /**
    * Creates a queue.
    */
-  constructor(tracks: Track<UserData>[] = []) {
-    this.tracks = tracks;
+  constructor(tracks: Track<UserData>[], options: TrackQueueOptions<UserData>) {
+    this.guildId = options.guildId;
+    this.link = options.link;
+    this.tracks = [];
+  }
+
+  private get key() {
+    return `player:queue:${this.guildId}`;
   }
 
   slice(start: number, end?: number) {
@@ -137,6 +159,36 @@ export class TrackQueue<UserData> {
     );
   }
 
+  private get state(): TrackState<UserData> {
+    return {
+      current: this.current,
+      previous: this.previous,
+      tracks: this.tracks,
+      offset: this.offset
+    };
+  }
+
+  async save() {
+    const redis = this.link.redis;
+    const stateStr = JSON.stringify(this.state);
+    await redis.set(this.key, stateStr);
+  }
+
+  async sync() {
+    const redis = this.link.redis;
+    const stateStr = await redis.get(this.key);
+
+    if (!stateStr) return;
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const state: TrackState<UserData> = JSON.parse(stateStr);
+
+    this.current = state.current;
+    this.previous = state.previous;
+    this.tracks = state.tracks;
+    this.offset = state.offset;
+  }
+
   /**
    * Clears the queue.
    */
@@ -149,13 +201,6 @@ export class TrackQueue<UserData> {
    * Creates a shallow copy of the queue.
    */
   clone(): TrackQueue<UserData> {
-    return new TrackQueue<UserData>(this.tracks.slice(this.offset));
-  }
-
-  /**
-   * Creates a queue from an existing array.
-   */
-  static fromArray<UserData>(tracks: Track<UserData>[]): TrackQueue<UserData> {
-    return new TrackQueue<UserData>(tracks);
+    return new TrackQueue<UserData>(this.tracks.slice(this.offset), { guildId: this.guildId, link: this.link });
   }
 }

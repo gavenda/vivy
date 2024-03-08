@@ -139,7 +139,6 @@ link.on('trackEnd', async (player, track, reason) => {
 
 link.on('queueEnd', async (player) => {
   logger.debug('Queue end');
-  await updatePlayer(context, player.guildId);
 });
 
 link.on('trackError', async (player, track) => {

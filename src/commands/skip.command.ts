@@ -30,7 +30,7 @@ export const skip: AppCommand = {
       return;
     }
 
-    const player = link.players.get(interaction.guildId);
+    const player = link.getPlayer(interaction.guildId);
 
     if (!player) {
       await interaction.reply({
