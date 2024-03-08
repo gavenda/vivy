@@ -41,8 +41,13 @@ export class Player<UserData> {
     this.link.emit('playerCreate', this);
   }
 
+  get remaining(): number {
+    const length = this.queue.current?.info.length ?? 0;
+    return Math.max(0, length - this.position);
+  }
+
   get duration(): number {
-    return this.queue.duration;
+    return Math.max(0, this.queue.duration);
   }
 
   async destroy() {
@@ -119,7 +124,7 @@ export class Player<UserData> {
 
   async disconnect() {
     if (!this.connected) return;
-
+    this.playing = false;
     await this.link.sendVoiceUpdate(this.guildId, {
       op: GatewayOpcodes.VoiceStateUpdate,
       d: {

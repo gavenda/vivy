@@ -32,8 +32,8 @@ export const createPlayerEmbed = (context: AppContext, guildId: string, pageInde
   const player = link.players.get(guildId);
   const track = player?.queue.current;
   const requester = String(track?.userData.requester ?? '-');
-  const duration = msToTime(Math.max(0, player?.duration ?? 0));
-  const position = msToTime(Math.max(0, player?.position ?? 0));
+  const duration = msToTime(player?.duration ?? 0);
+  const remaining = msToTime(player?.remaining ?? 0);
   const queue = createPlayerQueue(context, guildId, pageIndex);
 
   const queueEmbed = new EmbedBuilder()
@@ -55,7 +55,7 @@ export const createPlayerEmbed = (context: AppContext, guildId: string, pageInde
       },
       {
         name: 'Remaining',
-        value: `${String(position.minutes).padStart(2, '0')}:${String(position.seconds).padStart(2, '0')}`,
+        value: `${String(remaining.minutes).padStart(2, '0')}:${String(remaining.seconds).padStart(2, '0')}`,
         inline: true
       },
       {

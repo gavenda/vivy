@@ -128,9 +128,13 @@ export class TrackQueue<UserData> {
    * Total duration of the tracks in the queue.
    */
   get duration(): number {
-    return this.tracks
-      .filter((track) => !track.info.isSeekable)
-      .reduce((accumulator, track) => accumulator + track.info.length, 0);
+    const current = this.current?.info.length ?? 0;
+    return (
+      current +
+      this.tracks
+        .filter((track) => !track.info.isSeekable)
+        .reduce((accumulator, track) => accumulator + track.info.length, 0)
+    );
   }
 
   /**

@@ -212,8 +212,8 @@ export class LavalinkNode<UserData> {
         } else if (player.queue.next) {
           await player.play(player.queue.dequeue());
         } else {
+          await player.disconnect();
           this.link.emit('queueEnd', player);
-          player.playing = false;
         }
         break;
       }
