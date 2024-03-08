@@ -44,12 +44,12 @@ export class TrackQueue<UserData> {
   }
 
   slice(start: number, end?: number) {
-    this.tracks = this.tracks.slice(start, end);
+    this.tracks = this.tracks.slice(this.offset + start, end);
     this.offset = 0;
   }
 
   peek(index: number) {
-    return this.size > 0 ? this.tracks[index] : null;
+    return this.size > 0 ? this.tracks[this.offset + index] : null;
   }
 
   /**

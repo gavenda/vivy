@@ -87,7 +87,7 @@ export const remove: AppCommand = {
         return;
       }
 
-      player.queue.slice(from);
+      player.queue.slice(from + 1);
 
       await interaction.reply({
         ephemeral: true,
