@@ -9,9 +9,7 @@ export const clear: AppCommand = {
         .setName('effect')
         .setDescription('Clear the applied effects to the playing music.')
     )
-    .addSubcommand(
-      new SlashCommandSubcommandBuilder().setName('queue').setDescription('Clear the music queue.')
-    )
+    .addSubcommand(new SlashCommandSubcommandBuilder().setName('queue').setDescription('Clear the music queue.'))
     .setName('clear')
     .setDescription('Clear an existing applied setting.'),
   execute: async ({ link }, interaction) => {
@@ -58,7 +56,7 @@ export const clear: AppCommand = {
         });
         break;
       case 'effect':
-        player.filters.resetFilters();
+        await player.filter.reset();
         await interaction.reply({
           ephemeral: true,
           content: 'Effects cleared.'

@@ -2,11 +2,7 @@ import { AppContext } from '@app/context';
 import { logger } from '@app/logger';
 import { QueueType } from '@app/player';
 import { handleSearch, handleTrack, handleTracks } from '@app/player/handlers';
-import {
-  handleSpotifyAlbum,
-  handleSpotifyPlaylist,
-  handleSpotifyTrack
-} from '@app/spotify/handlers';
+import { handleSpotifyAlbum, handleSpotifyPlaylist, handleSpotifyTrack } from '@app/spotify/handlers';
 import { hasVoiceState, isSpotify, sleep, trimEllipse } from '@app/utils';
 import {
   ChatInputCommandInteraction,
@@ -14,9 +10,10 @@ import {
   SlashCommandStringOption,
   SlashCommandSubcommandBuilder
 } from 'discord.js';
-import { MoonlinkPlayer } from 'moonlink.js';
 import { parse as parseSpotifyUri } from 'spotify-uri';
 import { AppCommand } from './command';
+import { LoadResultType, Player } from '@app/link';
+import { Requester } from '@app/requester';
 
 export const play: AppCommand = {
   data: new SlashCommandBuilder()
@@ -133,46 +130,28 @@ const playMusic = async (options: {
   const { link } = context;
   const query = interaction.options.getString('query', true);
 
-  const player = link.players.create({
+  const player = link.createPlayer({
     guildId: interaction.guild.id,
-    voiceChannel: interaction.member.voice.channel.id,
-    textChannel: interaction.channelId,
-    autoLeave: true,
-    autoPlay: false,
-    loop: 0
+    voiceChannelId: interaction.member.voice.channel.id
   });
-
-  if (player.voiceChannel !== interaction.member.voice.channel.id) {
-    // Set to voice channel if not matching
-    player.setVoiceChannel(interaction.member.voice.channel.id);
-  }
-  if (player.textChannel !== interaction.channelId) {
-    // Set text channel if not matching
-    player.setTextChannel(interaction.channelId);
-  }
 
   logger.debug(`Connecting to voice channel: ${interaction.member.voice.channel.name}`);
   // Connect to the voice channel if not connected
-  player.connect({ setMute: false, setDeaf: false });
+  if (!player.connected) {
+    await player.connect();
+  }
 
   if (isSpotify(query)) {
     await handleSpotify({ query, player, context, interaction, queue });
   } else {
     await handleYoutube({ query, player, context, interaction, queue });
   }
-
-  if (player.paused) {
-    await player.resume();
-  }
-  if (!player.playing) {
-    await player.play();
-  }
 };
 
 const handleYoutube = async (
   options: {
     query: string;
-    player: MoonlinkPlayer;
+    player: Player<Requester>;
     context: AppContext;
     interaction: ChatInputCommandInteraction;
     queue: QueueType;
@@ -183,19 +162,15 @@ const handleYoutube = async (
   const { link } = options.context;
   const { query, interaction, queue, player } = options;
 
-  const result = await link.search({
-    query,
-    source: 'youtube',
-    requester: `<@${interaction.user.id}>`
-  });
+  const result = await link.search(query, { requester: `<@${interaction.user.id}>` });
 
   switch (result.loadType) {
-    case 'error': {
+    case LoadResultType.ERROR: {
       // Attempt to retry if search fails
       if (retry) {
-        const count = retryCount + 1;
+        logger.debug('Error in track lookup, attempting to retry', { retryCount });
         await sleep(1000);
-        await handleYoutube(options, count !== 5, count);
+        await handleYoutube(options, retryCount !== 0, retryCount - 1);
       } else {
         logger.debug('Give up in searching track', { retryCount });
         // Responding with an error message if loading fails
@@ -206,29 +181,29 @@ const handleYoutube = async (
       }
       break;
     }
-    case 'empty': {
+    case LoadResultType.EMPTY: {
       // Responding with a message if the search returns no results
       await interaction.followUp({ ephemeral: true, content: `No matches found!` });
       return;
     }
-    case 'playlist': {
-      if (!result.playlistInfo) return;
+    case LoadResultType.PLAYLIST: {
+      if (!result) return;
       // Handle playlist result
       await handleTracks({
         interaction,
         player,
         queue,
-        tracks: result.tracks,
-        name: result.playlistInfo.name
+        tracks: result.data.tracks,
+        name: result.data.info.name
       });
       break;
     }
-    case 'track': {
+    case LoadResultType.TRACK: {
       // Handle track result
-      await handleTrack({ interaction, track: result.tracks[0], player, queue });
+      await handleTrack({ interaction, track: result.data, player, queue });
       break;
     }
-    case 'search': {
+    case LoadResultType.SEARCH: {
       // Handle search result
       await handleSearch({ interaction, player, queue, result });
       break;
@@ -238,7 +213,7 @@ const handleYoutube = async (
 
 const handleSpotify = async (options: {
   query: string;
-  player: MoonlinkPlayer;
+  player: Player<Requester>;
   context: AppContext;
   interaction: ChatInputCommandInteraction;
   queue: QueueType;

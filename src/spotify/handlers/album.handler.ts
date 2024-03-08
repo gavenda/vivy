@@ -1,16 +1,17 @@
 import { AppContext } from '@app/context';
+import { Player, Track } from '@app/link';
 import { QueueType } from '@app/player';
 import { handleTracks } from '@app/player/handlers';
 import { lookupTrack } from '@app/player/lookup';
+import { Requester } from '@app/requester';
 import { ChatInputCommandInteraction } from 'discord.js';
-import { MoonlinkPlayer, MoonlinkTrack } from 'moonlink.js';
 import { ParsedSpotifyUri } from 'spotify-uri';
 
 export const handleSpotifyAlbum = async (options: {
   context: AppContext;
   interaction: ChatInputCommandInteraction;
   spotifyUri: ParsedSpotifyUri;
-  player: MoonlinkPlayer;
+  player: Player<Requester>;
   queue: QueueType;
 }) => {
   const { context, interaction, player, queue, spotifyUri } = options;
@@ -25,7 +26,7 @@ export const handleSpotifyAlbum = async (options: {
   }
 
   const spotifyAlbum = await spotify.albums.get(spotifyUri.id);
-  const tracks: MoonlinkTrack[] = [];
+  const tracks: Track<Requester>[] = [];
 
   for (const spotifyTrack of spotifyAlbum.tracks.items) {
     const spotifyArtists = spotifyTrack.artists.map((artist) => artist.name).join(' ');

@@ -20,9 +20,7 @@ try {
 
   const commandList = commands.map((command) => command.data.toJSON());
 
-  logger.info(
-    `Started refreshing ${commandList.length} application (/) commands on guild id: ${guildId}.`
-  );
+  logger.info(`Started refreshing ${commandList.length} application (/) commands on guild id: ${guildId}.`);
 
   await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commandList });
 

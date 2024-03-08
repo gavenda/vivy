@@ -3,9 +3,7 @@ import { SlashCommandBuilder } from 'discord.js';
 import { AppCommand } from './command';
 
 export const disconnect: AppCommand = {
-  data: new SlashCommandBuilder()
-    .setName('disconnect')
-    .setDescription('Disconnect the player from the voice channel.'),
+  data: new SlashCommandBuilder().setName('disconnect').setDescription('Disconnect the player from the voice channel.'),
   execute: async ({ link }, interaction) => {
     if (!interaction.guild || !interaction.guildId) {
       await interaction.reply({
@@ -39,7 +37,7 @@ export const disconnect: AppCommand = {
       return;
     }
 
-    player.disconnect();
+    await player.disconnect();
 
     await interaction.reply({
       ephemeral: true,

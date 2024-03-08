@@ -1,16 +1,17 @@
 import { AppContext } from '@app/context';
+import { Player } from '@app/link';
 import { QueueType } from '@app/player';
 import { handleTrack } from '@app/player/handlers';
 import { lookupTrack } from '@app/player/lookup';
+import { Requester } from '@app/requester';
 import { ChatInputCommandInteraction } from 'discord.js';
-import { MoonlinkPlayer } from 'moonlink.js';
 import { ParsedSpotifyUri } from 'spotify-uri';
 
 export const handleSpotifyTrack = async (options: {
   context: AppContext;
   interaction: ChatInputCommandInteraction;
   spotifyUri: ParsedSpotifyUri;
-  player: MoonlinkPlayer;
+  player: Player<Requester>;
   queue: QueueType;
 }) => {
   const { context, interaction, player, queue, spotifyUri } = options;
