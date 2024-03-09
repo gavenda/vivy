@@ -140,7 +140,8 @@ const playMusic = async (options: {
 
   const player = await link.createPlayer({
     guildId: interaction.guild.id,
-    voiceChannelId: interaction.member.voice.channel.id
+    voiceChannelId: interaction.member.voice.channel.id,
+    autoLeave: true
   });
 
   // Connect to the voice channel if not connected

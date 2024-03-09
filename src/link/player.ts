@@ -5,6 +5,8 @@ import { LavalinkNode } from './node';
 import { Track, UpdatePlayerOptions, VoiceState } from './payload';
 import { TrackQueue } from './queue';
 
+export const DEFAULT_AUTO_LEAVE_MS = 1000 * 60 * 5;
+
 export enum RepeatMode {
   TRACK = 'track',
   QUEUE = 'queue',
@@ -14,6 +16,8 @@ export enum RepeatMode {
 export interface PlayerOptions {
   guildId: string;
   voiceChannelId: string;
+  autoLeave: boolean;
+  autoLeaveMs?: number;
 }
 
 /**
@@ -27,6 +31,8 @@ export interface PlayerState {
   playing: boolean;
   volume: number;
   position: number;
+  autoLeave: boolean;
+  autoLeaveMs: number;
 }
 
 export class Player<UserData> {
@@ -35,6 +41,7 @@ export class Player<UserData> {
   queue: TrackQueue<UserData>;
   guildId: string;
   voiceChannelId: string;
+  textChannelId?: string;
   voice: Partial<VoiceState> = {};
   position: number = 0;
   connected: boolean = false;
@@ -45,12 +52,16 @@ export class Player<UserData> {
   volume = 1.0;
   filter = new LavalinkFilter(this);
   saveIntervalId: NodeJS.Timeout;
+  autoLeave: boolean;
+  autoLeaveMs: number;
 
   constructor(link: Lavalink<UserData>, node: LavalinkNode<UserData>, options: PlayerOptions) {
     this.link = link;
     this.node = node;
     this.guildId = options.guildId;
     this.voiceChannelId = options.voiceChannelId;
+    this.autoLeave = options.autoLeave;
+    this.autoLeaveMs = options.autoLeaveMs ?? DEFAULT_AUTO_LEAVE_MS;
     this.queue = new TrackQueue([], { link, guildId: options.guildId });
     // Save state every minute
     this.saveIntervalId = setInterval(async () => {
@@ -172,7 +183,9 @@ export class Player<UserData> {
       volume: this.volume,
       guildId: this.guildId,
       voice: this.voice,
-      position: this.position
+      position: this.position,
+      autoLeave: this.autoLeave,
+      autoLeaveMs: this.autoLeaveMs
     };
   }
 
@@ -194,5 +207,16 @@ export class Player<UserData> {
         token: voice.token
       }
     });
+  }
+
+  attemptAutoLeave() {
+    // Auto leave
+    if (this.autoLeave) {
+      setTimeout(async () => {
+        if (!this.playing && this.queue.isEmpty) {
+          await this.disconnect();
+        }
+      }, this.autoLeaveMs);
+    }
   }
 }

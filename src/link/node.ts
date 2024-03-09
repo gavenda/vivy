@@ -230,13 +230,7 @@ export class LavalinkNode<UserData> {
           await player.play(player.queue.dequeue());
         } else {
           this.link.emit('queueEnd', player);
-
-          // If nothing is playing after 30 seconds, disconnect
-          setTimeout(async () => {
-            if (!player.playing && player.queue.isEmpty) {
-              await player.disconnect();
-            }
-          }, 30000);
+          player.attemptAutoLeave();
         }
         break;
       }
@@ -285,7 +279,9 @@ export class LavalinkNode<UserData> {
     // Restore player instance
     const player = new Player(this.link, this, {
       voiceChannelId: state.voiceChannelId,
-      guildId: state.guildId
+      guildId: state.guildId,
+      autoLeave: state.autoLeave,
+      autoLeaveMs: state.autoLeaveMs
     });
 
     // Begin sync
