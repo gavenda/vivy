@@ -75,7 +75,6 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
       case 'stop': {
         player.queue.clear();
         await player.stop();
-        await player.destroy();
       }
       case 'previous': {
         pageIndex--;

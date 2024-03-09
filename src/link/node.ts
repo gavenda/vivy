@@ -350,7 +350,14 @@ export class LavalinkNode<UserData> {
   }
 
   async destroyPlayer(guildId: string) {
+    const player = this.players.get(guildId);
+
     await this.rest.destroyPlayer(guildId);
+
+    if (player) {
+      await this.link.redis.del(player.stateKey);
+    }
+
     this.players.delete(guildId);
   }
 
