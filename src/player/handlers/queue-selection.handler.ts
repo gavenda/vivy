@@ -42,23 +42,23 @@ export const handleQueueSelection = async (options: {
       linkButton
     );
 
-    const selectionReply = await interaction.editReply({
+    const queueQuestion = await interaction.editReply({
       content: `You have selected \`${track.info.title}\`. How would you like this to be queued?`,
       components: [queueActionRow]
     });
 
-    const buttonClick = await selectionReply.awaitMessageComponent({
-      filter: (i) => i.user.id === interaction.user.id && i.message.id === selectionReply.id,
+    const buttonClick = await queueQuestion.awaitMessageComponent({
+      filter: (i) => i.user.id === interaction.user.id && i.message.id === queueQuestion.id,
       componentType: ComponentType.Button,
-      time: 60_000
+      time: 15_000
     });
 
     const queue = <QueueType>buttonClick.customId.split(':')[1];
 
-    await handleTrack({ interaction, track, player, queue });
+    await handleTrack({ interaction: buttonClick, track, player, queue });
   } catch (e) {
-    await interaction.editReply({
-      content: `You didn't specify how to queue within a minute, will be playing it later.`,
+    await interaction.followUp({
+      content: `You failed to specify how to queue, will be playing it later.`,
       components: []
     });
 
