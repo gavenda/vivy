@@ -49,7 +49,6 @@ export class LavalinkNode<UserData> {
   reconnectTimeout: number;
   sessionId: string | null = null;
   players = new Map<string, Player<UserData>>();
-  resume = false;
   hasDisconnected = false;
 
   constructor(link: Lavalink<UserData>, userId: string, options: LavalinkNodeOptions) {
@@ -80,7 +79,7 @@ export class LavalinkNode<UserData> {
       'Client-Name': 'Vivy/1.0'
     };
 
-    if (this.resume && previousSessionId) {
+    if (previousSessionId) {
       headers['Session-Id'] = previousSessionId;
     }
 
@@ -164,8 +163,6 @@ export class LavalinkNode<UserData> {
         resuming: true,
         timeout: 300
       });
-      // Enable resume
-      this.resume = true;
       // Sync players
       await this.syncPlayers();
     }
