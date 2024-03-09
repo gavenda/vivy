@@ -18,7 +18,7 @@ export interface LavalinkEvents<UserData> {
   playerConnected: (player: Player<UserData>) => Awaitable<void>;
   playerInit: (player: Player<UserData>) => Awaitable<void>;
   playerMove: (player: Player<UserData>, oldVoiceChannelId: string, newVoiceChannelId: string) => Awaitable<void>;
-  playerDisconnect: (player: Player<UserData>) => Awaitable<void>;
+  playerDisconnected: (player: Player<UserData>) => Awaitable<void>;
   playerDestroy: (player: Player<UserData>) => Awaitable<void>;
   playerSocketClosed: (player: Player<UserData>, code: number, byRemote: boolean, reason: string) => Awaitable<void>;
   nodeDisconnected: (node: LavalinkNode<UserData>) => Awaitable<void>;

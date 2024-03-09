@@ -7,6 +7,7 @@ export const autocompleteInteraction: AppEvent<Events.InteractionCreate> = {
   event: Events.InteractionCreate,
   once: false,
   execute: async (context, interaction) => {
+    if (interaction.applicationId != context.applicationId) return;
     if (!interaction.isAutocomplete()) return;
 
     const command = commands.find((command) => command.data.name === interaction.commandName);

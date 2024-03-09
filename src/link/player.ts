@@ -15,7 +15,6 @@ export enum RepeatMode {
 
 export interface PlayerOptions {
   guildId: string;
-  voiceChannelId: string;
   autoLeave: boolean;
   autoLeaveMs?: number;
 }
@@ -25,7 +24,7 @@ export interface PlayerOptions {
  */
 export interface PlayerState {
   guildId: string;
-  voiceChannelId: string;
+  voiceChannelId?: string;
   voice: Partial<VoiceState>;
   repeatMode: RepeatMode;
   playing: boolean;
@@ -40,8 +39,7 @@ export class Player<UserData> {
   node: LavalinkNode<UserData>;
   queue: TrackQueue<UserData>;
   guildId: string;
-  voiceChannelId: string;
-  textChannelId?: string;
+  voiceChannelId?: string;
   voice: Partial<VoiceState> = {};
   position: number = 0;
   connected: boolean = false;
@@ -59,7 +57,6 @@ export class Player<UserData> {
     this.link = link;
     this.node = node;
     this.guildId = options.guildId;
-    this.voiceChannelId = options.voiceChannelId;
     this.autoLeave = options.autoLeave;
     this.autoLeaveMs = options.autoLeaveMs ?? DEFAULT_AUTO_LEAVE_MS;
     this.queue = new TrackQueue([], { link, guildId: options.guildId });
@@ -143,18 +140,20 @@ export class Player<UserData> {
     await this.node.rest.updatePlayer(this.guildId, { filters: { volume } });
   }
 
-  async connect() {
+  async connect(voiceChannelId: string) {
     if (this.connected) return;
 
     await this.link.sendVoiceUpdate(this.guildId, {
       op: 4,
       d: {
         guild_id: this.guildId,
-        channel_id: this.voiceChannelId,
+        channel_id: voiceChannelId,
         self_mute: false,
         self_deaf: false
       }
     });
+
+    this.voiceChannelId = voiceChannelId;
   }
 
   async disconnect() {

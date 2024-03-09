@@ -8,6 +8,7 @@ export const chatInputCommandInteraction: AppEvent<Events.InteractionCreate> = {
   event: Events.InteractionCreate,
   once: false,
   execute: async (context, interaction) => {
+    if (interaction.applicationId != context.applicationId) return;
     if (!interaction.isChatInputCommand()) return;
 
     const command = commands.find((command) => command.data.name === interaction.commandName);

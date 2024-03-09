@@ -9,6 +9,7 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
   event: Events.InteractionCreate,
   once: false,
   execute: async (context, interaction) => {
+    if (interaction.applicationId != context.applicationId) return;
     if (!interaction.isButton()) return;
     if (!interaction.customId.startsWith('player')) return;
     if (!interaction.guild || !interaction.guildId) {

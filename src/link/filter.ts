@@ -9,22 +9,22 @@ export class LavalinkFilter<UserData> {
   }
 
   async reset() {
-    const volume = this.player.volume;
+    const { volume } = this.player;
     await this.player.update({ filters: { volume } });
   }
 
   async setTimescale(timescale: Timescale) {
-    const volume = this.player.volume;
+    const { volume } = this.player;
     await this.player.update({ filters: { volume, timescale } });
   }
 
   async setKaraoke(karaoke: Karaoke) {
-    const volume = this.player.volume;
+    const { volume } = this.player;
     await this.player.update({ filters: { volume, karaoke } });
   }
 
   async setEqualizer(equalizer: Equalizer[]) {
-    const volume = this.player.volume;
+    const { volume } = this.player;
     await this.player.update({ filters: { volume, equalizer } });
   }
 }

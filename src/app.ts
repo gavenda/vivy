@@ -94,12 +94,27 @@ client.on(Events.Error, (error) => {
   logger.error('Internal error', { error });
 });
 
-const context: AppContext = { client, redis, link, spotify };
+const context: AppContext = {
+  applicationId: process.env.CLIENT_ID,
+  client,
+  redis,
+  link,
+  spotify
+};
 
 // link events
-link.on('nodeReady', (node) => {
+link.on('nodeReady', async (node) => {
   const { host } = node.options;
   logger.info(`Connected to node`, { host });
+
+  const guilds = client.guilds.cache.values();
+
+  for (const guild of guilds) {
+    await context.link.createPlayer({
+      guildId: guild.id,
+      autoLeave: true
+    });
+  }
 });
 
 link.on('nodeError', (node, error) => {
@@ -119,21 +134,21 @@ link.on('nodeDisconnected', (node) => {
 
 link.on('playerMove', (player, oldVoiceChannelId, newVoiceChannelId) => {
   const { guildId } = player;
-  logger.debug('Player moved', { guildId, oldVoiceChannelId, newVoiceChannelId });
+  logger.info('Player moved', { guildId, oldVoiceChannelId, newVoiceChannelId });
 });
 
 link.on('playerSocketClosed', (player, code, byRemote, reason) => {
   const { guildId } = player;
-  logger.debug('Player socket closed', { guildId, code, byRemote, reason });
+  logger.info('Player socket closed', { guildId, code, byRemote, reason });
 });
 
 link.on('trackStart', async (player, track) => {
-  logger.debug('Track start', { title: track.info.title });
+  logger.info('Track start', { title: track.info.title, guild: player.guildId });
   await updatePlayer(context, player.guildId);
 });
 
 link.on('trackEnd', async (player, track, reason) => {
-  logger.debug('Track end', { title: track.info.title, reason });
+  logger.info('Track end', { title: track.info.title, guild: player.guildId, reason });
   await updatePlayer(context, player.guildId);
 });
 
@@ -142,12 +157,12 @@ link.on('queueEnd', () => {
 });
 
 link.on('trackError', async (player, track) => {
-  logger.debug('Track error', { title: track.info.title });
+  logger.info('Track error', { title: track.info.title, guild: player.guildId });
   await player.skip();
 });
 
 link.on('trackStuck', async (player, track) => {
-  logger.debug('Track stuck', { title: track.info.title });
+  logger.info('Track stuck', { title: track.info.title, guild: player.guildId });
   await player.skip();
 });
 

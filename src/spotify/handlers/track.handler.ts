@@ -1,8 +1,7 @@
 import { AppContext } from '@app/context';
 import { LavalinkSource, Player } from '@app/link';
 import { logger } from '@app/logger';
-import { QueueType } from '@app/player';
-import { handleTrack } from '@app/player/handlers';
+import { handleQueueSelection, handleTrack } from '@app/player/handlers';
 import { lookupTrack } from '@app/player/lookup';
 import { Requester } from '@app/requester';
 import { ChatInputCommandInteraction } from 'discord.js';
@@ -13,9 +12,8 @@ export const handleSpotifyTrack = async (options: {
   interaction: ChatInputCommandInteraction;
   spotifyUri: ParsedSpotifyUri;
   player: Player<Requester>;
-  queue: QueueType;
 }) => {
-  const { context, interaction, player, queue, spotifyUri } = options;
+  const { context, interaction, player, spotifyUri } = options;
   const { spotify } = context;
 
   const spotifyTrack = await spotify.tracks.get(spotifyUri.id);
@@ -30,7 +28,11 @@ export const handleSpotifyTrack = async (options: {
   logger.debug(`Queuing spotify track`, { track: spotifyTrack.name });
 
   if (track) {
-    await handleTrack({ interaction, track, player, queue });
+    if (player.queue.current) {
+      await handleQueueSelection({ interaction, track, player });
+    } else {
+      await handleTrack({ interaction, track, player, queue: 'later' });
+    }
   } else {
     await interaction.followUp({
       ephemeral: true,

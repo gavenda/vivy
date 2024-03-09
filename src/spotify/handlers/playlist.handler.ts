@@ -1,7 +1,6 @@
 import { AppContext } from '@app/context';
 import { LavalinkSource, Player, Track } from '@app/link';
 import { logger } from '@app/logger';
-import { QueueType } from '@app/player';
 import { handleTracks } from '@app/player/handlers';
 import { lookupTrack } from '@app/player/lookup';
 import { Requester } from '@app/requester';
@@ -13,18 +12,9 @@ export const handleSpotifyPlaylist = async (options: {
   interaction: ChatInputCommandInteraction;
   spotifyUri: ParsedSpotifyUri;
   player: Player<Requester>;
-  queue: QueueType;
 }) => {
-  const { context, interaction, player, queue, spotifyUri } = options;
+  const { context, interaction, player, spotifyUri } = options;
   const { spotify } = context;
-
-  if (queue !== 'later') {
-    await interaction.followUp({
-      ephemeral: true,
-      content: `Trying to load an entire playlist on priority is cheating.`
-    });
-    return;
-  }
 
   const spotifyPlaylist = await spotify.playlists.getPlaylist(spotifyUri.id);
   const tracks: Track<Requester>[] = [];
@@ -50,5 +40,5 @@ export const handleSpotifyPlaylist = async (options: {
     }
   }
 
-  await handleTracks({ tracks, name: spotifyPlaylist.name, queue, player, interaction });
+  await handleTracks({ tracks, name: spotifyPlaylist.name, player, interaction });
 };

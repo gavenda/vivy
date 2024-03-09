@@ -15,7 +15,7 @@ export const createPlayerQueue = ({ link }: AppContext, guildId: string, pageInd
     for (const [index, track] of tracks.entries()) {
       const title = trimEllipse(track.info.title, 100);
       const trackNo = pageIndex * 15 + (index + 1);
-      const requester = String(track.userData.requester) ?? '-';
+      const requester = `<@${track.userData.userId}>`;
       const duration = msToTime(track.info.length ?? 0);
       // # [Track Title](URL) `00:00` <@user-id>
       queue.push(
@@ -31,7 +31,7 @@ export const createPlayerEmbed = (context: AppContext, guildId: string, pageInde
   const { link, client } = context;
   const player = link.getPlayer(guildId);
   const track = player?.queue.current;
-  const requester = String(track?.userData.requester ?? '-');
+  const requester = track?.userData.userId ? `<@${track.userData.userId}>` : '-';
   const duration = msToTime(player?.duration ?? 0);
   const remaining = msToTime(player?.remaining ?? 0);
   const queue = createPlayerQueue(context, guildId, pageIndex);

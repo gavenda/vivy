@@ -102,7 +102,7 @@ export class LavalinkNode<UserData> {
     this.hasDisconnected = true;
     this.link.emit('nodeDisconnected', this);
 
-    // Taken from https://lavalink.dev/api/#resuming
+    // Taken from https://lavathis.link.dev/api/#resuming
     // Special notes: If Lavalink-Server suddenly dies (think SIGKILL) the client will have to terminate any audio
     await this.disconnectPlayers();
 
@@ -140,35 +140,43 @@ export class LavalinkNode<UserData> {
   }
 
   private async handleReady(payload: ReadyPayload) {
-    const { host } = this.options;
     this.sessionId = payload.sessionId;
     this.rest.sessionId = payload.sessionId;
 
     // Save session id to redis
-    await this.link.redis.set(`lavalink:session:${host}`, payload.sessionId);
+    await this.link.redis.set(`lavalink:session:${this.options.host}`, payload.sessionId);
 
     if (payload.resumed) {
-      if (this.hasDisconnected) {
-        // We have resumed a disconnected session
-        this.link.emit('nodeResumed', this);
-      } else {
-        // This is a completely new session (meaning our discord ws disconnected), sync
-        await this.syncPlayers();
-      }
-    } else {
-      // Destroy any existing players in case of a failed resume.
-      await this.destroyPlayers();
-      // Tell lavalink we'll resume when we somehow disconnect
-      await this.rest.updateSession({
-        resuming: true,
-        timeout: 300
-      });
-      // Sync players
-      await this.syncPlayers();
+      await this.handleResume();
+      return;
     }
+
+    await this.ready();
+  }
+
+  private async ready() {
+    // Tell lavalink we'll resume when we somehow disconnect
+    await this.rest.updateSession({
+      resuming: true,
+      timeout: 300
+    });
+
+    // Sync players to their last known state
+    await this.syncPlayers();
 
     // We are now ready
     this.link.emit('nodeReady', this);
+  }
+
+  private async handleResume() {
+    if (this.hasDisconnected) {
+      // We have resumed a disconnected session
+      this.link.emit('nodeResumed', this);
+      return;
+    }
+
+    // This is a completely new session (meaning our discord ws disconnected), sync
+    await this.ready();
   }
 
   private handleStats(payload: StatsPayload) {
@@ -186,7 +194,7 @@ export class LavalinkNode<UserData> {
       if (payload.state.connected) {
         this.link.emit('playerConnected', player);
       } else {
-        this.link.emit('playerDisconnect', player);
+        this.link.emit('playerDisconnected', player);
         player.playing = false;
       }
     }
@@ -253,9 +261,7 @@ export class LavalinkNode<UserData> {
   }
 
   private async syncPlayers() {
-    const redis = this.link.redis;
-    const host = this.options.host;
-    const playerStateKeys = await redis.keys(`player:state:${host}:*`);
+    const playerStateKeys = await this.link.redis.keys(`player:state:${this.options.host}:*`);
 
     for (const playerStateKey of playerStateKeys) {
       const [, , , guildId] = playerStateKey.split(':');
@@ -264,10 +270,7 @@ export class LavalinkNode<UserData> {
   }
 
   async restorePlayer(guildId: string) {
-    const redis = this.link.redis;
-    const host = this.options.host;
-
-    const stateStr = await redis.get(`player:state:${host}:${guildId}`);
+    const stateStr = await this.link.redis.get(`player:state:${this.options.host}:${guildId}`);
     if (!stateStr) return;
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -275,7 +278,6 @@ export class LavalinkNode<UserData> {
 
     // Restore player instance
     const player = new Player(this.link, this, {
-      voiceChannelId: state.voiceChannelId,
       guildId: state.guildId,
       autoLeave: state.autoLeave,
       autoLeaveMs: state.autoLeaveMs
@@ -304,8 +306,8 @@ export class LavalinkNode<UserData> {
     this.players.set(guildId, player);
 
     // Sync playing state
-    if (state.playing) {
-      await player.connect();
+    if (state.playing && state.voiceChannelId) {
+      await player.connect(state.voiceChannelId);
       await player.play(player.queue.current);
       await player.update({ position: state.position });
     }
@@ -318,10 +320,6 @@ export class LavalinkNode<UserData> {
 
       if (!player) {
         throw new Error('Possible race condition occured');
-      }
-
-      if (player.voiceChannelId !== options.voiceChannelId) {
-        player.voiceChannelId = options.voiceChannelId;
       }
 
       return player;
@@ -346,6 +344,7 @@ export class LavalinkNode<UserData> {
   async destroyPlayers() {
     for (const player of this.players.values()) {
       await this.rest.destroyPlayer(player.guildId);
+      await this.link.redis.del(player.stateKey);
     }
     this.players.clear();
   }

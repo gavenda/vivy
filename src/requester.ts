@@ -1,3 +1,4 @@
 export interface Requester {
-  requester: string;
+  userId: string;
+  textChannelId: string;
 }

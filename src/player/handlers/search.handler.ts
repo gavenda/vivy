@@ -1,7 +1,6 @@
 import { AppEmoji } from '@app/emojis';
 import { Player, SearchLoadResult } from '@app/link';
 import { logger } from '@app/logger';
-import { QueueType } from '@app/player';
 import { Requester } from '@app/requester';
 import { trimEllipse } from '@app/utils/trim-ellipses';
 import {
@@ -11,22 +10,25 @@ import {
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder
 } from 'discord.js';
+import { handleQueueSelection } from './queue-selection.handler';
 import { handleTrack } from './track.handler';
 
 export const handleSearch = async (options: {
+  query: string;
   result: SearchLoadResult<Requester>;
   interaction: ChatInputCommandInteraction;
   player: Player<Requester>;
-  queue: QueueType;
 }) => {
-  const { result, interaction, player, queue } = options;
+  const { result, interaction, player, query } = options;
 
-  const selectMusicMenu = new StringSelectMenuBuilder()
+  const musicSelectMenu = new StringSelectMenuBuilder()
     .setCustomId(`select:music`)
+    .setMaxValues(1)
+    .setMinValues(1)
     .setPlaceholder('Please select music to play');
 
   for (const [index, track] of result.data.entries()) {
-    selectMusicMenu.addOptions(
+    musicSelectMenu.addOptions(
       new StringSelectMenuOptionBuilder()
         .setLabel(trimEllipse(track.info.title, 100))
         .setDescription(trimEllipse(track.info.author, 100))
@@ -35,22 +37,23 @@ export const handleSearch = async (options: {
     );
   }
 
-  const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMusicMenu);
+  const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(musicSelectMenu);
 
   const response = await interaction.followUp({
+    content: `Search results for \`${query}\``,
     components: [row]
   });
 
   try {
-    const selectTrack = await response.awaitMessageComponent({
+    const selectMusic = await response.awaitMessageComponent({
       componentType: ComponentType.StringSelect,
-      filter: (i) => i.user.id === interaction.user.id,
+      filter: (i) => i.user.id === interaction.user.id && i.message.id === response.id,
       time: 60_000
     });
-    const selectedIdentifier = selectTrack.values[0];
-    const selectedTrack = result.data.find((track) => track.info.identifier === selectedIdentifier);
+    const selectedIdentifier = selectMusic.values[0];
+    const track = result.data.find((track) => track.info.identifier === selectedIdentifier);
 
-    if (!selectedTrack) {
+    if (!track) {
       await interaction.editReply({
         content: `Unable to find selected track.`,
         components: []
@@ -58,9 +61,15 @@ export const handleSearch = async (options: {
       return;
     }
 
-    logger.debug('Track selected', selectedTrack);
+    logger.debug('Track selected', track);
 
-    await handleTrack({ interaction, track: selectedTrack, player, queue });
+    await selectMusic.deferUpdate();
+
+    if (player.queue.current) {
+      await handleQueueSelection({ interaction: selectMusic, track, player });
+    } else {
+      await handleTrack({ interaction, track, player, queue: 'later' });
+    }
   } catch (e) {
     await interaction.editReply({
       content: 'No music selected within a minute, cancelled.',

@@ -2,10 +2,10 @@ import { Player, Track } from '@app/link';
 import { logger } from '@app/logger';
 import { QueueType } from '@app/player';
 import { Requester } from '@app/requester';
-import { ChatInputCommandInteraction } from 'discord.js';
+import { ButtonInteraction, ChatInputCommandInteraction, StringSelectMenuInteraction } from 'discord.js';
 
 export const handleTrack = async (options: {
-  interaction: ChatInputCommandInteraction;
+  interaction: ChatInputCommandInteraction | StringSelectMenuInteraction | ButtonInteraction;
   track: Track<Requester>;
   player: Player<Requester>;
   queue: QueueType;

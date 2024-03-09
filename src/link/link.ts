@@ -112,15 +112,17 @@ export class Lavalink<UserData> extends EventEmitter {
 
     if (!player) return;
 
-    if (data.d.channel_id && data.d.channel_id !== player.voiceChannelId) {
-      this.emit('playerMove', player, player.voiceChannelId, data.d.channel_id);
+    if (data.d.channel_id && data.d.channel_id !== player.voiceChannelId && player.voiceChannelId) {
       player.voiceChannelId = data.d.channel_id;
+
+      this.emit('playerMove', player, player.voiceChannelId, data.d.channel_id);
     }
 
     if (!data.d.channel_id) {
       player.voice = {};
       player.connected = false;
-      this.emit('playerDisconnect', player);
+
+      this.emit('playerDisconnected', player);
     }
 
     player.voice.sessionId = data.d.session_id;

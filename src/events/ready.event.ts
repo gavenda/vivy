@@ -11,6 +11,11 @@ export const readyEvent: AppEvent<Events.ClientReady> = {
     // Init link
     await link.init(client.user.id);
 
+    // Set logger default meta
+    logger.defaultMeta = {
+      bot: client.user.username
+    };
+
     // Cleanup legacy players
     const legacyPlayersKey = `player:legacy`;
     const legacyPlayers = await redis.sMembers(legacyPlayersKey);
