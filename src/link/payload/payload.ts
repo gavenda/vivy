@@ -24,7 +24,7 @@ export interface Exception {
   cause: string;
 }
 
-export interface PlayerState {
+export interface LinkPlayerState {
   time: number;
   position: number;
   connected: boolean;
@@ -72,7 +72,7 @@ export interface ReadyPayload extends Payload {
 export interface PlayerUpdatePayload extends Payload {
   op: OpCode.PLAYER_UPDATE;
   guildId: string;
-  state: PlayerState;
+  state: LinkPlayerState;
 }
 
 export interface StatsPayload extends Stats, Payload {
