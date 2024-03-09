@@ -97,11 +97,15 @@ export class LavalinkNode<UserData> {
     this.socket.on('error', this.onWebSocketError.bind(this));
   }
 
-  private onWebSocketClose() {
+  private async onWebSocketClose() {
     this.sessionId = null;
     this.rest.sessionId = null;
     this.hasDisconnected = true;
     this.link.emit('nodeDisconnected', this);
+
+    // Taken from https://lavalink.dev/api/#resuming
+    // Special notes: If Lavalink-Server suddenly dies (think SIGKILL) the client will have to terminate any audio
+    await this.disconnectPlayers();
 
     // Reconnection attempt
     setTimeout(() => this.connect(), this.reconnectTimeout);
@@ -338,6 +342,12 @@ export class LavalinkNode<UserData> {
 
   async loadTrack(identifier: string) {
     return this.rest.loadTracks(identifier);
+  }
+
+  async disconnectPlayers() {
+    for (const player of this.players.values()) {
+      await player.disconnect();
+    }
   }
 
   async destroyPlayers() {
