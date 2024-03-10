@@ -30,17 +30,21 @@ export const handleQueueSelection = async (options: {
       .setCustomId('queue:now')
       .setStyle(ButtonStyle.Danger)
       .setLabel('Play Now');
-    const linkButton = new ButtonBuilder()
-      .setStyle(ButtonStyle.Link)
-      .setURL(track.info.uri)
-      .setLabel('View in YouTube');
 
     const queueActionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
       queueLaterButton,
       queueNowButton,
-      queueNextButton,
-      linkButton
+      queueNextButton
     );
+
+    if (track.info.uri) {
+      const linkButton = new ButtonBuilder()
+        .setStyle(ButtonStyle.Link)
+        .setURL(track.info.uri)
+        .setLabel('View in YouTube');
+
+      queueActionRow.addComponents(linkButton);
+    }
 
     const queueQuestion = await interaction.editReply({
       content: `You have selected \`${track.info.title}\`. How would you like this to be queued?`,
