@@ -49,7 +49,6 @@ export class Player<UserData> {
   playing: boolean = false;
   volume = 1.0;
   filter = new LavalinkFilter(this);
-  saveIntervalId: NodeJS.Timeout;
   autoLeave: boolean;
   autoLeaveMs: number;
 
@@ -60,11 +59,6 @@ export class Player<UserData> {
     this.autoLeave = options.autoLeave;
     this.autoLeaveMs = options.autoLeaveMs ?? DEFAULT_AUTO_LEAVE_MS;
     this.queue = new TrackQueue([], { link, guildId: options.guildId });
-    // Save state every minute
-    this.saveIntervalId = setInterval(async () => {
-      await this.queue.save();
-      await this.save();
-    }, 60000);
   }
 
   async init() {
@@ -85,7 +79,6 @@ export class Player<UserData> {
   async destroy() {
     await this.node.destroyPlayer(this.guildId);
     this.link.emit('playerDestroy', this);
-    clearTimeout(this.saveIntervalId);
   }
 
   async update(options: UpdatePlayerOptions<UserData>) {

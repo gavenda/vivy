@@ -127,7 +127,7 @@ export class LavalinkNode<UserData> {
         this.handleStats(payload);
         break;
       case OpCode.PLAYER_UPDATE:
-        this.handlePlayerUpdate(payload);
+        await this.handlePlayerUpdate(payload);
         break;
       case OpCode.EVENT:
         await this.handleEvent(payload);
@@ -185,7 +185,7 @@ export class LavalinkNode<UserData> {
     this.stats = stats;
   }
 
-  private handlePlayerUpdate(payload: PlayerUpdatePayload) {
+  private async handlePlayerUpdate(payload: PlayerUpdatePayload) {
     const player = this.players.get(payload.guildId);
 
     if (!player) return;
@@ -203,6 +203,10 @@ export class LavalinkNode<UserData> {
     player.ping = payload.state.ping;
     player.time = payload.state.time;
     player.connected = payload.state.connected;
+
+    // Save state
+    await player.queue.save();
+    await player.save();
   }
 
   private async handleEvent(payload: LavalinkEventReceivePayload<UserData>) {

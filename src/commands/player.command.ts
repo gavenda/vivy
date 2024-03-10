@@ -30,7 +30,7 @@ export const player: AppCommand = {
     });
 
     // Delete previous message, if any
-    const previousPlayer = await redis.get(`player:${interaction.guildId}`);
+    const previousPlayer = await redis.get(`player:embed:${interaction.guildId}`);
 
     if (previousPlayer) {
       try {
@@ -58,7 +58,7 @@ export const player: AppCommand = {
       components: playerComponents
     });
 
-    await redis.set(`player:${interaction.guildId}`, `${interaction.channelId}:${message.id}`);
+    await redis.set(`player:embed:${interaction.guildId}`, `${interaction.channelId}:${message.id}`);
 
     await interaction.followUp({
       content: `Created player in <#${interaction.channelId}>`,
