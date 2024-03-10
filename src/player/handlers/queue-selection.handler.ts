@@ -58,6 +58,7 @@ export const handleQueueSelection = async (options: {
     await handleTrack({ interaction: buttonClick, track, player, queue });
   } catch (e) {
     await interaction.followUp({
+      ephemeral: true,
       content: `You failed to specify how to queue, will be playing it later.`,
       components: []
     });
