@@ -1,7 +1,8 @@
 # Vivy
 
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
-![Build](https://github.com/gavenda/vivy.js/actions/workflows/build.yml/badge.svg)
+![GitHub package.json version](https://img.shields.io/github/package-json/v/gavenda/vivy)
+![GitHub License](https://img.shields.io/github/license/gavenda/vivy)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/gavenda/vivy/deploy.yml)
 
 My mission is to make everyone happy by singing.
 
