@@ -88,10 +88,6 @@ export class Player<UserData> {
    */
   playing: boolean = false;
   /**
-   * The current volume of this player.
-   */
-  volume = 1.0;
-  /**
    * The filters applied in this player.
    */
   filter = new LavalinkFilter(this);
@@ -129,6 +125,13 @@ export class Player<UserData> {
       autoLeave: this.autoLeave,
       autoLeaveMs: this.autoLeaveMs
     };
+  }
+
+  /**
+   * The current volume of this player.
+   */
+  get volume(): number {
+    return this.filter.volume;
   }
 
   /**
@@ -235,8 +238,7 @@ export class Player<UserData> {
    * @param volume the volume amount in floating numbers i.e (0 - 1.0)
    */
   async applyVolume(volume: number) {
-    this.volume = volume;
-    await this.node.rest.updatePlayer(this.guildId, { filters: { volume } });
+    await this.filter.applyVolume(volume);
   }
 
   /**

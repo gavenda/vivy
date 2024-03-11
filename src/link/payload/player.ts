@@ -180,7 +180,7 @@ export interface ChannelMix {
  *
  * Any smoothing values equal to or less than 1.0 will disable the filter.
  */
-export interface Lowpass {
+export interface LowPass {
   /**
    * The smoothing factor (1.0 < x).
    */
@@ -227,7 +227,7 @@ export interface Filters {
   /**
    * Filters higher frequencies.
    */
-  lowPass?: Lowpass;
+  lowPass?: LowPass;
   /**
    * Filter plugin configurations.
    */
