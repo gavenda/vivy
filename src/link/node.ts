@@ -9,6 +9,7 @@ import {
   ReadyPayload,
   Stats,
   StatsPayload,
+  TrackEndReason,
   UpdatePlayerOptions
 } from './payload';
 import { PlayerState, RepeatMode } from './player';
@@ -228,7 +229,7 @@ export class LavalinkNode<UserData> {
 
         this.link.emit('trackEnd', player, payload.track, payload.reason);
 
-        if (payload.reason === 'replaced') return;
+        if (payload.reason === TrackEndReason.REPLACED) return;
 
         if (player.repeatMode === RepeatMode.TRACK && player.queue.current) {
           await player.play(payload.track);
@@ -247,7 +248,7 @@ export class LavalinkNode<UserData> {
         player.playing = false;
         player.queue.current = null;
         await player.stop();
-        this.link.emit('trackError', player, payload.track, payload.error, payload.exception);
+        this.link.emit('trackError', player, payload.track, payload.exception);
         break;
       }
       case EventType.TRACK_STUCK: {
