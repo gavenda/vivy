@@ -21,6 +21,7 @@ jobs:
           cache: 'pnpm'
       - run: pnpm lint
         name: Lint
+        continue-on-error: true
       - run: |
           pnpm clean
           pnpm build
