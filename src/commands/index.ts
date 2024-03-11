@@ -1,6 +1,7 @@
 import { clear } from './clear.command';
 import { disconnect } from './disconnect.command';
 import { effect } from './effect.command';
+import { listenMoe } from './listen.moe.command';
 import { loop } from './loop.command';
 import { pause } from './pause.command';
 import { play } from './play.command';
@@ -19,6 +20,7 @@ export const commands = [
   clear,
   disconnect,
   effect,
+  listenMoe,
   loop,
   pause,
   play,
@@ -36,6 +38,7 @@ export {
   clear,
   disconnect,
   effect,
+  listenMoe,
   loop,
   pause,
   play,

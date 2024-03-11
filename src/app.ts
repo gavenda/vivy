@@ -9,6 +9,7 @@ import { Requester } from './requester';
 // @ts-expect-error no type definitions
 import * as dotenv from '@dotenvx/dotenvx';
 import { Lavalink } from './link';
+import { LISTEN_MOE_JPOP_STREAM, LISTEN_MOE_KPOP_STREAM, LISTEN_MOE_STREAMS, ListenMoe, RadioType } from './listen.moe';
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
 dotenv.config();
@@ -48,6 +49,9 @@ const redis = createClient({
 
 // Create spotify client
 const spotify = SpotifyApi.withClientCredentials(process.env.SPOTIFY_CLIENT_ID, process.env.SPOTIFY_CLIENT_SECRET);
+
+// Create listen moe radio
+const listenMoe = new ListenMoe();
 
 // Create discord client
 const client = new Client({
@@ -96,11 +100,23 @@ client.on(Events.Error, (error) => {
 
 const context: AppContext = {
   applicationId: process.env.CLIENT_ID,
+  listenMoe,
   client,
   redis,
   link,
   spotify
 };
+
+// listen moe events
+listenMoe.on('trackUpdate', async () => {
+  for (const node of link.connectedNodes) {
+    for (const player of node.players.values()) {
+      if (player.queue.current && LISTEN_MOE_STREAMS.includes(player.queue.current.info.identifier)) {
+        await updatePlayer(context, player.guildId);
+      }
+    }
+  }
+});
 
 // link events
 link.on('nodeReady', async (node) => {
@@ -144,11 +160,24 @@ link.on('playerSocketClosed', (player, code, byRemote, reason) => {
 
 link.on('trackStart', async (player, track) => {
   logger.info('Track start', { title: track.info.title, guild: player.guildId });
+
+  if (track.info.identifier === LISTEN_MOE_JPOP_STREAM) {
+    listenMoe.connect(RadioType.JPOP);
+  }
+  if (track.info.identifier === LISTEN_MOE_KPOP_STREAM) {
+    listenMoe.connect(RadioType.KPOP);
+  }
+
   await updatePlayer(context, player.guildId);
 });
 
 link.on('trackEnd', async (player, track, reason) => {
   logger.info('Track end', { title: track.info.title, guild: player.guildId, reason });
+
+  if (LISTEN_MOE_STREAMS.includes(track.info.identifier)) {
+    listenMoe.disconnect();
+  }
+
   await updatePlayer(context, player.guildId);
 });
 

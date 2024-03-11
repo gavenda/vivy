@@ -27,6 +27,37 @@ export const createPlayerQueue = ({ link }: AppContext, guildId: string, pageInd
   return queue.length === 0 ? 'The audience has not requested me to sing anything.' : queue.join('\n');
 };
 
+export const createListenMoeEmbed = (context: AppContext, guildId: string) => {
+  const { link, client, listenMoe } = context;
+  const player = link.getPlayer(guildId);
+
+  const listenMoeEmbed = new EmbedBuilder()
+    .setTitle(`${client.user?.username ?? 'Vivy'} Song List`)
+    .setDescription(`Listening to [Listen.MOE](https://listen.moe/)`)
+    .setColor(0xff015b)
+    .setImage(listenMoe.info.cover)
+    .setThumbnail(`https://listen.moe/_nuxt/img/logo-square-64.248c1f3.png`)
+    .addFields(
+      {
+        name: 'Now Playing',
+        value: listenMoe.info.song,
+        inline: false
+      },
+      {
+        name: 'Artist',
+        value: listenMoe.info.artist,
+        inline: false
+      },
+      {
+        name: 'Volume',
+        value: player?.volume ? `${Math.round(player?.volume * 100)}%` : '100%',
+        inline: true
+      }
+    );
+
+  return listenMoeEmbed;
+};
+
 export const createPlayerEmbed = (context: AppContext, guildId: string, pageIndex: number = 0) => {
   const { link, client } = context;
   const player = link.getPlayer(guildId);
@@ -46,6 +77,11 @@ export const createPlayerEmbed = (context: AppContext, guildId: string, pageInde
       {
         name: 'Now Playing',
         value: track?.info.title ? `[${track.info.title}](${track.info.uri})` : '-',
+        inline: false
+      },
+      {
+        name: 'Artist',
+        value: track?.info.author ?? '-',
         inline: false
       },
       {
@@ -83,7 +119,43 @@ export const createPlayerEmbed = (context: AppContext, guildId: string, pageInde
   return queueEmbed;
 };
 
-export const createPlayerComponents = ({ link }: AppContext, guildId: string) => {
+export const createListenMoeComponents = ({ link }: AppContext, guildId: string): ActionRowBuilder<ButtonBuilder>[] => {
+  const player = link.getPlayer(guildId);
+  const playing = player?.playing ?? false;
+
+  const pausePlayButton = new ButtonBuilder()
+    .setCustomId('player:play-toggle')
+    .setStyle(ButtonStyle.Secondary)
+    .setEmoji(playing ? AppEmoji.Pause : AppEmoji.Play);
+  const stopButton = new ButtonBuilder()
+    .setCustomId('player:stop')
+    .setStyle(ButtonStyle.Danger)
+    .setEmoji(AppEmoji.Stop);
+  const volumeDownButton = new ButtonBuilder()
+    .setCustomId('player:volume-down')
+    .setStyle(ButtonStyle.Secondary)
+    .setEmoji(AppEmoji.VolumeDown);
+  const volumeUpButton = new ButtonBuilder()
+    .setCustomId('player:volume-up')
+    .setStyle(ButtonStyle.Secondary)
+    .setEmoji(AppEmoji.VolumeUp);
+  const listenMoeButton = new ButtonBuilder()
+    .setStyle(ButtonStyle.Link)
+    .setLabel('Listen.MOE')
+    .setURL('https://listen.moe');
+
+  const firstRow = new ActionRowBuilder<ButtonBuilder>().setComponents(
+    pausePlayButton,
+    stopButton,
+    volumeDownButton,
+    volumeUpButton,
+    listenMoeButton
+  );
+
+  return [firstRow];
+};
+
+export const createPlayerComponents = ({ link }: AppContext, guildId: string): ActionRowBuilder<ButtonBuilder>[] => {
   const player = link.getPlayer(guildId);
   const playing = player?.playing ?? false;
   const disablePagination = (player?.queue?.size ?? 0) < 15;

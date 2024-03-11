@@ -213,6 +213,7 @@ export class Player<UserData> {
    * Stops the playing track.
    */
   async stop() {
+    this.queue.current = null;
     await this.node.rest.updatePlayer(this.guildId, { track: { encoded: null } });
     this.playing = false;
   }
