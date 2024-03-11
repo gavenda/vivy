@@ -13,14 +13,32 @@ import { LavalinkNode, LavalinkNodeOptions } from './node';
 import { LoadResultType } from './payload';
 import { PlayerOptions } from './player';
 
+/**
+ * Lavalink sources.
+ */
 export enum LavalinkSource {
+  /**
+   * Search in {@link https://www.youtube.com/ |  YouTube}.
+   */
   YOUTUBE = 'ytsearch',
+  /**
+   * Search in {@link https://music.youtube.com/ |  YouTube Music}.
+   */
   YOUTUBE_MUSIC = 'ytmsearch'
 }
 
 export interface SearchOptions<UserData> {
+  /**
+   * Search query. Can be a link if supported by the enabled sources.
+   */
   query: string;
+  /**
+   * Arbitrary user data you want to pass along.
+   */
   userData: UserData;
+  /**
+   * The source you want to query. Defaults to {@link LavalinkSource.YOUTUBE_MUSIC}.
+   */
   source?: LavalinkSource;
 }
 
@@ -29,11 +47,25 @@ export interface Lavalink<UserData> {
   emit<E extends keyof LavalinkEvents<UserData>>(event: E, ...args: Parameters<LavalinkEvents<UserData>[E]>): boolean;
 }
 
+/**
+ * Send voice update function.
+ * @param guildId the guild id
+ * @param payload the payload from discord.js
+ */
 export type SendVoiceUpdate = (guildId: string, payload: GatewaySendPayload) => Awaitable<void>;
 
 export interface LavalinkOptions {
+  /**
+   * The nodes to use.
+   */
   nodes: LavalinkNodeOptions[];
+  /**
+   * The redis client.
+   */
   redis: ReturnType<typeof createClient>;
+  /**
+   * The send voice update function.
+   */
   sendVoiceUpdate: SendVoiceUpdate;
 }
 
@@ -53,30 +85,46 @@ export class Lavalink<UserData> extends EventEmitter {
     this.sendVoiceUpdate = options.sendVoiceUpdate;
   }
 
-  connectedNodes() {
+  /**
+   * The connected nodes in this client.
+   */
+  get connectedNodes() {
     return this.nodes.filter((node) => node.connected);
   }
 
+  /**
+   * Retrieves a ready and available node.
+   */
+  get availableNode() {
+    if (this.connectedNodes.length === 0) {
+      throw Error('No nodes connected');
+    }
+
+    return this.connectedNodes[Math.floor(Math.random() * this.connectedNodes.length)];
+  }
+
+  /**
+   * Returns an instance of {@link Player} within this client.
+   * @param guildId the guild of the player
+   * @returns the player instance, or `null` if not found.
+   */
   getPlayer(guildId: string) {
     const node = this.nodes.find((node) => node.players.has(guildId));
     return node?.players.get(guildId);
   }
 
-  availableNode() {
-    const connectedNodes = this.connectedNodes();
-
-    if (connectedNodes.length === 0) {
-      throw Error('No nodes connected');
-    }
-
-    return connectedNodes[Math.floor(Math.random() * connectedNodes.length)];
-  }
-
+  /**
+   * Creates a player instance on an available node.
+   * @param options player options
+   */
   async createPlayer(options: PlayerOptions) {
-    const node = this.availableNode();
-    return node.createPlayer(options);
+    return this.availableNode.createPlayer(options);
   }
 
+  /**
+   * Initializes this client.
+   * @param userId the user id of the bot
+   */
   async init(userId: string) {
     this.userId = userId;
 
@@ -87,6 +135,10 @@ export class Lavalink<UserData> extends EventEmitter {
     }
   }
 
+  /**
+   * Handle raw data coming from the discord gateway.
+   * @param data raw data coming from discord.js
+   */
   async handleRawData(data: GatewayReceivePayload) {
     switch (data.t) {
       // case GatewayDispatchEvents.ChannelDelete:
@@ -104,6 +156,10 @@ export class Lavalink<UserData> extends EventEmitter {
   // TODO: handle channel deletion
   // async handleChannelDelete(data: GatewayChannelDeleteDispatch) {}
 
+  /**
+   * Handle voice state update.
+   * @param data voice update dispatch data from discord.js
+   */
   async handleVoiceStateUpdate(data: GatewayVoiceStateUpdateDispatch) {
     if (!data.d.guild_id) return;
     if (data.d.user_id !== this.userId) return;
@@ -139,6 +195,10 @@ export class Lavalink<UserData> extends EventEmitter {
     });
   }
 
+  /**
+   * Handle voice server update.
+   * @param data voice server update data coming from discord.js
+   */
   async handleVoiceServerUpdate(data: GatewayVoiceServerUpdateDispatch) {
     const player = this.getPlayer(data.d.guild_id);
 
@@ -159,6 +219,11 @@ export class Lavalink<UserData> extends EventEmitter {
     });
   }
 
+  /**
+   * Search for a track.
+   * @param options track search options
+   * @returns the search load result
+   */
   async search(options: SearchOptions<UserData>) {
     const { query, userData } = options;
     let { source } = options;
@@ -169,8 +234,8 @@ export class Lavalink<UserData> extends EventEmitter {
 
     const identifier = `${source}:${query}`;
     const result = isValidHttpUrl(query)
-      ? await this.availableNode().loadTrack(query)
-      : await this.availableNode().loadTrack(identifier);
+      ? await this.availableNode.loadTrack(query)
+      : await this.availableNode.loadTrack(identifier);
 
     switch (result.loadType) {
       case LoadResultType.TRACK:
