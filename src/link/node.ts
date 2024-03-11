@@ -16,6 +16,7 @@ import { RepeatMode } from './player';
 import { PlayerState } from './player.state';
 import { LavalinkRestApi } from './rest';
 import { Player, PlayerOptions } from './player';
+import { version } from '@app/version';
 
 export interface LavalinkNodeOptions {
   /**
@@ -102,7 +103,7 @@ export class LavalinkNode<UserData> {
     const headers: Record<string, string> = {
       Authorization: authorization,
       'User-Id': this.userId,
-      'Client-Name': 'Vivy/1.0'
+      'Client-Name': `Vivy/${version}`
     };
 
     if (previousSessionId) {
