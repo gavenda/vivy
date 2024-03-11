@@ -125,6 +125,8 @@ export class ListenMoe extends EventEmitter {
     }
     if (data.song.albums && data.song.albums.length > 0 && data.song.albums[0].image) {
       this.info.cover = `https://cdn.listen.moe/covers/${data.song.albums[0].image}`;
+    } else if (data.song.artists && data.song.artists.length > 0 && data.song.artists[0].image) {
+      this.info.cover = `https://cdn.listen.moe/artists/${data.song.artists[0].image}`;
     } else {
       this.info.cover = null;
     }
