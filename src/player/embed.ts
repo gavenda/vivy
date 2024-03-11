@@ -49,6 +49,11 @@ export const createListenMoeEmbed = (context: AppContext, guildId: string) => {
         inline: false
       },
       {
+        name: 'Album',
+        value: listenMoe.info.album,
+        inline: false
+      },
+      {
         name: 'Volume',
         value: player?.volume ? `${Math.round(player?.volume * 100)}%` : '100%',
         inline: true
