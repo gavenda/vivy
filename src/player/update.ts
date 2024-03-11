@@ -4,7 +4,7 @@ import { createPlayerComponents, createPlayerEmbed } from './embed';
 
 export const updatePlayer = async (context: AppContext, guildId: string) => {
   const { client, redis } = context;
-  const player = await redis.get(`player:${guildId}`);
+  const player = await redis.get(`player:embed:${guildId}`);
 
   if (!player) return;
 
