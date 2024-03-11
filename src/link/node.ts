@@ -17,10 +17,25 @@ import { LavalinkRestApi } from './rest';
 import { Player, PlayerOptions } from './player';
 
 export interface LavalinkNodeOptions {
+  /**
+   * The lavalink host.
+   */
   host: string;
+  /**
+   * The lavalink port.
+   */
   port: number;
+  /**
+   * The lavalink password.
+   */
   authorization: string;
+  /**
+   * Set to true if using a secure protocol.
+   */
   secure: boolean;
+  /**
+   * Reconnect timeout in milliseconds.
+   */
   reconnectTimeout?: number;
 }
 
@@ -61,14 +76,23 @@ export class LavalinkNode<UserData> {
     this.rest = new LavalinkRestApi(options);
   }
 
+  /**
+   * Returns `true` if this node is connected.
+   */
   get connected() {
     return this.sessionId !== undefined || this.sessionId !== null;
   }
 
+  /**
+   * Returns the password of this node.
+   */
   get authorization() {
     return this.options.authorization;
   }
 
+  /**
+   * Establish a connection to the lavalink server.
+   */
   async connect() {
     const { authorization, host, port, secure } = this.options;
 
@@ -274,6 +298,10 @@ export class LavalinkNode<UserData> {
     }
   }
 
+  /**
+   * Restores a player to their previous state.
+   * @param guildId guild id of the player
+   */
   async restorePlayer(guildId: string) {
     const stateStr = await this.link.redis.get(`player:state:${this.options.host}:${guildId}`);
     if (!stateStr) return;
@@ -318,6 +346,10 @@ export class LavalinkNode<UserData> {
     }
   }
 
+  /**
+   * Create a player in this node.
+   * @param options player options
+   */
   async createPlayer(options: PlayerOptions) {
     // Check existing players
     if (this.players.has(options.guildId)) {
@@ -336,16 +368,26 @@ export class LavalinkNode<UserData> {
     }
   }
 
+  /**
+   * Load a track using this node.
+   * @param identifier the identifier
+   */
   async loadTrack(identifier: string) {
     return this.rest.loadTracks(identifier);
   }
 
+  /**
+   * Disconnect all players in this node.
+   */
   async disconnectPlayers() {
     for (const player of this.players.values()) {
       await player.disconnect();
     }
   }
 
+  /**
+   * Destroy all players in this node.
+   */
   async destroyPlayers() {
     for (const player of this.players.values()) {
       await this.rest.destroyPlayer(player.guildId);
@@ -354,6 +396,10 @@ export class LavalinkNode<UserData> {
     this.players.clear();
   }
 
+  /**
+   * Destroy a player in this node.
+   * @param guildId guild id
+   */
   async destroyPlayer(guildId: string) {
     const player = this.players.get(guildId);
 
@@ -366,6 +412,11 @@ export class LavalinkNode<UserData> {
     this.players.delete(guildId);
   }
 
+  /**
+   * Updates a player in this node
+   * @param guildId guild id
+   * @param options player update options
+   */
   async updatePlayer(guildId: string, options: UpdatePlayerOptions<UserData>) {
     await this.rest.updatePlayer(guildId, options);
   }
