@@ -49,7 +49,7 @@ export const clear: AppCommand = {
 
     switch (subcommand) {
       case 'queue':
-        player.queue.clear();
+        await player.queue.clear();
         await interaction.reply({
           ephemeral: true,
           content: 'Queue cleared.'

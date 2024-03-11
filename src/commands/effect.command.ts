@@ -127,11 +127,11 @@ const handleFilter = async (options: {
         return;
       }
 
-      await player.filter.setTimescale({ rate: speed / 100 });
+      await player.filter.applyTimescale({ rate: speed / 100 });
       break;
     }
     case 'karaoke': {
-      await player.filter.setKaraoke({
+      await player.filter.applyKaraoke({
         level: 1.0,
         monoLevel: 1.0,
         filterBand: 220.0,
@@ -160,7 +160,7 @@ const handleEqualizer = async (options: {
 
   switch (subcommand) {
     case 'rock': {
-      await player.filter.setEqualizer([
+      await player.filter.applyEqualizer([
         { band: 0, gain: 0.3 },
         { band: 1, gain: 0.25 },
         { band: 2, gain: 0.2 },
@@ -180,7 +180,7 @@ const handleEqualizer = async (options: {
       break;
     }
     case 'pop': {
-      await player.filter.setEqualizer([
+      await player.filter.applyEqualizer([
         { band: 0, gain: -0.25 },
         { band: 1, gain: 0.48 },
         { band: 2, gain: 0.59 },

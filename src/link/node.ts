@@ -12,7 +12,8 @@ import {
   TrackEndReason,
   UpdatePlayerOptions
 } from './payload';
-import { PlayerState, RepeatMode } from './player';
+import { RepeatMode } from './player';
+import { PlayerState } from './player.state';
 import { LavalinkRestApi } from './rest';
 import { Player, PlayerOptions } from './player';
 
@@ -230,8 +231,8 @@ export class LavalinkNode<UserData> {
     player.connected = payload.state.connected;
 
     // Save state
-    await player.queue.save();
-    await player.save();
+    await player.queue.saveState();
+    await player.saveState();
   }
 
   private async handleEvent(payload: LavalinkEventReceivePayload<UserData>) {
@@ -320,7 +321,7 @@ export class LavalinkNode<UserData> {
     player.repeatMode = state.repeatMode;
 
     // Sync volume
-    await player.setVolume(state.volume);
+    await player.applyVolume(state.volume);
 
     // Sync voice state
     if (state.voice.endpoint && state.voice.sessionId && state.voice.token) {
@@ -390,8 +391,8 @@ export class LavalinkNode<UserData> {
    */
   async destroyPlayers() {
     for (const player of this.players.values()) {
+      await player.deleteState();
       await this.rest.destroyPlayer(player.guildId);
-      await this.link.redis.del(player.stateKey);
     }
     this.players.clear();
   }
@@ -403,11 +404,11 @@ export class LavalinkNode<UserData> {
   async destroyPlayer(guildId: string) {
     const player = this.players.get(guildId);
 
-    await this.rest.destroyPlayer(guildId);
-
     if (player) {
-      await this.link.redis.del(player.stateKey);
+      await player.deleteState();
     }
+
+    await this.rest.destroyPlayer(guildId);
 
     this.players.delete(guildId);
   }

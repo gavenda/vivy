@@ -63,7 +63,7 @@ export const volume: AppCommand = {
       return;
     }
 
-    await player.setVolume(volume / 100);
+    await player.applyVolume(volume / 100);
 
     await interaction.reply({
       ephemeral: true,

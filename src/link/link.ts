@@ -1,5 +1,7 @@
 import { Awaitable, isValidHttpUrl } from '@app/utils';
 import {
+  ChannelType,
+  GatewayChannelDeleteDispatch,
   GatewayDispatchEvents,
   GatewayReceivePayload,
   GatewaySendPayload,
@@ -71,10 +73,25 @@ export interface LavalinkOptions {
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export class Lavalink<UserData> extends EventEmitter {
+  /**
+   * The nodes that belong in this client.
+   */
   nodes: LavalinkNode<UserData>[] = [];
+  /**
+   * The redis client.
+   */
   redis: ReturnType<typeof createClient>;
+  /**
+   * The options that were used when creating this client.
+   */
   options: LavalinkOptions;
+  /**
+   * The send voice update function.
+   */
   sendVoiceUpdate: SendVoiceUpdate;
+  /**
+   * The user id of the discord bot this client belongs to.
+   */
   userId?: string;
 
   constructor(options: LavalinkOptions) {
@@ -141,9 +158,9 @@ export class Lavalink<UserData> extends EventEmitter {
    */
   async handleRawData(data: GatewayReceivePayload) {
     switch (data.t) {
-      // case GatewayDispatchEvents.ChannelDelete:
-      //   await this.handleChannelDelete(data);
-      //   break;
+      case GatewayDispatchEvents.ChannelDelete:
+        await this.handleChannelDelete(data);
+        break;
       case GatewayDispatchEvents.VoiceServerUpdate:
         await this.handleVoiceServerUpdate(data);
         break;
@@ -153,14 +170,59 @@ export class Lavalink<UserData> extends EventEmitter {
     }
   }
 
-  // TODO: handle channel deletion
-  // async handleChannelDelete(data: GatewayChannelDeleteDispatch) {}
+  /**
+   * Search for a track.
+   * @param options track search options
+   * @returns the search load result
+   */
+  async search(options: SearchOptions<UserData>) {
+    const { query, userData } = options;
+    let { source } = options;
+
+    if (!source) {
+      source = LavalinkSource.YOUTUBE_MUSIC;
+    }
+
+    const identifier = `${source}:${query}`;
+    const result = isValidHttpUrl(query)
+      ? await this.availableNode.loadTrack(query)
+      : await this.availableNode.loadTrack(identifier);
+
+    switch (result.loadType) {
+      case LoadResultType.TRACK:
+        result.data.userData = userData;
+        break;
+      case LoadResultType.PLAYLIST:
+        result.data.tracks.forEach((track) => (track.userData = userData));
+        break;
+      case LoadResultType.SEARCH:
+        result.data.forEach((track) => (track.userData = userData));
+        break;
+    }
+
+    return result;
+  }
+
+  /**
+   * Handle channel delete.
+   * @param data channel delete data from discord.js
+   */
+  private async handleChannelDelete(data: GatewayChannelDeleteDispatch) {
+    if (data.d.type !== ChannelType.GuildVoice) return;
+    if (!data.d.guild_id) return;
+
+    const player = this.getPlayer(data.d.guild_id);
+
+    if (!player) return;
+
+    await player.node.destroyPlayer(data.d.guild_id);
+  }
 
   /**
    * Handle voice state update.
    * @param data voice update dispatch data from discord.js
    */
-  async handleVoiceStateUpdate(data: GatewayVoiceStateUpdateDispatch) {
+  private async handleVoiceStateUpdate(data: GatewayVoiceStateUpdateDispatch) {
     if (!data.d.guild_id) return;
     if (data.d.user_id !== this.userId) return;
 
@@ -199,7 +261,7 @@ export class Lavalink<UserData> extends EventEmitter {
    * Handle voice server update.
    * @param data voice server update data coming from discord.js
    */
-  async handleVoiceServerUpdate(data: GatewayVoiceServerUpdateDispatch) {
+  private async handleVoiceServerUpdate(data: GatewayVoiceServerUpdateDispatch) {
     const player = this.getPlayer(data.d.guild_id);
 
     if (!player) return;
@@ -217,38 +279,5 @@ export class Lavalink<UserData> extends EventEmitter {
         sessionId: player.voice.sessionId
       }
     });
-  }
-
-  /**
-   * Search for a track.
-   * @param options track search options
-   * @returns the search load result
-   */
-  async search(options: SearchOptions<UserData>) {
-    const { query, userData } = options;
-    let { source } = options;
-
-    if (!source) {
-      source = LavalinkSource.YOUTUBE_MUSIC;
-    }
-
-    const identifier = `${source}:${query}`;
-    const result = isValidHttpUrl(query)
-      ? await this.availableNode.loadTrack(query)
-      : await this.availableNode.loadTrack(identifier);
-
-    switch (result.loadType) {
-      case LoadResultType.TRACK:
-        result.data.userData = userData;
-        break;
-      case LoadResultType.PLAYLIST:
-        result.data.tracks.forEach((track) => (track.userData = userData));
-        break;
-      case LoadResultType.SEARCH:
-        result.data.forEach((track) => (track.userData = userData));
-        break;
-    }
-
-    return result;
   }
 }

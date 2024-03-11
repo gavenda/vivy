@@ -2,6 +2,7 @@ import { Equalizer, Karaoke, Timescale } from './payload';
 import { Player } from './player';
 
 export class LavalinkFilter<UserData> {
+  volume: number = 1.0;
   player: Player<UserData>;
 
   constructor(player: Player<UserData>) {
@@ -9,22 +10,27 @@ export class LavalinkFilter<UserData> {
   }
 
   async reset() {
-    const { volume } = this.player;
+    const { volume } = this;
     await this.player.update({ filters: { volume } });
   }
 
-  async setTimescale(timescale: Timescale) {
-    const { volume } = this.player;
+  async applyVolume(volume: number) {
+    this.volume = volume;
+    await this.player.update({ filters: { volume } });
+  }
+
+  async applyTimescale(timescale: Timescale) {
+    const { volume } = this;
     await this.player.update({ filters: { volume, timescale } });
   }
 
-  async setKaraoke(karaoke: Karaoke) {
-    const { volume } = this.player;
+  async applyKaraoke(karaoke: Karaoke) {
+    const { volume } = this;
     await this.player.update({ filters: { volume, karaoke } });
   }
 
-  async setEqualizer(equalizer: Equalizer[]) {
-    const { volume } = this.player;
+  async applyEqualizer(equalizer: Equalizer[]) {
+    const { volume } = this;
     await this.player.update({ filters: { volume, equalizer } });
   }
 }

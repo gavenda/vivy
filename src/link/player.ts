@@ -4,52 +4,104 @@ import { Lavalink } from './link';
 import { LavalinkNode } from './node';
 import { Track, UpdatePlayerOptions, VoiceState } from './payload';
 import { TrackQueue } from './queue';
+import { PlayerState } from './player.state';
 
 export const DEFAULT_AUTO_LEAVE_MS = 1000 * 60 * 5;
 
 export enum RepeatMode {
+  /**
+   * Repeat the playing track.
+   */
   TRACK = 'track',
+  /**
+   * Repeat the playing queue.
+   */
   QUEUE = 'queue',
+  /**
+   * Turns off repeat.
+   */
   OFF = 'off'
 }
 
 export interface PlayerOptions {
+  /**
+   * Guild identifier.
+   */
   guildId: string;
+  /**
+   * Enable auto leave.
+   */
   autoLeave: boolean;
+  /**
+   * Auto leave time in milliseconds.
+   */
   autoLeaveMs?: number;
 }
 
-/**
- * An interface that can be safely stored as json.
- */
-export interface PlayerState {
-  guildId: string;
-  voiceChannelId?: string;
-  voice: Partial<VoiceState>;
-  repeatMode: RepeatMode;
-  playing: boolean;
-  volume: number;
-  position: number;
-  autoLeave: boolean;
-  autoLeaveMs: number;
-}
-
 export class Player<UserData> {
+  /**
+   * The lavalink client this player belongs to.
+   */
   link: Lavalink<UserData>;
+  /**
+   * The node this player belongs to.
+   */
   node: LavalinkNode<UserData>;
+  /**
+   * The track queue of this player.
+   */
   queue: TrackQueue<UserData>;
+  /**
+   * The guild id this player belongs to.
+   */
   guildId: string;
+  /**
+   * The voice channel id this player is connected to.
+   */
   voiceChannelId?: string;
+  /**
+   * Discord voice state of this player.
+   */
   voice: Partial<VoiceState> = {};
+  /**
+   * The position this player is playing music.
+   */
   position: number = 0;
+  /**
+   * The connected state of this player.
+   */
   connected: boolean = false;
+  /**
+   * The server time of this player.
+   */
   time: number = 0;
+  /**
+   * The latency in milliseconds of this player to the discord voice server.
+   */
   ping: number = 0;
+  /**
+   * The current repeat mode of this player.
+   */
   repeatMode: RepeatMode = RepeatMode.OFF;
+  /**
+   * Returns `true` if player is playing music.
+   */
   playing: boolean = false;
+  /**
+   * The current volume of this player.
+   */
   volume = 1.0;
+  /**
+   * The filters applied in this player.
+   */
   filter = new LavalinkFilter(this);
+  /**
+   * The auto leave state of this player.
+   */
   autoLeave: boolean;
+  /**
+   * The amount in milliseconds the player will auto leave after the queue ends.
+   */
   autoLeaveMs: number;
 
   constructor(link: Lavalink<UserData>, node: LavalinkNode<UserData>, options: PlayerOptions) {
@@ -61,30 +113,68 @@ export class Player<UserData> {
     this.queue = new TrackQueue([], { link, guildId: options.guildId });
   }
 
-  async init() {
-    await this.queue.sync();
-    // Emit creation
-    this.link.emit('playerInit', this);
+  private get stateKey(): string {
+    return `player:state:${this.node.options.host}:${this.guildId}`;
   }
 
+  private get state(): PlayerState {
+    return {
+      playing: this.playing,
+      voiceChannelId: this.voiceChannelId,
+      repeatMode: this.repeatMode,
+      volume: this.volume,
+      guildId: this.guildId,
+      voice: this.voice,
+      position: this.position,
+      autoLeave: this.autoLeave,
+      autoLeaveMs: this.autoLeaveMs
+    };
+  }
+
+  /**
+   * The remaining time of the this player.
+   */
   get remaining(): number {
     const length = this.queue.current?.info.length ?? 0;
     return Math.max(0, length - this.position);
   }
 
+  /**
+   * The total track duration of this player.
+   */
   get duration(): number {
     return Math.max(0, this.queue.duration);
   }
 
+  /**
+   * Initializes this player.
+   */
+  async init() {
+    await this.queue.syncState();
+    // Emit creation
+    this.link.emit('playerInit', this);
+  }
+
+  /**
+   * Destroy this player.
+   */
   async destroy() {
     await this.node.destroyPlayer(this.guildId);
     this.link.emit('playerDestroy', this);
   }
 
+  /**
+   * Updates this player.
+   * @param options player update options
+   */
   async update(options: UpdatePlayerOptions<UserData>) {
     await this.node.updatePlayer(this.guildId, options);
   }
 
+  /**
+   * Play a given track.
+   * @param track the track to play
+   */
   async play(track: Track<UserData> | null = null) {
     // Check if given null, otherwise take from queue
     if (!track) {
@@ -100,6 +190,9 @@ export class Player<UserData> {
     this.playing = true;
   }
 
+  /**
+   * Skips the playing track.
+   */
   async skip() {
     if (this.repeatMode === RepeatMode.TRACK && this.queue.current) {
       await this.play(this.queue.current);
@@ -113,26 +206,43 @@ export class Player<UserData> {
     }
   }
 
+  /**
+   * Stops the playing track.
+   */
   async stop() {
     await this.node.rest.updatePlayer(this.guildId, { track: { encoded: null } });
     this.playing = false;
   }
 
+  /**
+   * Pauses this player.
+   */
   async pause() {
     await this.node.rest.updatePlayer(this.guildId, { paused: true });
     this.playing = false;
   }
 
+  /**
+   * Resumes playing if paused.
+   */
   async resume() {
     await this.node.rest.updatePlayer(this.guildId, { paused: false });
     this.playing = true;
   }
 
-  async setVolume(volume: number) {
+  /**
+   * Applies the amount of volume given to this player
+   * @param volume the volume amount in floating numbers i.e (0 - 1.0)
+   */
+  async applyVolume(volume: number) {
     this.volume = volume;
     await this.node.rest.updatePlayer(this.guildId, { filters: { volume } });
   }
 
+  /**
+   * Connect to the voice channel.
+   * @param voiceChannelId voice channel id
+   */
   async connect(voiceChannelId: string) {
     if (this.connected) return;
 
@@ -149,6 +259,9 @@ export class Player<UserData> {
     this.voiceChannelId = voiceChannelId;
   }
 
+  /**
+   * Disconnect from the voice channel.
+   */
   async disconnect() {
     if (!this.connected) return;
     this.playing = false;
@@ -163,30 +276,25 @@ export class Player<UserData> {
     });
   }
 
-  get stateKey(): string {
-    return `player:state:${this.node.options.host}:${this.guildId}`;
-  }
-
-  get state(): PlayerState {
-    return {
-      playing: this.playing,
-      voiceChannelId: this.voiceChannelId,
-      repeatMode: this.repeatMode,
-      volume: this.volume,
-      guildId: this.guildId,
-      voice: this.voice,
-      position: this.position,
-      autoLeave: this.autoLeave,
-      autoLeaveMs: this.autoLeaveMs
-    };
-  }
-
-  async save() {
-    const redis = this.link.redis;
+  /**
+   * Save this player state.
+   */
+  async saveState() {
     const stateStr = JSON.stringify(this.state);
-    await redis.set(this.stateKey, stateStr);
+    await this.link.redis.set(this.stateKey, stateStr);
   }
 
+  /**
+   * Delete the player state.
+   */
+  async deleteState() {
+    await this.link.redis.del(this.stateKey);
+  }
+
+  /**
+   * Sync the voice state.
+   * @param voice the voice state
+   */
   async syncVoiceState(voice: Partial<VoiceState>) {
     if (!voice.endpoint) return;
     if (!voice.sessionId) return;
@@ -201,6 +309,9 @@ export class Player<UserData> {
     });
   }
 
+  /**
+   * Attempt an auto leave.
+   */
   attemptAutoLeave() {
     // Auto leave
     if (this.autoLeave) {

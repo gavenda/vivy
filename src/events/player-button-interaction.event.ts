@@ -57,11 +57,11 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
         break;
       }
       case 'volume-down': {
-        await player.setVolume(Math.min(1, Math.max(0, volume - 0.1)));
+        await player.applyVolume(Math.min(1, Math.max(0, volume - 0.1)));
         break;
       }
       case 'volume-up': {
-        await player.setVolume(Math.min(1, Math.max(0, volume + 0.1)));
+        await player.applyVolume(Math.min(1, Math.max(0, volume + 0.1)));
         break;
       }
       case 'repeat-track': {
@@ -73,7 +73,7 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
         break;
       }
       case 'stop': {
-        player.queue.clear();
+        await player.queue.clear();
         await player.stop();
       }
       case 'previous': {

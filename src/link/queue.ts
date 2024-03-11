@@ -1,12 +1,6 @@
 import { Lavalink } from './link';
 import { Track } from './payload';
-
-export interface TrackState<UserData> {
-  current: Track<UserData> | null;
-  previous: Track<UserData> | null;
-  tracks: Track<UserData>[];
-  offset: number;
-}
+import { TrackState } from './track.state';
 
 export interface TrackQueueOptions<UserData> {
   link: Lavalink<UserData>;
@@ -36,11 +30,20 @@ export class TrackQueue<UserData> {
   constructor(tracks: Track<UserData>[], options: TrackQueueOptions<UserData>) {
     this.guildId = options.guildId;
     this.link = options.link;
-    this.tracks = [];
+    this.tracks = tracks;
   }
 
-  private get key() {
+  private get stateKey() {
     return `player:queue:${this.guildId}`;
+  }
+
+  private get state(): TrackState<UserData> {
+    return {
+      current: this.current,
+      previous: this.previous,
+      tracks: this.tracks,
+      offset: this.offset
+    };
   }
 
   slice(start: number, end?: number) {
@@ -48,6 +51,10 @@ export class TrackQueue<UserData> {
     this.offset = 0;
   }
 
+  /**
+   * Peek to a track in the queue.
+   * @param index the index to peek
+   */
   peek(index: number) {
     return this.size > 0 ? this.tracks[this.offset + index] : null;
   }
@@ -159,24 +166,21 @@ export class TrackQueue<UserData> {
     );
   }
 
-  private get state(): TrackState<UserData> {
-    return {
-      current: this.current,
-      previous: this.previous,
-      tracks: this.tracks,
-      offset: this.offset
-    };
-  }
-
-  async save() {
+  /**
+   * Saves the queue state.
+   */
+  async saveState() {
     const redis = this.link.redis;
     const stateStr = JSON.stringify(this.state);
-    await redis.set(this.key, stateStr);
+    await redis.set(this.stateKey, stateStr);
   }
 
-  async sync() {
+  /**
+   * Synchronizes the queue state.
+   */
+  async syncState() {
     const redis = this.link.redis;
-    const stateStr = await redis.get(this.key);
+    const stateStr = await redis.get(this.stateKey);
 
     if (!stateStr) return;
 
@@ -192,9 +196,11 @@ export class TrackQueue<UserData> {
   /**
    * Clears the queue.
    */
-  clear() {
+  async clear() {
     this.tracks = [];
     this.offset = 0;
+    // Clear remote state
+    await this.link.redis.del(this.stateKey);
   }
 
   /**

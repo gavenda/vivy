@@ -40,7 +40,7 @@ export const stop: AppCommand = {
       return;
     }
 
-    player.queue.clear();
+    await player.queue.clear();
     await player.stop();
     await player.destroy();
 
