@@ -49,6 +49,11 @@
     },
     "placeholder": {
       "select_music": "Please select music to play"
+    },
+    "button": {
+      "queue_later": "Reserve Later",
+      "queue_next": "Play Next",
+      "queue_now": "Play Now"
     }
   }
 }

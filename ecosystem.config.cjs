@@ -5,15 +5,15 @@ const postDeployCommands = {
 
 const deploymentConfig = (environment, commands) => {
   return {
-    user: process.env.APP_USER,
-    host: process.env.APP_HOST,
-    key: 'deploy.key',
-    ref: process.env.APP_BRANCH,
-    repo: 'https://github.com/gavenda/vivy',
-    path: process.env.APP_PATH,
+    'user': process.env.APP_USER,
+    'host': process.env.APP_HOST,
+    'key': 'deploy.key',
+    'ref': process.env.APP_BRANCH,
+    'repo': 'https://github.com/gavenda/vivy',
+    'path': process.env.APP_PATH,
     // prettier-ignore
     'post-deploy': commands,
-    env: {
+    'env': {
       APP_ENV: environment,
       DOTENV_KEY: process.env.DOTENV_KEY
     }
