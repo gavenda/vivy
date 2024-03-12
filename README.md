@@ -1,8 +1,8 @@
 # Vivy
 
-![GitHub package.json version](https://img.shields.io/github/package-json/v/gavenda/vivy)
-![GitHub License](https://img.shields.io/github/license/gavenda/vivy)
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/gavenda/vivy/deploy.yml)
+![GitHub package.json version](https://img.shields.io/github/package-json/v/gavenda/vivy?style=for-the-badge)
+![GitHub License](https://img.shields.io/github/license/gavenda/vivy?style=for-the-badge)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/gavenda/vivy/deploy.yml?style=for-the-badge)
 
 My mission is to make everyone happy by singing.
 
