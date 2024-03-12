@@ -35,7 +35,14 @@
       "failed_music_selection": "No music selected within a minute, cancelled.",
       "selected_track_not_found": "Unable to find selected track.",
       "query_search_results": "Search results for `{{ query }}`",
-      "queue_question": "You have selected `{{ track }}`. How would you like this to be queued?"
+      "queue_question": "You have selected `{{ track }}`. How would you like this to be queued?",
+      "cleared_queue": "Queue cleared.",
+      "cleared_effect": "Effects cleared.",
+      "disconnected_from_channel": "Disconnected from voice channel.",
+      "applied_equalizer": "Equalizer applied.",
+      "applied_filter": "Filter applied.",
+      "speed_not_greater_than_max": "Speed should not be greater than {{ max }}.",
+      "speed_not_less_than_min": "Speed should not be less than {{ min }}."
     },
     "placeholder": {
       "select_music": "Please select music to play"

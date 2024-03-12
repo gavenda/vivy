@@ -112,18 +112,19 @@ const handleFilter = async (options: {
   switch (subcommand) {
     case 'nightcore': {
       const speed = interaction.options.getInteger('speed') ?? 105;
-
-      if (speed > 300) {
+      const min = 10;
+      const max = 300;
+      if (speed > max) {
         await interaction.reply({
           ephemeral: true,
-          content: 'Speed should not be greater than 300.'
+          content: i18next.t('reply.speed_not_greater_than_max', { lng: interaction.locale, max })
         });
         return;
       }
-      if (speed < 10) {
+      if (speed < min) {
         await interaction.reply({
           ephemeral: true,
-          content: 'Speed should not be less than 10.'
+          content: i18next.t('reply.speed_not_less_than_min', { lng: interaction.locale, min })
         });
         return;
       }
@@ -147,7 +148,7 @@ const handleFilter = async (options: {
 
   await interaction.reply({
     ephemeral: true,
-    content: 'Filter applied.'
+    content: i18next.t('reply.applied_filter', { lng: interaction.locale })
   });
 };
 
@@ -202,6 +203,6 @@ const handleEqualizer = async (options: {
 
   await interaction.reply({
     ephemeral: true,
-    content: 'Equalizer applied.'
+    content: i18next.t('reply.applied_equalizer', { lng: interaction.locale })
   });
 };

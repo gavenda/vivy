@@ -42,7 +42,7 @@ export const disconnect: AppCommand = {
 
     await interaction.reply({
       ephemeral: true,
-      content: 'Disconnected from voice channel.'
+      content: i18next.t('reply.disconnected_from_channel', { lng: interaction.locale })
     });
   }
 };

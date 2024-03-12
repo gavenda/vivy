@@ -53,14 +53,14 @@ export const clear: AppCommand = {
         await player.queue.clear();
         await interaction.reply({
           ephemeral: true,
-          content: 'Queue cleared.'
+          content: i18next.t('reply.cleared_queue', { lng: interaction.locale })
         });
         break;
       case 'effect':
         await player.filter.reset();
         await interaction.reply({
           ephemeral: true,
-          content: 'Effects cleared.'
+          content: i18next.t('reply.cleared_effect', { lng: interaction.locale })
         });
         break;
     }
