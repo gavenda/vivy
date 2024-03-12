@@ -60,6 +60,8 @@ export const handleQueueSelection = async (options: {
 
     const queue = <QueueType>buttonClick.customId.split(':')[1];
 
+    await buttonClick.deferUpdate();
+
     await handleTrack({ interaction: buttonClick, track, player, queue });
   } catch (e) {
     await interaction.followUp({
