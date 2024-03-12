@@ -1,7 +1,5 @@
 import { AppContext } from '@app/context';
-import { Player } from '@app/link';
 import { logger } from '@app/logger';
-import { Requester } from '@app/requester';
 import { hasVoiceState } from '@app/utils';
 import {
   ChatInputCommandInteraction,
@@ -11,6 +9,7 @@ import {
   SlashCommandSubcommandGroupBuilder
 } from 'discord.js';
 import i18next from 'i18next';
+import { MoonlinkPlayer } from 'moonlink.js';
 import { AppCommand } from './command';
 
 export const effect: AppCommand = {
@@ -76,7 +75,7 @@ export const effect: AppCommand = {
     }
 
     const { link } = context;
-    const player = link.getPlayer(interaction.guildId);
+    const player = link.players.get(interaction.guildId);
 
     if (!player) {
       await interaction.reply({
@@ -103,7 +102,7 @@ export const effect: AppCommand = {
 
 const handleFilter = async (options: {
   context: AppContext;
-  player: Player<Requester>;
+  player: MoonlinkPlayer;
   interaction: ChatInputCommandInteraction;
 }) => {
   const { interaction, player } = options;
@@ -129,11 +128,11 @@ const handleFilter = async (options: {
         return;
       }
 
-      await player.filter.applyTimescale({ rate: speed / 100 });
+      player.filters.setTimescale({ rate: speed / 100 });
       break;
     }
     case 'karaoke': {
-      await player.filter.applyKaraoke({
+      player.filters.setKaraoke({
         level: 1.0,
         monoLevel: 1.0,
         filterBand: 220.0,
@@ -154,7 +153,7 @@ const handleFilter = async (options: {
 
 const handleEqualizer = async (options: {
   context: AppContext;
-  player: Player<Requester>;
+  player: MoonlinkPlayer;
   interaction: ChatInputCommandInteraction;
 }) => {
   const { interaction, player } = options;
@@ -162,7 +161,7 @@ const handleEqualizer = async (options: {
 
   switch (subcommand) {
     case 'rock': {
-      await player.filter.applyEqualizer([
+      player.filters.setEqualizer([
         { band: 0, gain: 0.3 },
         { band: 1, gain: 0.25 },
         { band: 2, gain: 0.2 },
@@ -182,7 +181,7 @@ const handleEqualizer = async (options: {
       break;
     }
     case 'pop': {
-      await player.filter.applyEqualizer([
+      player.filters.setEqualizer([
         { band: 0, gain: -0.25 },
         { band: 1, gain: 0.48 },
         { band: 2, gain: 0.59 },

@@ -54,4 +54,4 @@ pnpx @dotenvx/dotenvx encrypt
 
 ## Notes
 
-As of 1.2.0, Vivy now uses its own lavalink client, the moonlink client will still be maintained just in case. If you want to see the moonlink client code, click [here](https://github.com/gavenda/vivy/tree/moonlink).
+You are currently viewing the [moonlink.js](https://github.com/Ecliptia/moonlink.js) branch of this application.

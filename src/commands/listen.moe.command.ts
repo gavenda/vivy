@@ -1,11 +1,10 @@
 import { AppContext } from '@app/context';
-import { LoadResultType, Player } from '@app/link';
 import { LISTEN_MOE_JPOP_M38U, LISTEN_MOE_KPOP_M38U, RadioType } from '@app/listen.moe';
 import { updatePlayer } from '@app/player';
-import { Requester } from '@app/requester';
 import { hasVoiceState } from '@app/utils/has-voice-state';
 import { ChatInputCommandInteraction, SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
 import i18next from 'i18next';
+import { MoonlinkPlayer } from 'moonlink.js';
 import { AppCommand } from './command';
 
 export const listenMoe: AppCommand = {
@@ -48,21 +47,17 @@ export const listenMoe: AppCommand = {
     const { guildId } = interaction;
     const { link } = context;
 
-    const player = link.getPlayer(guildId);
-
-    if (!player) {
-      await interaction.reply({
-        ephemeral: true,
-        content: i18next.t('reply.not_playing', { lng: interaction.locale })
-      });
-      return;
-    }
-
+    const player = link.players.create({
+      guildId,
+      textChannel: interaction.channelId,
+      voiceChannel: interaction.member.voice.channel.id,
+      autoLeave: true
+    });
     const type = interaction.options.getSubcommand(true);
     const radioType = type === 'anime' ? RadioType.JPOP : RadioType.KPOP;
 
     if (!player.connected) {
-      await player.connect(interaction.member.voice.channel.id);
+      player.connect({});
     }
 
     const listenAttempt = listenToRadio({ guildId, context, player, interaction, radioType });
@@ -92,7 +87,7 @@ export const listenMoe: AppCommand = {
 const listenToRadio = async (options: {
   guildId: string;
   context: AppContext;
-  player: Player<Requester>;
+  player: MoonlinkPlayer;
   interaction: ChatInputCommandInteraction;
   radioType: RadioType;
 }) => {
@@ -100,20 +95,20 @@ const listenToRadio = async (options: {
   const { link } = context;
   const loadResult = await link.search({
     query: radioType === RadioType.JPOP ? LISTEN_MOE_JPOP_M38U : LISTEN_MOE_KPOP_M38U,
-    userData: {
+    requester: {
       textChannelId: interaction.channelId,
       userId: interaction.user.id
     }
   });
 
   switch (loadResult.loadType) {
-    case LoadResultType.TRACK:
-      await player.queue.clear();
+    case 'track':
+      player.queue.clear();
       await player.stop();
-      await player.play(loadResult.data);
+      await player.play(loadResult.tracks[0]);
       await updatePlayer(context, guildId);
       return true;
-    case LoadResultType.ERROR:
+    case 'error':
       return false;
   }
 

@@ -36,7 +36,7 @@ export const clear: AppCommand = {
       return;
     }
 
-    const player = link.getPlayer(interaction.guildId);
+    const player = link.players.get(interaction.guildId);
 
     if (!player) {
       await interaction.reply({
@@ -50,14 +50,14 @@ export const clear: AppCommand = {
 
     switch (subcommand) {
       case 'queue':
-        await player.queue.clear();
+        player.queue.clear();
         await interaction.reply({
           ephemeral: true,
           content: i18next.t('reply.cleared_queue', { lng: interaction.locale })
         });
         break;
       case 'effect':
-        await player.filter.reset();
+        player.filters.resetFilters();
         await interaction.reply({
           ephemeral: true,
           content: i18next.t('reply.cleared_effect', { lng: interaction.locale })

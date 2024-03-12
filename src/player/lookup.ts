@@ -1,40 +1,39 @@
 import { AppContext } from '@app/context';
-import { LavalinkSource, LoadResultType, Track } from '@app/link';
 import { logger } from '@app/logger';
-import { Requester } from '@app/requester';
 import { ChatInputCommandInteraction } from 'discord.js';
+import { MoonlinkTrack, SearchPlatform } from 'moonlink.js';
 
 export const lookupTrack = async (options: {
   query: string;
-  source: LavalinkSource;
+  source: SearchPlatform;
   context: AppContext;
   interaction: ChatInputCommandInteraction;
-}): Promise<Track<Requester> | null> => {
+}): Promise<MoonlinkTrack | null> => {
   const { link } = options.context;
-  const { query, interaction } = options;
+  const { query, interaction, source } = options;
   const result = await link.search({
     query,
-    userData: {
+    requester: {
       userId: interaction.user.id,
       textChannelId: interaction.channelId
     },
-    source: LavalinkSource.YOUTUBE_MUSIC
+    source
   });
 
   switch (result.loadType) {
-    case LoadResultType.ERROR: {
+    case 'error': {
       logger.warn('Lookup error', { query });
       return null;
     }
-    case LoadResultType.PLAYLIST: {
-      return result.data.tracks[result.data.info.selectedTrack];
+    case 'playlist': {
+      return result.playlistInfo!.selectedTrack!;
     }
-    case LoadResultType.EMPTY: {
+    case 'empty': {
       logger.warn('Lookup returned empty', { query });
       return null;
     }
-    case LoadResultType.SEARCH: {
-      return result.data[0];
+    case 'search': {
+      return result.tracks[0];
     }
   }
 

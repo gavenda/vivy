@@ -1,5 +1,5 @@
 import { SpotifyApi } from '@spotify/web-api-ts-sdk';
-import { ActivityType, Client, Events, GatewayIntentBits, GatewayReceivePayload } from 'discord.js';
+import { ActivityType, Client, Events, GatewayIntentBits, GatewaySendPayload } from 'discord.js';
 import i18next from 'i18next';
 import { createClient } from 'redis';
 import { AppContext } from './context';
@@ -7,10 +7,9 @@ import { events } from './events';
 import en from './locales/en.json';
 import { logger } from './logger';
 import { updatePlayer } from './player';
-import { Requester } from './requester';
 // @ts-expect-error no type definitions
 import * as dotenv from '@dotenvx/dotenvx';
-import { Lavalink } from './link';
+import { MoonlinkManager, MoonlinkPlayer, MoonlinkTrack, VoicePacket } from 'moonlink.js';
 import { LISTEN_MOE_JPOP_STREAM, LISTEN_MOE_KPOP_STREAM, LISTEN_MOE_STREAMS, ListenMoe, RadioType } from './listen.moe';
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
@@ -65,24 +64,27 @@ const client = new Client({
 });
 
 // Configure lava link
-const link = new Lavalink<Requester>({
-  redis,
-  nodes: [
+const link = new MoonlinkManager(
+  [
     {
       host: process.env.LAVA_HOST,
       port: Number(process.env.LAVA_PORT),
       secure: true,
-      authorization: process.env.LAVA_PASS
+      password: process.env.LAVA_PASS
     }
   ],
-  sendVoiceUpdate: (guildId, data) => {
+  {
+    autoResume: true,
+    resume: true
+  },
+  (guildId: string, data: GatewaySendPayload) => {
     const guild = client.guilds.cache.get(guildId);
 
     if (guild) {
       guild.shard.send(data);
     }
   }
-});
+);
 
 // Handle redis errors
 redis.on('error', (error) => {
@@ -91,8 +93,8 @@ redis.on('error', (error) => {
 });
 
 // Handle raw packets
-client.on('raw', async (data: GatewayReceivePayload) => {
-  await link.handleRawData(data);
+client.on('raw', (data: VoicePacket) => {
+  link.packetUpdate(data);
 });
 
 // Handle application errors
@@ -111,43 +113,37 @@ const context: AppContext = {
 
 // listen moe events
 listenMoe.on('trackUpdate', async () => {
-  for (const node of link.connectedNodes) {
-    for (const player of node.players.values()) {
-      if (player.queue.current && LISTEN_MOE_STREAMS.includes(player.queue.current.info.identifier)) {
-        await updatePlayer(context, player.guildId);
-      }
+  if (!link.players.all) return;
+
+  const players = link.players.all as MoonlinkPlayer[];
+
+  for (const player of players) {
+    const track = player.current as MoonlinkTrack;
+    if (track && LISTEN_MOE_STREAMS.includes(track.identifier)) {
+      await updatePlayer(context, player.guildId);
     }
   }
 });
 
 // link events
-link.on('nodeReady', async (node) => {
-  const { host } = node.options;
+link.on('nodeReady', (node) => {
+  const { host } = node;
   logger.info(`Connected to node`, { host });
-
-  const guilds = client.guilds.cache.values();
-
-  for (const guild of guilds) {
-    await context.link.createPlayer({
-      guildId: guild.id,
-      autoLeave: true
-    });
-  }
 });
 
 link.on('nodeError', (node, error) => {
-  const { host } = node.options;
+  const { host } = node;
   logger.info(`Error on node`, { host, error });
 });
 
 link.on('nodeResumed', (node) => {
-  const { host } = node.options;
+  const { host } = node;
   logger.info(`Session resumed`, { host });
 });
 
-link.on('nodeDisconnected', (node) => {
-  const { host } = node.options;
-  logger.info(`Disconnected from node`, { host });
+link.on('nodeDestroy', (node) => {
+  const { host } = node;
+  logger.info(`Destroy node`, { host });
 });
 
 link.on('playerMove', (player, oldVoiceChannelId, newVoiceChannelId) => {
@@ -155,28 +151,28 @@ link.on('playerMove', (player, oldVoiceChannelId, newVoiceChannelId) => {
   logger.info('Player moved', { guildId, oldVoiceChannelId, newVoiceChannelId });
 });
 
-link.on('playerSocketClosed', (player, code, byRemote, reason) => {
-  const { guildId } = player;
-  logger.info('Player socket closed', { guildId, code, byRemote, reason });
+link.on('nodeClose', (node, code, reason) => {
+  const { host } = node;
+  logger.info('Player socket closed', { host, code, reason });
 });
 
-link.on('trackStart', async (player, track) => {
-  logger.info('Track start', { title: track.info.title, guild: player.guildId });
+link.on('trackStart', async (player, track: MoonlinkTrack) => {
+  logger.info('Track start', { title: track.title, guild: player.guildId });
 
-  if (track.info.identifier === LISTEN_MOE_JPOP_STREAM) {
+  if (track.identifier === LISTEN_MOE_JPOP_STREAM) {
     listenMoe.connect(RadioType.JPOP);
   }
-  if (track.info.identifier === LISTEN_MOE_KPOP_STREAM) {
+  if (track.identifier === LISTEN_MOE_KPOP_STREAM) {
     listenMoe.connect(RadioType.KPOP);
   }
 
   await updatePlayer(context, player.guildId);
 });
 
-link.on('trackEnd', async (player, track, reason) => {
-  logger.info('Track end', { title: track.info.title, guild: player.guildId, reason });
+link.on('trackEnd', async (player, track: MoonlinkTrack, reason) => {
+  logger.info('Track end', { title: track.title, guild: player.guildId, reason });
 
-  if (LISTEN_MOE_STREAMS.includes(track.info.identifier)) {
+  if (LISTEN_MOE_STREAMS.includes(track.identifier)) {
     listenMoe.disconnect();
   }
 
@@ -187,13 +183,13 @@ link.on('queueEnd', () => {
   logger.debug('Queue end');
 });
 
-link.on('trackError', async (player, track) => {
-  logger.info('Track error', { title: track.info.title, guild: player.guildId });
+link.on('trackError', async (player, track: MoonlinkTrack) => {
+  logger.info('Track error', { title: track.title, guild: player.guildId });
   await player.skip();
 });
 
-link.on('trackStuck', async (player, track) => {
-  logger.info('Track stuck', { title: track.info.title, guild: player.guildId });
+link.on('trackStuck', async (player, track: MoonlinkTrack) => {
+  logger.info('Track stuck', { title: track.title, guild: player.guildId });
   await player.skip();
 });
 

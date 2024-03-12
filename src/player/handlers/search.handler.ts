@@ -1,7 +1,5 @@
 import { AppEmoji } from '@app/emojis';
-import { Player, SearchLoadResult } from '@app/link';
 import { logger } from '@app/logger';
-import { Requester } from '@app/requester';
 import { trimEllipse } from '@app/utils/trim-ellipses';
 import {
   ActionRowBuilder,
@@ -10,15 +8,16 @@ import {
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder
 } from 'discord.js';
+import i18next from 'i18next';
+import { MoonlinkPlayer, SearchResult } from 'moonlink.js';
 import { handleQueueSelection } from './queue-selection.handler';
 import { handleTrack } from './track.handler';
-import i18next from 'i18next';
 
 export const handleSearch = async (options: {
   query: string;
-  result: SearchLoadResult<Requester>;
+  result: SearchResult;
   interaction: ChatInputCommandInteraction;
-  player: Player<Requester>;
+  player: MoonlinkPlayer;
 }) => {
   const { result, interaction, player, query } = options;
 
@@ -28,12 +27,12 @@ export const handleSearch = async (options: {
     .setMinValues(1)
     .setPlaceholder(i18next.t('placeholder.select_music', { lng: interaction.locale }));
 
-  for (const [index, track] of result.data.entries()) {
+  for (const [index, track] of result.tracks.entries()) {
     musicSelectMenu.addOptions(
       new StringSelectMenuOptionBuilder()
-        .setLabel(trimEllipse(track.info.title, 100))
-        .setDescription(trimEllipse(track.info.author, 100))
-        .setValue(track.info.identifier)
+        .setLabel(trimEllipse(track.title, 100))
+        .setDescription(trimEllipse(track.author, 100))
+        .setValue(track.identifier)
         .setEmoji(index === 0 ? AppEmoji.Preferred : AppEmoji.MusicNote)
     );
   }
@@ -52,7 +51,7 @@ export const handleSearch = async (options: {
       time: 60_000
     });
     const selectedIdentifier = selectMusic.values[0];
-    const track = result.data.find((track) => track.info.identifier === selectedIdentifier);
+    const track = result.tracks.find((track) => track.identifier === selectedIdentifier);
 
     if (!track) {
       await interaction.editReply({
@@ -66,7 +65,7 @@ export const handleSearch = async (options: {
 
     await selectMusic.deferUpdate();
 
-    if (player.queue.current) {
+    if (player.current) {
       await handleQueueSelection({ interaction: selectMusic, track, player });
     } else {
       await handleTrack({ interaction, track, player, queue: 'later' });

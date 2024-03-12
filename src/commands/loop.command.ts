@@ -1,8 +1,7 @@
 import { hasVoiceState } from '@app/utils/has-voice-state';
 import { SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
-import { AppCommand } from './command';
-import { RepeatMode } from '@app/link';
 import i18next from 'i18next';
+import { AppCommand } from './command';
 
 export const loop: AppCommand = {
   data: new SlashCommandBuilder()
@@ -35,7 +34,7 @@ export const loop: AppCommand = {
       return;
     }
 
-    const player = link.getPlayer(interaction.guildId);
+    const player = link.players.get(interaction.guildId);
 
     if (!player) {
       await interaction.reply({
@@ -49,7 +48,7 @@ export const loop: AppCommand = {
 
     switch (subcommand) {
       case 'track':
-        player.repeatMode = RepeatMode.TRACK;
+        player.setLoop(1);
 
         await interaction.reply({
           ephemeral: true,
@@ -57,7 +56,7 @@ export const loop: AppCommand = {
         });
         break;
       case 'queue':
-        player.repeatMode = RepeatMode.QUEUE;
+        player.setLoop(2);
 
         await interaction.reply({
           ephemeral: true,

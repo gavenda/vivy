@@ -2,6 +2,7 @@ import { AppContext } from '@app/context';
 import { logger } from '@app/logger';
 import { createListenMoeComponents, createListenMoeEmbed, createPlayerComponents, createPlayerEmbed } from './embed';
 import { LISTEN_MOE_STREAMS } from '@app/listen.moe';
+import { MoonlinkTrack } from 'moonlink.js';
 
 export const updatePlayer = async (context: AppContext, guildId: string) => {
   const { client, redis, link } = context;
@@ -9,8 +10,9 @@ export const updatePlayer = async (context: AppContext, guildId: string) => {
 
   if (!playerEmbed) return;
 
-  const player = link.getPlayer(guildId);
-  const isListenMoe = LISTEN_MOE_STREAMS.includes(player?.queue?.current?.info?.identifier ?? '');
+  const player = link.players.get(guildId);
+  const track = player?.current as MoonlinkTrack;
+  const isListenMoe = LISTEN_MOE_STREAMS.includes(track?.identifier ?? '');
 
   try {
     const [channelId, messageId] = playerEmbed.split(':');

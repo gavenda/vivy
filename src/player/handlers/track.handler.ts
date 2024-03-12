@@ -1,14 +1,13 @@
-import { Player, Track } from '@app/link';
 import { logger } from '@app/logger';
 import { QueueType } from '@app/player';
-import { Requester } from '@app/requester';
 import { ButtonInteraction, ChatInputCommandInteraction, StringSelectMenuInteraction } from 'discord.js';
 import i18next from 'i18next';
+import { MoonlinkPlayer, MoonlinkTrack } from 'moonlink.js';
 
 export const handleTrack = async (options: {
   interaction: ChatInputCommandInteraction | StringSelectMenuInteraction | ButtonInteraction;
-  track: Track<Requester>;
-  player: Player<Requester>;
+  track: MoonlinkTrack;
+  player: MoonlinkPlayer;
   queue: QueueType;
 }) => {
   const { interaction, track, player, queue } = options;
@@ -17,33 +16,33 @@ export const handleTrack = async (options: {
 
   switch (queue) {
     case 'later': {
-      if (!player.queue.current) {
+      if (!player.current) {
         await player.play(track);
       } else {
-        player.queue.enqueue(track);
+        player.queue.add(track);
       }
       break;
     }
     case 'next': {
-      if (!player.queue.current) {
+      if (!player.current) {
         await player.play(track);
       } else {
-        player.queue.enqueueNext(track);
+        player.queue.add(track, 0);
       }
       break;
     }
     case 'now': {
       await player.play(track);
 
-      if (player.queue.previous) {
-        player.queue.enqueueNext(player.queue.previous);
+      if (player.previous) {
+        player.queue.add(player.previous as MoonlinkTrack);
       }
       break;
     }
   }
 
   await interaction.editReply({
-    content: i18next.t('reply.music_queued', { lng: interaction.locale, track: track.info.title }),
+    content: i18next.t('reply.music_queued', { lng: interaction.locale, track: track.title }),
     components: []
   });
 };

@@ -1,21 +1,20 @@
-import { Player, Track } from '@app/link';
-import { Requester } from '@app/requester';
 import {
-  ChatInputCommandInteraction,
+  ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  ActionRowBuilder,
+  ChatInputCommandInteraction,
   ComponentType,
   StringSelectMenuInteraction
 } from 'discord.js';
-import { handleTrack } from './track.handler';
-import { QueueType } from '../queue.type';
 import i18next from 'i18next';
+import { MoonlinkPlayer, MoonlinkTrack } from 'moonlink.js';
+import { QueueType } from '../queue.type';
+import { handleTrack } from './track.handler';
 
 export const handleQueueSelection = async (options: {
-  track: Track<Requester>;
+  track: MoonlinkTrack;
   interaction: ChatInputCommandInteraction | StringSelectMenuInteraction;
-  player: Player<Requester>;
+  player: MoonlinkPlayer;
 }) => {
   const { interaction, player, track } = options;
   try {
@@ -38,17 +37,14 @@ export const handleQueueSelection = async (options: {
       queueNextButton
     );
 
-    if (track.info.uri) {
-      const linkButton = new ButtonBuilder()
-        .setStyle(ButtonStyle.Link)
-        .setURL(track.info.uri)
-        .setLabel('View in YouTube');
+    if (track.url) {
+      const linkButton = new ButtonBuilder().setStyle(ButtonStyle.Link).setURL(track.url).setLabel('View in YouTube');
 
       queueActionRow.addComponents(linkButton);
     }
 
     const queueQuestion = await interaction.editReply({
-      content: i18next.t('reply.queue_question', { lng: interaction.locale, track: track.info.title }),
+      content: i18next.t('reply.queue_question', { lng: interaction.locale, track: track.title }),
       components: [queueActionRow]
     });
 

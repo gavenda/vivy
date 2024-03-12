@@ -31,7 +31,7 @@ export const pause: AppCommand = {
       return;
     }
 
-    const player = link.getPlayer(interaction.guildId);
+    const player = link.players.get(interaction.guildId);
 
     if (!player) {
       await interaction.reply({

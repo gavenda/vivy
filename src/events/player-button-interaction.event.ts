@@ -1,4 +1,3 @@
-import { RepeatMode } from '@app/link';
 import { logger } from '@app/logger';
 import { createPlayerComponents, createPlayerEmbed } from '@app/player';
 import { chunkSize } from '@app/utils';
@@ -21,7 +20,7 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
       return;
     }
     const { link, redis } = context;
-    const player = link.getPlayer(interaction.guild.id);
+    const player = link.players.get(interaction.guild.id);
 
     if (!player) {
       await interaction.reply({
@@ -58,23 +57,23 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
         break;
       }
       case 'volume-down': {
-        await player.applyVolume(Math.min(1, Math.max(0, volume - 0.1)));
+        player.filters.setVolume(Math.min(1, Math.max(0, volume - 0.1)));
         break;
       }
       case 'volume-up': {
-        await player.applyVolume(Math.min(1, Math.max(0, volume + 0.1)));
+        player.filters.setVolume(Math.min(1, Math.max(0, volume + 0.1)));
         break;
       }
       case 'repeat-track': {
-        player.repeatMode = player.repeatMode === RepeatMode.TRACK ? RepeatMode.OFF : RepeatMode.TRACK;
+        player.setLoop(player.loop === 1 ? 0 : 1);
         break;
       }
       case 'repeat-queue': {
-        player.repeatMode = player.repeatMode === RepeatMode.QUEUE ? RepeatMode.OFF : RepeatMode.QUEUE;
+        player.setLoop(player.loop === 2 ? 0 : 2);
         break;
       }
       case 'stop': {
-        await player.queue.clear();
+        player.queue.clear();
         await player.stop();
         break;
       }

@@ -2,6 +2,7 @@ import { hasVoiceState } from '@app/utils';
 import { SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
 import { AppCommand } from './command';
+import { MoonlinkTrack } from 'moonlink.js';
 
 export const skip: AppCommand = {
   // prettier-ignore
@@ -31,7 +32,7 @@ export const skip: AppCommand = {
       return;
     }
 
-    const player = link.getPlayer(interaction.guildId);
+    const player = link.players.get(interaction.guildId);
 
     if (!player) {
       await interaction.reply({
@@ -41,7 +42,7 @@ export const skip: AppCommand = {
       return;
     }
 
-    if (!player.queue.current) {
+    if (!player.current) {
       await interaction.reply({
         ephemeral: true,
         content: i18next.t('reply.nothing_playing', { lng: interaction.locale })
@@ -49,11 +50,11 @@ export const skip: AppCommand = {
       return;
     }
 
-    const track = player.queue.current;
+    const track = player.current as MoonlinkTrack;
 
     await interaction.reply({
       ephemeral: true,
-      content: i18next.t('reply.music_skipped', { lng: interaction.locale, track: track.info.title })
+      content: i18next.t('reply.music_skipped', { lng: interaction.locale, track: track.title })
     });
 
     await player.skip();

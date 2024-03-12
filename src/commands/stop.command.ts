@@ -31,7 +31,7 @@ export const stop: AppCommand = {
       return;
     }
 
-    const player = link.getPlayer(interaction.guildId);
+    const player = link.players.get(interaction.guildId);
 
     if (!player) {
       await interaction.reply({
@@ -41,7 +41,7 @@ export const stop: AppCommand = {
       return;
     }
 
-    await player.queue.clear();
+    player.queue.clear();
     await player.stop();
     await player.destroy();
 

@@ -41,7 +41,7 @@ export const remove: AppCommand = {
       return;
     }
 
-    const player = link.getPlayer(interaction.guildId);
+    const player = link.players.get(interaction.guildId);
 
     if (!player) {
       await interaction.reply({
@@ -71,14 +71,14 @@ export const remove: AppCommand = {
         return;
       }
 
-      player.queue.slice(from, to);
+      player.queue.setQueue(player.queue.getQueue().slice(from, to));
 
       await interaction.reply({
         ephemeral: true,
         content: i18next.t('reply.remove_track_range_from_queue', { lng: interaction.locale, from, to })
       });
     } else {
-      const track = player.queue.peek(from);
+      const track = player.queue.getQueue()[from];
 
       if (!track) {
         await interaction.reply({
@@ -88,11 +88,11 @@ export const remove: AppCommand = {
         return;
       }
 
-      player.queue.slice(from + 1);
+      player.queue.remove(from);
 
       await interaction.reply({
         ephemeral: true,
-        content: i18next.t('reply.remove_track_from_queue', { lng: interaction.locale, track: track.info.title })
+        content: i18next.t('reply.remove_track_from_queue', { lng: interaction.locale, track: track.title })
       });
     }
   }

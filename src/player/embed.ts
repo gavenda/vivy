@@ -1,25 +1,25 @@
 import { AppContext } from '@app/context';
 import { AppEmoji } from '@app/emojis';
-import { RepeatMode } from '@app/link';
 import { chunk, msToTime, trimEllipse } from '@app/utils';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
+import { MoonlinkTrack } from 'moonlink.js';
 
 export const createPlayerQueue = ({ link }: AppContext, guildId: string, pageIndex = 0) => {
-  const player = link.getPlayer(guildId);
+  const player = link.players.get(guildId);
   const queue: string[] = [];
 
   if (player && player.queue.size > 0) {
-    const tracksChunked = chunk(player.queue.toArray(), 15);
+    const tracksChunked = chunk(player.queue.getQueue(), 15);
     const tracks = tracksChunked[pageIndex];
 
     for (const [index, track] of tracks.entries()) {
-      const title = trimEllipse(track.info.title, 100);
+      const title = trimEllipse(track.title, 100);
       const trackNo = pageIndex * 15 + (index + 1);
-      const requester = `<@${track.userData.userId}>`;
-      const duration = msToTime(track.info.length ?? 0);
+      const requester = `<@${track.requester.userId}>`;
+      const duration = msToTime(track.duration ?? 0);
       // # [Track Title](URL) `00:00` <@user-id>
       queue.push(
-        `\`${trackNo}\` [${title}](${track.info.uri}) \`${String(duration.minutes).padStart(2, '0')}:${String(duration.seconds).padStart(2, '0')}\` ${requester}`
+        `\`${trackNo}\` [${title}](${track.url}) \`${String(duration.minutes).padStart(2, '0')}:${String(duration.seconds).padStart(2, '0')}\` ${requester}`
       );
     }
   }
@@ -29,7 +29,7 @@ export const createPlayerQueue = ({ link }: AppContext, guildId: string, pageInd
 
 export const createListenMoeEmbed = (context: AppContext, guildId: string) => {
   const { link, client, listenMoe } = context;
-  const player = link.getPlayer(guildId);
+  const player = link.players.get(guildId);
 
   const listenMoeEmbed = new EmbedBuilder()
     .setTitle(`${client.user?.username ?? 'Vivy'} Song List`)
@@ -55,7 +55,7 @@ export const createListenMoeEmbed = (context: AppContext, guildId: string) => {
       },
       {
         name: 'Volume',
-        value: player?.volume ? `${Math.round(player?.volume * 100)}%` : '100%',
+        value: player?.filters.volume ? `${Math.round(player?.filters.volume * 100)}%` : '100%',
         inline: true
       }
     );
@@ -65,11 +65,14 @@ export const createListenMoeEmbed = (context: AppContext, guildId: string) => {
 
 export const createPlayerEmbed = (context: AppContext, guildId: string, pageIndex: number = 0) => {
   const { link, client } = context;
-  const player = link.getPlayer(guildId);
-  const track = player?.queue.current;
-  const requester = track?.userData.userId ? `<@${track.userData.userId}>` : '-';
-  const duration = msToTime(player?.duration ?? 0);
-  const remaining = msToTime(player?.remaining ?? 0);
+  const player = link.players.get(guildId);
+  const track = player?.current as MoonlinkTrack | undefined;
+  const requester = track?.requester.userId ? `<@${track.requester.userId}>` : '-';
+  const trackDuration = track?.duration ?? 0;
+  const trackPosition = track?.position ?? 0;
+  const durationTotal = player?.queue.getQueue().reduce((acc, track) => acc + track.duration, 0) ?? 0;
+  const duration = msToTime(durationTotal);
+  const remaining = msToTime(Math.max(0, trackDuration - trackPosition));
   const queue = createPlayerQueue(context, guildId, pageIndex);
 
   const queueEmbed = new EmbedBuilder()
@@ -77,16 +80,16 @@ export const createPlayerEmbed = (context: AppContext, guildId: string, pageInde
     .setDescription(queue)
     .setColor(0x00ffff)
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    .setImage(track?.info.artworkUrl ?? null)
+    .setImage(track?.artworkUrl ?? null)
     .addFields(
       {
         name: 'Now Playing',
-        value: track?.info.title ? `[${track.info.title}](${track.info.uri})` : '-',
+        value: track?.title ? `[${track.title}](${track.url})` : '-',
         inline: false
       },
       {
         name: 'Artist',
-        value: track?.info.author ?? '-',
+        value: track?.author ?? '-',
         inline: false
       },
       {
@@ -106,12 +109,12 @@ export const createPlayerEmbed = (context: AppContext, guildId: string, pageInde
       },
       {
         name: 'Looped (Track)',
-        value: player?.repeatMode === RepeatMode.TRACK ? 'Yes' : 'No',
+        value: player?.loop === 1 ? 'Yes' : 'No',
         inline: true
       },
       {
         name: 'Looped (Queue)',
-        value: player?.repeatMode === RepeatMode.QUEUE ? 'Yes' : 'No',
+        value: player?.loop === 2 ? 'Yes' : 'No',
         inline: true
       },
       {
@@ -125,7 +128,7 @@ export const createPlayerEmbed = (context: AppContext, guildId: string, pageInde
 };
 
 export const createListenMoeComponents = ({ link }: AppContext, guildId: string): ActionRowBuilder<ButtonBuilder>[] => {
-  const player = link.getPlayer(guildId);
+  const player = link.players.get(guildId);
   const playing = player?.playing ?? false;
 
   const pausePlayButton = new ButtonBuilder()
@@ -161,7 +164,7 @@ export const createListenMoeComponents = ({ link }: AppContext, guildId: string)
 };
 
 export const createPlayerComponents = ({ link }: AppContext, guildId: string): ActionRowBuilder<ButtonBuilder>[] => {
-  const player = link.getPlayer(guildId);
+  const player = link.players.get(guildId);
   const playing = player?.playing ?? false;
   const disablePagination = (player?.queue?.size ?? 0) < 15;
 
@@ -189,11 +192,11 @@ export const createPlayerComponents = ({ link }: AppContext, guildId: string): A
   const repeatQueueButton = new ButtonBuilder()
     .setCustomId('player:repeat-queue')
     .setStyle(ButtonStyle.Secondary)
-    .setEmoji(player?.repeatMode === RepeatMode.QUEUE ? AppEmoji.RepeatQueueOn : AppEmoji.RepeatQueue);
+    .setEmoji(player?.loop === 1 ? AppEmoji.RepeatQueueOn : AppEmoji.RepeatQueue);
   const repeatTrackButton = new ButtonBuilder()
     .setCustomId('player:repeat-track')
     .setStyle(ButtonStyle.Secondary)
-    .setEmoji(player?.repeatMode === RepeatMode.TRACK ? AppEmoji.RepeatTrackOn : AppEmoji.RepeatTrack);
+    .setEmoji(player?.loop === 2 ? AppEmoji.RepeatTrackOn : AppEmoji.RepeatTrack);
   const stopButton = new ButtonBuilder()
     .setCustomId('player:stop')
     .setStyle(ButtonStyle.Danger)

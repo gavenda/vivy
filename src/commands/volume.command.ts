@@ -36,7 +36,7 @@ export const volume: AppCommand = {
       return;
     }
 
-    const player = link.getPlayer(interaction.guildId);
+    const player = link.players.get(interaction.guildId);
 
     if (!player) {
       await interaction.reply({
@@ -64,7 +64,7 @@ export const volume: AppCommand = {
       return;
     }
 
-    await player.applyVolume(volume / 100);
+    player.filters.setVolume(volume / 100);
 
     await interaction.reply({
       ephemeral: true,

@@ -1,17 +1,18 @@
-import { Player, Track } from '@app/link';
-import { Requester } from '@app/requester';
 import { ChatInputCommandInteraction } from 'discord.js';
 import i18next from 'i18next';
+import { MoonlinkPlayer, MoonlinkTrack } from 'moonlink.js';
 
 export const handleTracks = async (options: {
-  tracks: Track<Requester>[];
+  tracks: MoonlinkTrack[];
   name: string;
-  player: Player<Requester>;
+  player: MoonlinkPlayer;
   interaction: ChatInputCommandInteraction;
 }) => {
   const { tracks, interaction, player, name } = options;
 
-  player.queue.enqueue(...tracks);
+  for (const track of tracks) {
+    player.queue.add(track);
+  }
 
   if (!interaction.replied) {
     await interaction.followUp({
@@ -20,7 +21,7 @@ export const handleTracks = async (options: {
     });
   }
 
-  if (!player.queue.current) {
+  if (!player.current) {
     await player.play();
   }
 };

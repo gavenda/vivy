@@ -28,7 +28,7 @@ export const disconnect: AppCommand = {
       return;
     }
 
-    const player = link.getPlayer(interaction.guildId);
+    const player = link.players.get(interaction.guildId);
 
     if (!player) {
       await interaction.reply({
@@ -38,7 +38,7 @@ export const disconnect: AppCommand = {
       return;
     }
 
-    await player.disconnect();
+    player.disconnect();
 
     await interaction.reply({
       ephemeral: true,
