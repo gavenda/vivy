@@ -5,6 +5,7 @@ import { handleQueueSelection, handleTrack } from '@app/player/handlers';
 import { lookupTrack } from '@app/player/lookup';
 import { Requester } from '@app/requester';
 import { ChatInputCommandInteraction } from 'discord.js';
+import i18next from 'i18next';
 import { ParsedSpotifyUri } from 'spotify-uri';
 
 export const handleSpotifyTrack = async (options: {
@@ -36,7 +37,7 @@ export const handleSpotifyTrack = async (options: {
   } else {
     await interaction.followUp({
       ephemeral: true,
-      content: `There was an error looking up the music. Please try again.`
+      content: i18next.t('reply.error_lookup', { lng: interaction.locale })
     });
   }
 };

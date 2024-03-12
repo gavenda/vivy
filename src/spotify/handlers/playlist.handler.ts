@@ -5,6 +5,7 @@ import { handleTracks } from '@app/player/handlers';
 import { lookupTrack } from '@app/player/lookup';
 import { Requester } from '@app/requester';
 import { ChatInputCommandInteraction } from 'discord.js';
+import i18next from 'i18next';
 import { ParsedSpotifyUri } from 'spotify-uri';
 
 export const handleSpotifyPlaylist = async (options: {
@@ -23,7 +24,7 @@ export const handleSpotifyPlaylist = async (options: {
 
   await interaction.followUp({
     ephemeral: true,
-    content: `Queuing spotify playlist \`${spotifyPlaylist.name}\`.`
+    content: i18next.t('reply.spotify_queued_playlist', { lng: interaction.locale, playlist: spotifyPlaylist.name })
   });
 
   for (const { track: spotifyTrack } of spotifyPlaylist.tracks.items) {
