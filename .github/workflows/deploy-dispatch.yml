@@ -22,6 +22,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         name: Checkout
+        with:
+          ref: ${{ inputs.branch }}
       - uses: pnpm/action-setup@v3
         name: Install pnpm
         with:
@@ -45,6 +47,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         name: Checkout
+        with:
+          ref: ${{ inputs.branch }}
       - run: |
           mkdir -p ~/.ssh/
           echo "$SSH_PRIVATE_KEY" > ./deploy.key
