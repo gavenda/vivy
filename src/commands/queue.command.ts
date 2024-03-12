@@ -1,5 +1,6 @@
 import { createPlayerEmbed } from '@app/player';
 import { SlashCommandBuilder } from 'discord.js';
+import i18next from 'i18next';
 import { AppCommand } from './command';
 
 export const queue: AppCommand = {
@@ -10,7 +11,7 @@ export const queue: AppCommand = {
   execute: async (context, interaction) => {
     if (!interaction.guild || !interaction.guildId) {
       await interaction.reply({
-        content: `You are not in a guild.`,
+        content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
         ephemeral: true
       });
       return;

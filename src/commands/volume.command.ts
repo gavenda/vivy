@@ -1,5 +1,6 @@
 import { hasVoiceState } from '@app/utils';
 import { SlashCommandBuilder, SlashCommandNumberOption } from 'discord.js';
+import i18next from 'i18next';
 import { AppCommand } from './command';
 
 export const volume: AppCommand = {
@@ -15,21 +16,21 @@ export const volume: AppCommand = {
   execute: async ({ link }, interaction) => {
     if (!interaction.guild || !interaction.guildId) {
       await interaction.reply({
-        content: `You are not in a guild.`,
+        content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
         ephemeral: true
       });
       return;
     }
     if (!hasVoiceState(interaction.member)) {
       await interaction.reply({
-        content: `Illegal attempt for a non gateway interaction request.`,
+        content: i18next.t('reply.illegal_non_gateway_request', { lng: interaction.locale }),
         ephemeral: true
       });
       return;
     }
     if (!interaction.member.voice.channel) {
       await interaction.reply({
-        content: `You are not in a voice channel.`,
+        content: i18next.t('reply.not_in_voice', { lng: interaction.locale }),
         ephemeral: true
       });
       return;
@@ -40,7 +41,7 @@ export const volume: AppCommand = {
     if (!player) {
       await interaction.reply({
         ephemeral: true,
-        content: 'I am not playing anything.'
+        content: i18next.t('reply.not_playing', { lng: interaction.locale })
       });
       return;
     }
@@ -50,7 +51,7 @@ export const volume: AppCommand = {
     if (volume > 100) {
       await interaction.reply({
         ephemeral: true,
-        content: `Volume should not be greater than 100.`
+        content: i18next.t('reply.volume_not_greater_than_max', { lng: interaction.locale, max: 100 })
       });
       return;
     }
@@ -58,7 +59,7 @@ export const volume: AppCommand = {
     if (volume < 0) {
       await interaction.reply({
         ephemeral: true,
-        content: `Volume should not be less than zero.`
+        content: i18next.t('reply.volume_not_less_than_zero', { lng: interaction.locale })
       });
       return;
     }
@@ -67,7 +68,7 @@ export const volume: AppCommand = {
 
     await interaction.reply({
       ephemeral: true,
-      content: `Volume set to \`${volume}\`.`
+      content: i18next.t('reply.volume_applied', { lng: interaction.locale, volume })
     });
   }
 };

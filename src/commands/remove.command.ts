@@ -1,6 +1,7 @@
-import { SlashCommandBuilder, SlashCommandIntegerOption } from 'discord.js';
-import { AppCommand } from './command';
 import { hasVoiceState } from '@app/utils';
+import { SlashCommandBuilder, SlashCommandIntegerOption } from 'discord.js';
+import i18next from 'i18next';
+import { AppCommand } from './command';
 
 export const remove: AppCommand = {
   data: new SlashCommandBuilder()
@@ -20,21 +21,21 @@ export const remove: AppCommand = {
   execute: async ({ link }, interaction) => {
     if (!interaction.guild || !interaction.guildId) {
       await interaction.reply({
-        content: `You are not in a guild.`,
+        content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
         ephemeral: true
       });
       return;
     }
     if (!hasVoiceState(interaction.member)) {
       await interaction.reply({
-        content: `Illegal attempt for a non gateway interaction request.`,
+        content: i18next.t('reply.illegal_non_gateway_request', { lng: interaction.locale }),
         ephemeral: true
       });
       return;
     }
     if (!interaction.member.voice.channel) {
       await interaction.reply({
-        content: `You are not in a voice channel.`,
+        content: i18next.t('reply.not_in_voice', { lng: interaction.locale }),
         ephemeral: true
       });
       return;
@@ -45,7 +46,7 @@ export const remove: AppCommand = {
     if (!player) {
       await interaction.reply({
         ephemeral: true,
-        content: 'I am not playing anything.'
+        content: i18next.t('reply.not_playing', { lng: interaction.locale })
       });
       return;
     }
@@ -56,7 +57,7 @@ export const remove: AppCommand = {
     if (from >= player.queue.size) {
       await interaction.reply({
         ephemeral: true,
-        content: `Position should not be greater than or equal to queue size.`
+        content: i18next.t('reply.position_not_greater_than_queue_size', { lng: interaction.locale })
       });
       return;
     }
@@ -65,7 +66,7 @@ export const remove: AppCommand = {
       if (from >= to) {
         await interaction.reply({
           ephemeral: true,
-          content: `Minimum position should not be greater than maximimum.`
+          content: i18next.t('reply.position_not_greater_than_max', { lng: interaction.locale })
         });
         return;
       }
@@ -74,7 +75,7 @@ export const remove: AppCommand = {
 
       await interaction.reply({
         ephemeral: true,
-        content: `Removed music \`${from}\` to \`${to}\` from queue.`
+        content: i18next.t('reply.remove_track_range_from_queue', { lng: interaction.locale, from, to })
       });
     } else {
       const track = player.queue.peek(from);
@@ -82,7 +83,7 @@ export const remove: AppCommand = {
       if (!track) {
         await interaction.reply({
           ephemeral: true,
-          content: `Invalid range given.`
+          content: i18next.t('reply.invalid_range', { lng: interaction.locale })
         });
         return;
       }
@@ -91,7 +92,7 @@ export const remove: AppCommand = {
 
       await interaction.reply({
         ephemeral: true,
-        content: `Removed \`${track.info.title}\` from queue.`
+        content: i18next.t('reply.remove_track_from_queue', { lng: interaction.locale, track: track.info.title })
       });
     }
   }

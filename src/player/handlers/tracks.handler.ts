@@ -1,6 +1,7 @@
 import { Player, Track } from '@app/link';
 import { Requester } from '@app/requester';
 import { ChatInputCommandInteraction } from 'discord.js';
+import i18next from 'i18next';
 
 export const handleTracks = async (options: {
   tracks: Track<Requester>[];
@@ -15,7 +16,7 @@ export const handleTracks = async (options: {
   if (!interaction.replied) {
     await interaction.followUp({
       ephemeral: true,
-      content: `Queued \`${name}\`.`
+      content: i18next.t('reply.music_queued', { lng: interaction.locale, track: name })
     });
   }
 

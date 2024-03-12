@@ -1,8 +1,10 @@
 import { SpotifyApi } from '@spotify/web-api-ts-sdk';
 import { ActivityType, Client, Events, GatewayIntentBits, GatewayReceivePayload } from 'discord.js';
+import i18next from 'i18next';
 import { createClient } from 'redis';
 import { AppContext } from './context';
 import { events } from './events';
+import en from './locales/en.json';
 import { logger } from './logger';
 import { updatePlayer } from './player';
 import { Requester } from './requester';
@@ -228,6 +230,14 @@ try {
 }
 
 try {
+  // Initialize i18next
+  await i18next.init({
+    lng: 'en-US',
+    resources: {
+      en
+    }
+  });
+
   // Now ready to login to gateway
   await client.login(process.env.TOKEN);
 } catch (error) {

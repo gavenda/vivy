@@ -2,6 +2,7 @@ import { hasVoiceState } from '@app/utils/has-voice-state';
 import { SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
 import { AppCommand } from './command';
 import { RepeatMode } from '@app/link';
+import i18next from 'i18next';
 
 export const loop: AppCommand = {
   data: new SlashCommandBuilder()
@@ -14,21 +15,21 @@ export const loop: AppCommand = {
   execute: async ({ link }, interaction) => {
     if (!interaction.guild || !interaction.guildId) {
       await interaction.reply({
-        content: `You are not in a guild.`,
+        content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
         ephemeral: true
       });
       return;
     }
     if (!hasVoiceState(interaction.member)) {
       await interaction.reply({
-        content: `Illegal attempt for a non gateway interaction request.`,
+        content: i18next.t('reply.illegal_non_gateway_request', { lng: interaction.locale }),
         ephemeral: true
       });
       return;
     }
     if (!interaction.member.voice.channel) {
       await interaction.reply({
-        content: `You are not in a voice channel.`,
+        content: i18next.t('reply.not_in_voice', { lng: interaction.locale }),
         ephemeral: true
       });
       return;
@@ -39,7 +40,7 @@ export const loop: AppCommand = {
     if (!player) {
       await interaction.reply({
         ephemeral: true,
-        content: 'I am not playing anything.'
+        content: i18next.t('reply.not_playing', { lng: interaction.locale })
       });
       return;
     }
@@ -52,7 +53,7 @@ export const loop: AppCommand = {
 
         await interaction.reply({
           ephemeral: true,
-          content: 'Now looping the current track.'
+          content: i18next.t('reply.loop_track', { lng: interaction.locale })
         });
         break;
       case 'queue':
@@ -60,7 +61,7 @@ export const loop: AppCommand = {
 
         await interaction.reply({
           ephemeral: true,
-          content: 'Now looping the current queue.'
+          content: i18next.t('reply.loop_queue', { lng: interaction.locale })
         });
         break;
     }

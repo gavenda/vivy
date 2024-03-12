@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
 import { AppCommand } from './command';
+import i18next from 'i18next';
 
 export const playlist: AppCommand = {
   data: new SlashCommandBuilder()
@@ -21,7 +22,7 @@ export const playlist: AppCommand = {
   execute: async (context, interaction) => {
     await interaction.reply({
       ephemeral: true,
-      content: 'Not yet implemented.'
+      content: i18next.t('reply.not_yet_implemented', { lng: interaction.locale })
     });
   }
 };

@@ -1,9 +1,10 @@
+import { RepeatMode } from '@app/link';
 import { logger } from '@app/logger';
 import { createPlayerComponents, createPlayerEmbed } from '@app/player';
 import { chunkSize } from '@app/utils';
 import { Events } from 'discord.js';
+import i18next from 'i18next';
 import { AppEvent } from './event';
-import { RepeatMode } from '@app/link';
 
 export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
   event: Events.InteractionCreate,
@@ -14,7 +15,7 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
     if (!interaction.customId.startsWith('player')) return;
     if (!interaction.guild || !interaction.guildId) {
       await interaction.reply({
-        content: `You are not in a guild.`,
+        content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
         ephemeral: true
       });
       return;
@@ -25,7 +26,7 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
     if (!player) {
       await interaction.reply({
         ephemeral: true,
-        content: 'I am not playing anything.'
+        content: i18next.t('reply.not_playing', { lng: interaction.locale })
       });
       return;
     }

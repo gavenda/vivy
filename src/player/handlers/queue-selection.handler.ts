@@ -10,6 +10,7 @@ import {
 } from 'discord.js';
 import { handleTrack } from './track.handler';
 import { QueueType } from '../queue.type';
+import i18next from 'i18next';
 
 export const handleQueueSelection = async (options: {
   track: Track<Requester>;
@@ -47,7 +48,7 @@ export const handleQueueSelection = async (options: {
     }
 
     const queueQuestion = await interaction.editReply({
-      content: `You have selected \`${track.info.title}\`. How would you like this to be queued?`,
+      content: i18next.t('reply.queue_question', { lng: interaction.locale, track: track.info.title }),
       components: [queueActionRow]
     });
 
@@ -63,7 +64,7 @@ export const handleQueueSelection = async (options: {
   } catch (e) {
     await interaction.followUp({
       ephemeral: true,
-      content: `You failed to specify how to queue, will be playing it later.`,
+      content: i18next.t('reply.failed_queue_question', { lng: interaction.locale }),
       components: []
     });
 

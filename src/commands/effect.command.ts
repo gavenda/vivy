@@ -1,5 +1,7 @@
 import { AppContext } from '@app/context';
+import { Player } from '@app/link';
 import { logger } from '@app/logger';
+import { Requester } from '@app/requester';
 import { hasVoiceState } from '@app/utils';
 import {
   ChatInputCommandInteraction,
@@ -8,9 +10,8 @@ import {
   SlashCommandSubcommandBuilder,
   SlashCommandSubcommandGroupBuilder
 } from 'discord.js';
+import i18next from 'i18next';
 import { AppCommand } from './command';
-import { Requester } from '@app/requester';
-import { Player } from '@app/link';
 
 export const effect: AppCommand = {
   data: new SlashCommandBuilder()
@@ -54,21 +55,21 @@ export const effect: AppCommand = {
   execute: async (context, interaction) => {
     if (!interaction.guild || !interaction.guildId) {
       await interaction.reply({
-        content: `You are not in a guild.`,
+        content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
         ephemeral: true
       });
       return;
     }
     if (!hasVoiceState(interaction.member)) {
       await interaction.reply({
-        content: `Illegal attempt for a non gateway interaction request.`,
+        content: i18next.t('reply.illegal_non_gateway_request', { lng: interaction.locale }),
         ephemeral: true
       });
       return;
     }
     if (!interaction.member.voice.channel) {
       await interaction.reply({
-        content: `You are not in a voice channel.`,
+        content: i18next.t('reply.not_in_voice', { lng: interaction.locale }),
         ephemeral: true
       });
       return;
@@ -80,7 +81,7 @@ export const effect: AppCommand = {
     if (!player) {
       await interaction.reply({
         ephemeral: true,
-        content: 'I am not playing anything.'
+        content: i18next.t('reply.not_playing', { lng: interaction.locale })
       });
       return;
     }
