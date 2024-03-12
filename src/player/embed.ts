@@ -2,10 +2,12 @@ import { AppContext } from '@app/context';
 import { AppEmoji } from '@app/emojis';
 import { RepeatMode } from '@app/link';
 import { chunk, msToTime, trimEllipse } from '@app/utils';
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, Locale } from 'discord.js';
+import i18next from 'i18next';
 
-export const createPlayerQueue = ({ link }: AppContext, guildId: string, pageIndex = 0) => {
+export const createPlayerQueue = ({ client, link }: AppContext, guildId: string, pageIndex = 0) => {
   const player = link.getPlayer(guildId);
+  const lng = client.guilds.cache.get(guildId)?.preferredLocale ?? Locale.EnglishUS;
   const queue: string[] = [];
 
   if (player && player.queue.size > 0) {
@@ -24,37 +26,38 @@ export const createPlayerQueue = ({ link }: AppContext, guildId: string, pageInd
     }
   }
 
-  return queue.length === 0 ? 'The audience has not requested me to sing anything.' : queue.join('\n');
+  return queue.length === 0 ? i18next.t('player_embed.description_queue_empty', { lng }) : queue.join('\n');
 };
 
 export const createListenMoeEmbed = (context: AppContext, guildId: string) => {
   const { link, client, listenMoe } = context;
+  const lng = client.guilds.cache.get(guildId)?.preferredLocale ?? Locale.EnglishUS;
   const player = link.getPlayer(guildId);
 
   const listenMoeEmbed = new EmbedBuilder()
     .setTitle(`${client.user?.username ?? 'Vivy'} Song List`)
-    .setDescription(`Listening to [Listen.MOE](https://listen.moe/)`)
+    .setDescription(i18next.t('player_embed.description_listen_moe', { lng }))
     .setColor(0xff015b)
     .setImage(listenMoe.info.cover)
     .setThumbnail(`https://listen.moe/_nuxt/img/logo-square-64.248c1f3.png`)
     .addFields(
       {
-        name: 'Now Playing',
+        name: i18next.t('player_embed.now_playing', { lng }),
         value: listenMoe.info.song,
         inline: false
       },
       {
-        name: 'Artist',
+        name: i18next.t('player_embed.artist', { lng }),
         value: listenMoe.info.artist,
         inline: false
       },
       {
-        name: 'Album',
+        name: i18next.t('player_embed.album', { lng }),
         value: listenMoe.info.album,
         inline: false
       },
       {
-        name: 'Volume',
+        name: i18next.t('player_embed.volume', { lng }),
         value: player?.volume ? `${Math.round(player?.volume * 100)}%` : '100%',
         inline: true
       }
@@ -65,6 +68,7 @@ export const createListenMoeEmbed = (context: AppContext, guildId: string) => {
 
 export const createPlayerEmbed = (context: AppContext, guildId: string, pageIndex: number = 0) => {
   const { link, client } = context;
+  const lng = client.guilds.cache.get(guildId)?.preferredLocale ?? Locale.EnglishUS;
   const player = link.getPlayer(guildId);
   const track = player?.queue.current;
   const requester = track?.userData.userId ? `<@${track.userData.userId}>` : '-';
@@ -80,42 +84,42 @@ export const createPlayerEmbed = (context: AppContext, guildId: string, pageInde
     .setImage(track?.info.artworkUrl ?? null)
     .addFields(
       {
-        name: 'Now Playing',
+        name: i18next.t('player_embed.now_playing', { lng }),
         value: track?.info.title ? `[${track.info.title}](${track.info.uri})` : '-',
         inline: false
       },
       {
-        name: 'Artist',
+        name: i18next.t('player_embed.artist', { lng }),
         value: track?.info.author ?? '-',
         inline: false
       },
       {
-        name: 'Duration',
+        name: i18next.t('player_embed.duration', { lng }),
         value: `${String(duration.minutes).padStart(2, '0')}:${String(duration.seconds).padStart(2, '0')}`,
         inline: true
       },
       {
-        name: 'Remaining',
+        name: i18next.t('player_embed.remaining', { lng }),
         value: `${String(remaining.minutes).padStart(2, '0')}:${String(remaining.seconds).padStart(2, '0')}`,
         inline: true
       },
       {
-        name: 'Requester',
+        name: i18next.t('player_embed.requester', { lng }),
         value: requester,
         inline: true
       },
       {
-        name: 'Looped (Track)',
+        name: i18next.t('player_embed.loop_track', { lng }),
         value: player?.repeatMode === RepeatMode.TRACK ? 'Yes' : 'No',
         inline: true
       },
       {
-        name: 'Looped (Queue)',
+        name: i18next.t('player_embed.loop_queue', { lng }),
         value: player?.repeatMode === RepeatMode.QUEUE ? 'Yes' : 'No',
         inline: true
       },
       {
-        name: 'Volume',
+        name: i18next.t('player_embed.volume', { lng }),
         value: player?.volume ? `${Math.round(player?.volume * 100)}%` : '100%',
         inline: true
       }
