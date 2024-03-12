@@ -3,6 +3,7 @@ import { logger } from '@app/logger';
 import { QueueType } from '@app/player';
 import { Requester } from '@app/requester';
 import { ButtonInteraction, ChatInputCommandInteraction, StringSelectMenuInteraction } from 'discord.js';
+import i18next from 'i18next';
 
 export const handleTrack = async (options: {
   interaction: ChatInputCommandInteraction | StringSelectMenuInteraction | ButtonInteraction;
@@ -42,7 +43,7 @@ export const handleTrack = async (options: {
   }
 
   await interaction.editReply({
-    content: `Queued \`${track.info.title}\`.`,
+    content: i18next.t('reply.music_queued', { lng: interaction.locale, track: track.info.title }),
     components: []
   });
 };

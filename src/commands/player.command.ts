@@ -1,6 +1,7 @@
 import { logger } from '@app/logger';
 import { createPlayerComponents, createPlayerEmbed } from '@app/player';
 import { SlashCommandBuilder } from 'discord.js';
+import i18next from 'i18next';
 import { AppCommand } from './command';
 
 export const player: AppCommand = {
@@ -8,7 +9,7 @@ export const player: AppCommand = {
   execute: async (context, interaction) => {
     if (!interaction.guild || !interaction.guildId) {
       await interaction.reply({
-        content: `You are not in a guild.`,
+        content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
         ephemeral: true
       });
       return;
@@ -16,7 +17,7 @@ export const player: AppCommand = {
 
     if (!interaction.channel) {
       await interaction.reply({
-        content: `You are not in a text channel.`,
+        content: i18next.t('reply.not_in_text_channel', { lng: interaction.locale }),
         ephemeral: true
       });
       return;
@@ -61,7 +62,7 @@ export const player: AppCommand = {
     await redis.set(`player:embed:${interaction.guildId}`, `${interaction.channelId}:${message.id}`);
 
     await interaction.followUp({
-      content: `Created player in <#${interaction.channelId}>`,
+      content: i18next.t('reply.player_embed_created', { lng: interaction.locale, channelId: interaction.channelId }),
       ephemeral: true
     });
   }

@@ -3,6 +3,7 @@ import { logger } from '@app/logger';
 import { updatePlayer } from '@app/player';
 import { Events } from 'discord.js';
 import { AppEvent } from './event';
+import i18next from 'i18next';
 
 export const chatInputCommandInteraction: AppEvent<Events.InteractionCreate> = {
   event: Events.InteractionCreate,
@@ -42,12 +43,12 @@ export const chatInputCommandInteraction: AppEvent<Events.InteractionCreate> = {
       // Make sure we reply to the user or they get an error for no response
       if (interaction.replied || interaction.deferred) {
         await interaction.followUp({
-          content: 'There was an error while executing this command!',
+          content: i18next.t('reply.error_command_execution', { lng: interaction.locale }),
           ephemeral: true
         });
       } else {
         await interaction.reply({
-          content: 'There was an error while executing this command!',
+          content: i18next.t('reply.error_command_execution', { lng: interaction.locale }),
           ephemeral: true
         });
       }

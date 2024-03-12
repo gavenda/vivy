@@ -1,5 +1,6 @@
 import { hasVoiceState } from '@app/utils';
 import { SlashCommandBuilder } from 'discord.js';
+import i18next from 'i18next';
 import { AppCommand } from './command';
 
 export const skip: AppCommand = {
@@ -10,21 +11,21 @@ export const skip: AppCommand = {
   execute: async ({ link }, interaction) => {
     if (!interaction.guild || !interaction.guildId) {
       await interaction.reply({
-        content: `You are not in a guild.`,
+        content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
         ephemeral: true
       });
       return;
     }
     if (!hasVoiceState(interaction.member)) {
       await interaction.reply({
-        content: `Illegal attempt for a non gateway interaction request.`,
+        content: i18next.t('reply.illegal_non_gateway_request', { lng: interaction.locale }),
         ephemeral: true
       });
       return;
     }
     if (!interaction.member.voice.channel) {
       await interaction.reply({
-        content: `You are not in a voice channel.`,
+        content: i18next.t('reply.not_in_voice', { lng: interaction.locale }),
         ephemeral: true
       });
       return;
@@ -35,7 +36,7 @@ export const skip: AppCommand = {
     if (!player) {
       await interaction.reply({
         ephemeral: true,
-        content: 'I am not playing anything.'
+        content: i18next.t('reply.not_playing', { lng: interaction.locale })
       });
       return;
     }
@@ -43,7 +44,7 @@ export const skip: AppCommand = {
     if (!player.queue.current) {
       await interaction.reply({
         ephemeral: true,
-        content: 'There is nothing playing.'
+        content: i18next.t('reply.nothing_playing', { lng: interaction.locale })
       });
       return;
     }
@@ -52,7 +53,7 @@ export const skip: AppCommand = {
 
     await interaction.reply({
       ephemeral: true,
-      content: `Skipped \`${track.info.title}\``
+      content: i18next.t('reply.music_skipped', { lng: interaction.locale, track: track.info.title })
     });
 
     await player.skip();

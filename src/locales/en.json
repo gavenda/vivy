@@ -1,0 +1,44 @@
+{
+  "translation": {
+    "reply": {
+      "not_in_text_channel": "You are not in a text channel.",
+      "not_in_guild": "You are not in a guild.",
+      "not_in_voice": "You are not in a voice channel.",
+      "not_playing": "I am not playing anything",
+      "nothing_playing": "There is nothing playing.",
+      "illegal_non_gateway_request": "Illegal attempt for a non gateway interaction request.",
+      "error_no_match": "No matches found!",
+      "error_lookup": "There was an error looking up the music. Please try again.",
+      "error_radio": "There was an error starting the radio. Please try again.",
+      "error_command_execution": "There was an error while executing this command!",
+      "listen_jpop": "Now listening to an anime radio provided by Listen.MOE.",
+      "listen_kpop": "Now listening to a k-pop radio provided by Listen.MOE.",
+      "loop_track": "Now looping the current track.",
+      "loop_queue": "Now looping the current queue.",
+      "music_paused": "Music paused.",
+      "music_resumed": "Music resumed.",
+      "music_stopped": "Music stopped.",
+      "music_skipped": "Skipped `{{ track }}`.",
+      "music_queued": "Queued `{{ track }}`.",
+      "not_yet_implemented": "Not yet implemented.",
+      "queue_shuffled": "Queue shuffled",
+      "player_embed_created": "Created player in <#{{ channelId }}>",
+      "remove_track_from_queue": "Removed `{{ track }}` from queue.",
+      "remove_track_range_from_queue": "Removed music `{{ from }}` to `{{ to }}` from queue.",
+      "invalid_range": "Invalid range given.",
+      "volume_applied": "Volume set to `{{ volume }}`.",
+      "volume_not_greater_than_max": "Volume should not be greater than {{ max }}.",
+      "volume_not_less_than_zero": "Volume should not be less than zero.",
+      "position_not_greater_than_queue_size": "Position should not be greater than or equal to queue size.",
+      "position_not_greater_than_max": "Minimum position should not be greater than maximimum.",
+      "failed_queue_question": "You failed to specify how to queue, will be playing it later.",
+      "failed_music_selection": "No music selected within a minute, cancelled.",
+      "selected_track_not_found": "Unable to find selected track.",
+      "query_search_results": "Search results for `{{ query }}`",
+      "queue_question": "You have selected `{{ track }}`. How would you like this to be queued?"
+    },
+    "placeholder": {
+      "select_music": "Please select music to play"
+    }
+  }
+}

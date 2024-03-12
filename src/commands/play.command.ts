@@ -8,6 +8,7 @@ import { hasVoiceState, isSpotify, trimEllipse } from '@app/utils';
 import { ChatInputCommandInteraction, SlashCommandBuilder, SlashCommandStringOption } from 'discord.js';
 import { parse as parseSpotifyUri } from 'spotify-uri';
 import { AppCommand } from './command';
+import i18next from 'i18next';
 
 export const play: AppCommand = {
   data: new SlashCommandBuilder()
@@ -71,21 +72,21 @@ const playMusic = async (options: {
 
   if (!interaction.guild || !interaction.guildId) {
     await interaction.reply({
-      content: `You are not in a guild.`,
+      content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
       ephemeral: true
     });
     return;
   }
   if (!hasVoiceState(interaction.member)) {
     await interaction.reply({
-      content: `Illegal attempt for a non gateway interaction request.`,
+      content: i18next.t('reply.illegal_non_gateway_request', { lng: interaction.locale }),
       ephemeral: true
     });
     return;
   }
   if (!interaction.member.voice.channel) {
     await interaction.reply({
-      content: `You are not in a voice channel.`,
+      content: i18next.t('reply.not_in_voice', { lng: interaction.locale }),
       ephemeral: true
     });
     return;
@@ -151,14 +152,17 @@ const handleQuery = async (
         // Responding with an error message if loading fails
         await interaction.followUp({
           ephemeral: true,
-          content: `There was an error looking up the music. Please try again.`
+          content: i18next.t('reply.error_lookup', { lng: interaction.locale })
         });
       }
       break;
     }
     case LoadResultType.EMPTY: {
       // Responding with a message if the search returns no results
-      await interaction.followUp({ ephemeral: true, content: `No matches found!` });
+      await interaction.followUp({
+        ephemeral: true,
+        content: i18next.t('reply.error_no_match', { lng: interaction.locale })
+      });
       return;
     }
     case LoadResultType.PLAYLIST: {

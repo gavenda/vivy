@@ -12,6 +12,7 @@ import {
 } from 'discord.js';
 import { handleQueueSelection } from './queue-selection.handler';
 import { handleTrack } from './track.handler';
+import i18next from 'i18next';
 
 export const handleSearch = async (options: {
   query: string;
@@ -25,7 +26,7 @@ export const handleSearch = async (options: {
     .setCustomId(`select:music`)
     .setMaxValues(1)
     .setMinValues(1)
-    .setPlaceholder('Please select music to play');
+    .setPlaceholder(i18next.t('placeholder.select_music', { lng: interaction.locale }));
 
   for (const [index, track] of result.data.entries()) {
     musicSelectMenu.addOptions(
@@ -40,7 +41,7 @@ export const handleSearch = async (options: {
   const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(musicSelectMenu);
 
   const response = await interaction.followUp({
-    content: `Search results for \`${query}\``,
+    content: i18next.t('reply.query_search_results', { lng: interaction.locale, query }),
     components: [row]
   });
 
@@ -55,7 +56,7 @@ export const handleSearch = async (options: {
 
     if (!track) {
       await interaction.editReply({
-        content: `Unable to find selected track.`,
+        content: i18next.t('reply.selected_track_not_found', { lng: interaction.locale }),
         components: []
       });
       return;
@@ -72,7 +73,7 @@ export const handleSearch = async (options: {
     }
   } catch (e) {
     await interaction.editReply({
-      content: 'No music selected within a minute, cancelled.',
+      content: i18next.t('reply.failed_music_selection', { lng: interaction.locale }),
       components: []
     });
     return;

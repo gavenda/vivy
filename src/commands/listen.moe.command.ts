@@ -5,6 +5,7 @@ import { updatePlayer } from '@app/player';
 import { Requester } from '@app/requester';
 import { hasVoiceState } from '@app/utils/has-voice-state';
 import { ChatInputCommandInteraction, SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
+import i18next from 'i18next';
 import { AppCommand } from './command';
 
 export const listenMoe: AppCommand = {
@@ -24,21 +25,21 @@ export const listenMoe: AppCommand = {
   execute: async (context, interaction) => {
     if (!interaction.guild || !interaction.guildId) {
       await interaction.reply({
-        content: `You are not in a guild.`,
+        content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
         ephemeral: true
       });
       return;
     }
     if (!hasVoiceState(interaction.member)) {
       await interaction.reply({
-        content: `Illegal attempt for a non gateway interaction request.`,
+        content: i18next.t('reply.illegal_non_gateway_request', { lng: interaction.locale }),
         ephemeral: true
       });
       return;
     }
     if (!interaction.member.voice.channel) {
       await interaction.reply({
-        content: `You are not in a voice channel.`,
+        content: i18next.t('reply.not_in_voice', { lng: interaction.locale }),
         ephemeral: true
       });
       return;
@@ -52,7 +53,7 @@ export const listenMoe: AppCommand = {
     if (!player) {
       await interaction.reply({
         ephemeral: true,
-        content: 'I am not playing anything.'
+        content: i18next.t('reply.not_playing', { lng: interaction.locale })
       });
       return;
     }
@@ -69,7 +70,7 @@ export const listenMoe: AppCommand = {
     if (!listenAttempt) {
       await interaction.reply({
         ephemeral: true,
-        content: `There was an error starting the radio. Please try again.`
+        content: i18next.t('reply.error_radio', { lng: interaction.locale })
       });
       return;
     }
@@ -77,12 +78,12 @@ export const listenMoe: AppCommand = {
     if (radioType === RadioType.JPOP) {
       await interaction.reply({
         ephemeral: true,
-        content: `Now listening to an anime radio provided by Listen.MOE.`
+        content: i18next.t('reply.listen_jpop', { lng: interaction.locale })
       });
     } else {
       await interaction.reply({
         ephemeral: true,
-        content: `Now listening to a k-pop radio provided by Listen.MOE.`
+        content: i18next.t('reply.listen_kpop', { lng: interaction.locale })
       });
     }
   }
