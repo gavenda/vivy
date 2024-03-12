@@ -37,7 +37,7 @@ export class LavalinkRestApi<UserData> {
     const response = await fetch(url, {
       method: 'PATCH',
       headers: {
-        Authorization: authorization,
+        'Authorization': authorization,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(options)
@@ -55,7 +55,7 @@ export class LavalinkRestApi<UserData> {
     await fetch(url, {
       method: 'PATCH',
       headers: {
-        Authorization: authorization,
+        'Authorization': authorization,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(options)

@@ -101,7 +101,7 @@ export class LavalinkNode<UserData> {
     const previousSessionId = await this.link.redis.get(`lavalink:session:${host}`);
 
     const headers: Record<string, string> = {
-      Authorization: authorization,
+      'Authorization': authorization,
       'User-Id': this.userId,
       'Client-Name': `Vivy/${version}`
     };

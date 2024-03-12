@@ -22,15 +22,15 @@ export const handleQueueSelection = async (options: {
     const queueLaterButton = new ButtonBuilder()
       .setCustomId('queue:later')
       .setStyle(ButtonStyle.Primary)
-      .setLabel('Reserve Later');
+      .setLabel(i18next.t('button.queue_later', { lng: interaction.locale }));
     const queueNextButton = new ButtonBuilder()
       .setCustomId('queue:next')
       .setStyle(ButtonStyle.Secondary)
-      .setLabel('Play Next');
+      .setLabel(i18next.t('button.queue_next', { lng: interaction.locale }));
     const queueNowButton = new ButtonBuilder()
       .setCustomId('queue:now')
       .setStyle(ButtonStyle.Danger)
-      .setLabel('Play Now');
+      .setLabel(i18next.t('button.queue_now', { lng: interaction.locale }));
 
     const queueActionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
       queueLaterButton,
