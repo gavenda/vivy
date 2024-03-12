@@ -6,7 +6,7 @@ on:
       branch:
         required: true
         description: Branch to deploy
-        default: origin/main
+        default: main
         type: string
       environment:
         required: true
@@ -73,5 +73,5 @@ jobs:
       - run: dotenvx run -- pnpm exec pm2 deploy ecosystem.config.cjs ${{ inputs.environment }}
         name: Deploy to ${{ inputs.environment }}
         env:
-          APP_BRANCH: ${{ inputs.branch }}
+          APP_BRANCH: origin/${{ inputs.branch }}
           DOTENV_KEY: ${{ secrets.DOTENV_KEY }}
