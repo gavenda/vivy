@@ -1,6 +1,6 @@
 <div align="center">
 
-<a href="https://vivy.gavenda.dev">
+<a href="https://vivy.gavenda.dev" rel="noopener" target="_blank">
   <img width="550" src="https://vivy.gavenda.dev/vivy.png">
 </a>
 
