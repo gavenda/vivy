@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://vivy.gavenda.dev/vivy.png">
+<img width="550" src="https://vivy.gavenda.dev/vivy.png">
 
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/gavenda/vivy?style=for-the-badge)
 ![GitHub License](https://img.shields.io/github/license/gavenda/vivy?style=for-the-badge)
