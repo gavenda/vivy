@@ -11,13 +11,14 @@ on:
       environment:
         required: true
         description: 'Environment to deploy'
-        default: production
+        default: development
         type: environment
 
 run-name: Deploy branch '${{ inputs.branch }}' to ${{ inputs.environment }}
 
 jobs:
   build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,11 +26,11 @@ jobs:
         with:
           ref: ${{ inputs.branch }}
       - uses: pnpm/action-setup@v3
-        name: Install pnpm
+        name: Set up pnpm
         with:
           run_install: true
       - uses: actions/setup-node@v4
-        name: Install Node.js
+        name: Set up Node.js
         with:
           node-version-file: '.nvmrc'
           cache: 'pnpm'
@@ -41,6 +42,7 @@ jobs:
           pnpm build
         name: Build
   deploy:
+    name: Deploy
     needs: build
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment || 'production' }}
@@ -54,22 +56,22 @@ jobs:
           echo "$SSH_PRIVATE_KEY" > ./deploy.key
           sudo chmod 600 ./deploy.key
           echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
-        name: 'Setup SSH'
+        name: 'Set up SSH'
         shell: bash
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
       - uses: pnpm/action-setup@v3
-        name: Install pnpm
+        name: Set up pnpm
         with:
           run_install: true
       - uses: actions/setup-node@v4
-        name: Install Node.js
+        name: Set up Node.js
         with:
           node-version-file: '.nvmrc'
           cache: 'pnpm'
       - run: curl -fsS https://dotenvx.sh/ | sh
-        name: Install @dotenvx/dotenvx
+        name: Set up @dotenvx/dotenvx
       - run: dotenvx run -- pnpm exec pm2 deploy ecosystem.config.cjs ${{ inputs.environment }}
         name: Deploy to ${{ inputs.environment }}
         env:
