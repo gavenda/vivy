@@ -1,6 +1,5 @@
 const postDeployCommands = {
-  production: ['pnpm install', 'pnpm run register', 'pm2 startOrRestart ecosystem.config.cjs', 'pm2 save'],
-  development: ['pnpm install', 'pnpm run register:guild', 'pm2 startOrRestart ecosystem.config.cjs', 'pm2 save']
+  production: ['pnpm install', 'pnpm run register', 'pm2 startOrRestart ecosystem.config.cjs', 'pm2 save']
 };
 
 const deploymentConfig = (environment, commands) => {
@@ -31,7 +30,6 @@ module.exports = {
     }
   ],
   deploy: {
-    production: deploymentConfig('production', postDeployCommands.production.join(' && ')),
-    development: deploymentConfig('development', postDeployCommands.development.join(' && '))
+    production: deploymentConfig('production', postDeployCommands.production.join(' && '))
   }
 };
