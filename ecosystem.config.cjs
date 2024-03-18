@@ -11,7 +11,6 @@ const deploymentConfig = (environment, commands) => {
     'ref': process.env.APP_BRANCH,
     'repo': 'https://github.com/gavenda/vivy',
     'path': process.env.APP_PATH,
-    // prettier-ignore
     'post-deploy': commands,
     'env': {
       APP_ENV: environment,
