@@ -27,40 +27,6 @@ jobs:
           pnpm clean
           pnpm build
         name: Build
-  deploy:
-    name: Deploy
-    needs: build
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - uses: actions/checkout@v4
-        name: Checkout
-      - run: |
-          mkdir -p ~/.ssh/
-          echo "$SSH_PRIVATE_KEY" > ./deploy.key
-          sudo chmod 600 ./deploy.key
-          echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
-        name: 'Set up SSH'
-        shell: bash
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
-      - uses: pnpm/action-setup@v3
-        name: Set up pnpm
-        with:
-          run_install: true
-      - uses: actions/setup-node@v4
-        name: Set up Node.js
-        with:
-          node-version-file: '.node-version'
-          cache: 'pnpm'
-      - run: curl -fsS https://dotenvx.sh/ | sh
-        name: Set up @dotenvx/dotenvx
-      - run: dotenvx run -- pnpm exec pm2 deploy ecosystem.config.cjs production
-        name: Deploy to production
-        env:
-          APP_BRANCH: origin/main
-          DOTENV_KEY: ${{ secrets.DOTENV_KEY }}
   docker:
     name: Push to Docker
     needs: build
