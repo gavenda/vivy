@@ -74,7 +74,7 @@ const link = new Lavalink<Requester>({
     {
       host: process.env.LAVA_HOST,
       port: Number(process.env.LAVA_PORT),
-      secure: Boolean(process.env.LAVA_SECURE),
+      secure: process.env.LAVA_SECURE === 'true',
       authorization: process.env.LAVA_PASS
     }
   ],
