@@ -8,13 +8,8 @@ import en from './locales/en.json';
 import { logger } from './logger';
 import { updatePlayer } from './player';
 import { Requester } from './requester';
-// @ts-expect-error no type definitions
-import * as dotenv from '@dotenvx/dotenvx';
 import { Lavalink } from './link';
 import { LISTEN_MOE_JPOP_STREAM, LISTEN_MOE_KPOP_STREAM, LISTEN_MOE_STREAMS, ListenMoe, RadioType } from './listen.moe';
-
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-dotenv.config();
 
 if (!process.env.TOKEN) {
   throw new Error('TOKEN is required.');
