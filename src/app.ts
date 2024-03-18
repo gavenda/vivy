@@ -37,6 +37,9 @@ if (!process.env.SPOTIFY_CLIENT_SECRET) {
 if (!process.env.LAVA_HOST) {
   throw new Error('LAVA_HOST is required.');
 }
+if (!process.env.LAVA_SECURE) {
+  throw new Error('LAVA_SECURE is required.');
+}
 if (!process.env.LAVA_PASS) {
   throw new Error('LAVA_HOST is required.');
 }
@@ -71,7 +74,7 @@ const link = new Lavalink<Requester>({
     {
       host: process.env.LAVA_HOST,
       port: Number(process.env.LAVA_PORT),
-      secure: true,
+      secure: Boolean(process.env.LAVA_SECURE),
       authorization: process.env.LAVA_PASS
     }
   ],
