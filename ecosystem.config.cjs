@@ -27,6 +27,7 @@ module.exports = {
       script: './src/app.ts',
       interpreter: 'node',
       interpreterArgs: '--import tsx/esm',
+      max_memory_restart: '200M',
       wait_ready: true
     }
   ],

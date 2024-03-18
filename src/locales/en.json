@@ -61,7 +61,7 @@
       "requester": "Requester",
       "loop_track": "Loop (Track)",
       "loop_queue": "Loop (Queue)",
-      "volume": "volume"
+      "volume": "Volume"
     },
     "button": {
       "queue_later": "Reserve Later",
