@@ -5,7 +5,8 @@ import { LISTEN_MOE_STREAMS } from '@app/listen.moe';
 
 export const updatePlayer = async (context: AppContext, guildId: string) => {
   const { client, redis, link } = context;
-  const playerEmbed = await redis.get(`player:embed:${guildId}`);
+  const playerEmbedKey = `player:embed:${guildId}`;
+  const playerEmbed = await redis.get(playerEmbedKey);
 
   if (!playerEmbed) return;
 
@@ -31,5 +32,7 @@ export const updatePlayer = async (context: AppContext, guildId: string) => {
     }
   } catch (error) {
     logger.error(`Unable to send player update`, { guildId, error });
+    await redis.del(playerEmbedKey);
+    logger.info(`Removing embed key from cache`, { playerEmbedKey });
   }
 };

@@ -189,7 +189,7 @@ export class Player<UserData> {
       return;
     }
 
-    await this.node.rest.updatePlayer(this.guildId, { track });
+    await this.node.updatePlayer(this.guildId, { track });
     this.playing = true;
   }
 
@@ -214,7 +214,7 @@ export class Player<UserData> {
    */
   async stop() {
     this.queue.current = null;
-    await this.node.rest.updatePlayer(this.guildId, { track: { encoded: null } });
+    await this.node.updatePlayer(this.guildId, { track: { encoded: null } });
     this.playing = false;
   }
 
@@ -222,7 +222,7 @@ export class Player<UserData> {
    * Pauses this player.
    */
   async pause() {
-    await this.node.rest.updatePlayer(this.guildId, { paused: true });
+    await this.node.updatePlayer(this.guildId, { paused: true });
     this.playing = false;
   }
 
@@ -230,7 +230,7 @@ export class Player<UserData> {
    * Resumes playing if paused.
    */
   async resume() {
-    await this.node.rest.updatePlayer(this.guildId, { paused: false });
+    await this.node.updatePlayer(this.guildId, { paused: false });
     this.playing = true;
   }
 

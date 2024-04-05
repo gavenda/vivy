@@ -1,3 +1,4 @@
+import { LavalinkNode } from './node';
 import { LavalinkTrackLoadResult, UpdatePlayerOptions, UpdateSession } from './payload';
 
 export interface LavalinkRestApiOptions {
@@ -8,10 +9,11 @@ export interface LavalinkRestApiOptions {
 }
 
 export class LavalinkRestApi<UserData> {
+  node: LavalinkNode<UserData>;
   options: LavalinkRestApiOptions;
-  sessionId: string | null = null;
 
-  constructor(options: LavalinkRestApiOptions) {
+  constructor(node: LavalinkNode<UserData>, options: LavalinkRestApiOptions) {
+    this.node = node;
     this.options = options;
   }
 
@@ -27,12 +29,12 @@ export class LavalinkRestApi<UserData> {
   }
 
   private buildUpdatePlayerUrl(guildId: string): URL {
-    return new URL(`/v4/sessions/${this.sessionId}/players/${guildId}`, this.restUrl);
+    return new URL(`/v4/sessions/${this.node.sessionId}/players/${guildId}`, this.restUrl);
   }
 
   async updateSession(options: UpdateSession): Promise<UpdateSession> {
     const { authorization } = this.options;
-    const url = new URL(`/v4/sessions/${this.sessionId}`, this.restUrl);
+    const url = new URL(`/v4/sessions/${this.node.sessionId}`, this.restUrl);
 
     const response = await fetch(url, {
       method: 'PATCH',

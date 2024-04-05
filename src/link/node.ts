@@ -10,13 +10,15 @@ import {
   Stats,
   StatsPayload,
   TrackEndReason,
-  UpdatePlayerOptions
+  UpdatePlayerOptions,
+  VoiceState
 } from './payload';
 import { RepeatMode } from './player';
 import { PlayerState } from './player.state';
 import { LavalinkRestApi } from './rest';
 import { Player, PlayerOptions } from './player';
 import { version } from '@app/version';
+import { logger } from '@app/logger';
 
 export interface LavalinkNodeOptions {
   /**
@@ -61,13 +63,16 @@ export class LavalinkNode<UserData> {
   };
   options: LavalinkNodeOptions;
   link: Lavalink<UserData>;
-  rest: LavalinkRestApi<UserData>;
   nodeId: string;
   userId: string;
   reconnectTimeout: number;
-  sessionId: string | null = null;
   players = new Map<string, Player<UserData>>();
   hasDisconnected = false;
+
+  // Private
+  #rest: LavalinkRestApi<UserData>;
+  #sessionId: string | null = null;
+  #voiceState: VoiceState | null = null;
 
   constructor(link: Lavalink<UserData>, userId: string, options: LavalinkNodeOptions) {
     this.link = link;
@@ -75,14 +80,21 @@ export class LavalinkNode<UserData> {
     this.options = options;
     this.nodeId = options.host;
     this.reconnectTimeout = options.reconnectTimeout ?? 60000;
-    this.rest = new LavalinkRestApi(options);
+    this.#rest = new LavalinkRestApi(this, options);
   }
 
   /**
    * Returns `true` if this node is connected.
    */
   get connected() {
-    return this.sessionId !== undefined || this.sessionId !== null;
+    return this.sessionId !== null;
+  }
+
+  /**
+   * Returns `true` if this node has connected to a voice channel.
+   */
+  get voiceConnected() {
+    return this.#voiceState !== null;
   }
 
   /**
@@ -90,6 +102,23 @@ export class LavalinkNode<UserData> {
    */
   get authorization() {
     return this.options.authorization;
+  }
+
+  get sessionId(): string {
+    if (!this.#sessionId) {
+      throw new Error('No session identifier is set! This will lead to awkward executions.');
+    }
+    return this.#sessionId;
+  }
+
+  set sessionId(value: string) {
+    logger.info('New session id set', { sessionId: value });
+    this.#sessionId = value;
+  }
+
+  clearSessionId() {
+    logger.info('Session cleared');
+    this.#sessionId = null;
   }
 
   /**
@@ -124,8 +153,7 @@ export class LavalinkNode<UserData> {
   }
 
   private async onWebSocketClose() {
-    this.sessionId = null;
-    this.rest.sessionId = null;
+    this.clearSessionId();
     this.hasDisconnected = true;
     this.link.emit('nodeDisconnected', this);
 
@@ -168,7 +196,6 @@ export class LavalinkNode<UserData> {
 
   private async handleReady(payload: ReadyPayload) {
     this.sessionId = payload.sessionId;
-    this.rest.sessionId = payload.sessionId;
 
     // Save session id to redis
     await this.link.redis.set(`lavalink:session:${this.options.host}`, payload.sessionId);
@@ -183,7 +210,7 @@ export class LavalinkNode<UserData> {
 
   private async ready() {
     // Tell lavalink we'll resume when we somehow disconnect
-    await this.rest.updateSession({
+    await this.#rest.updateSession({
       resuming: true,
       timeout: 300
     });
@@ -375,7 +402,7 @@ export class LavalinkNode<UserData> {
    * @param identifier the identifier
    */
   async loadTrack(identifier: string) {
-    return this.rest.loadTracks(identifier);
+    return this.#rest.loadTracks(identifier);
   }
 
   /**
@@ -393,7 +420,7 @@ export class LavalinkNode<UserData> {
   async destroyPlayers() {
     for (const player of this.players.values()) {
       await player.deleteState();
-      await this.rest.destroyPlayer(player.guildId);
+      await this.#rest.destroyPlayer(player.guildId);
     }
     this.players.clear();
   }
@@ -409,7 +436,7 @@ export class LavalinkNode<UserData> {
       await player.deleteState();
     }
 
-    await this.rest.destroyPlayer(guildId);
+    await this.#rest.destroyPlayer(guildId);
 
     this.players.delete(guildId);
   }
@@ -420,6 +447,24 @@ export class LavalinkNode<UserData> {
    * @param options player update options
    */
   async updatePlayer(guildId: string, options: UpdatePlayerOptions<UserData>) {
-    await this.rest.updatePlayer(guildId, options);
+    if (options.voice) {
+      logger.info('Connected to discord voice', { ...options.voice });
+      this.#voiceState = options.voice;
+    }
+
+    if (options.track && !this.voiceConnected) {
+      logger.warn('Load track attempt while not connected to voice, delaying update...');
+
+      setTimeout(async () => {
+        if (this.voiceConnected) {
+          await this.#rest.updatePlayer(guildId, options);
+        } else {
+          logger.error('Load track attempt failed, still not connected to discord after 5000ms');
+        }
+      }, 5000);
+      return;
+    }
+
+    await this.#rest.updatePlayer(guildId, options);
   }
 }
