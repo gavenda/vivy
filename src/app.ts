@@ -185,8 +185,8 @@ link.on('queueEnd', () => {
   logger.debug('Queue end');
 });
 
-link.on('trackError', async (player, track) => {
-  logger.info('Track error', { title: track.info.title, guild: player.guildId });
+link.on('trackError', async (player, track, exception) => {
+  logger.error('Track error', { title: track.info.title, guild: player.guildId, exception });
   await player.skip();
 });
 
