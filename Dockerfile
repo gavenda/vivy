@@ -19,4 +19,4 @@ RUN pnpm install
 COPY . /app/vivy
 
 # Start app
-CMD ["node", "--import", "tsx/esm", "./dist/app.ts"]
+CMD ["node", "--import", "tsx/esm", "./src/app.ts"]
