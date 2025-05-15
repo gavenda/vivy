@@ -7,9 +7,10 @@ RUN corepack enable pnpm
 RUN mkdir -p /app/vivy
 WORKDIR /app/vivy
 
-# Copy package.json and pnpm-lock.yaml
+# Copy package.json, pnpm-workspace.yaml and pnpm-lock.yaml
 COPY package.json /app/vivy
 COPY pnpm-lock.yaml /app/vivy
+COPY pnpm-workspace.yaml /app/vivy
 
 # Run install
 RUN pnpm install
@@ -18,4 +19,4 @@ RUN pnpm install
 COPY . /app/vivy
 
 # Start app
-CMD ["node", "--import", "tsx/esm", "./src/app.ts"]
+CMD ["node", "--import", "tsx/esm", "./dist/app.ts"]

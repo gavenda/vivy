@@ -1,8 +1,8 @@
-import WebSocket from 'ws';
-import { ListenMoePayload, PayloadType, PlaybackInfoPayload } from './payload';
-import { EventEmitter } from 'events';
-import { ListenMoeEvents } from './listen.moe.events';
 import { logger } from '@app/logger';
+import { EventEmitter } from 'events';
+import WebSocket from 'ws';
+import type { ListenMoeEvents } from './listen.moe.events';
+import { type ListenMoePayload, PayloadType, type PlaybackInfoPayload } from './payload';
 
 export enum RadioType {
   JPOP,

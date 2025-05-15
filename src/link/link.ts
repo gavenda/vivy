@@ -1,19 +1,19 @@
-import { Awaitable, isValidHttpUrl } from '@app/utils';
+import { type Awaitable, isValidHttpUrl } from '@app/utils';
 import {
   ChannelType,
-  GatewayChannelDeleteDispatch,
+  type GatewayChannelDeleteDispatch,
   GatewayDispatchEvents,
-  GatewayReceivePayload,
-  GatewaySendPayload,
-  GatewayVoiceServerUpdateDispatch,
-  GatewayVoiceStateUpdateDispatch
+  type GatewayReceivePayload,
+  type GatewaySendPayload,
+  type GatewayVoiceServerUpdateDispatch,
+  type GatewayVoiceStateUpdateDispatch
 } from 'discord.js';
 import EventEmitter from 'events';
 import { createClient } from 'redis';
-import { LavalinkEvents } from './link.events';
-import { LavalinkNode, LavalinkNodeOptions } from './node';
+import type { LavalinkEvents } from './link.events';
+import { LavalinkNode, type LavalinkNodeOptions } from './node';
 import { LoadResultType } from './payload';
-import { PlayerOptions } from './player';
+import type { PlayerOptions } from './player';
 
 /**
  * Lavalink sources.

@@ -1,7 +1,7 @@
 import { hasVoiceState } from '@app/utils';
 import { SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
-import { AppCommand } from './command';
 import i18next from 'i18next';
+import type { AppCommand } from './command';
 
 export const clear: AppCommand = {
   data: new SlashCommandBuilder()
@@ -12,9 +12,10 @@ export const clear: AppCommand = {
     )
     .addSubcommand(new SlashCommandSubcommandBuilder().setName('queue').setDescription('Clear the music queue.'))
     .setName('clear')
-    .setDescription('Clear an existing applied setting.'),
+    .setDescription('Clear an existing applied setting.')
+    .toJSON(),
   execute: async ({ link }, interaction) => {
-    if (!interaction.guild || !interaction.guildId) {
+    if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
       await interaction.reply({
         content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
         ephemeral: true

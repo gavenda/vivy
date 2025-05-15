@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
-import { AppCommand } from './command';
 import i18next from 'i18next';
+import type { AppCommand } from './command';
 
 export const playlist: AppCommand = {
   data: new SlashCommandBuilder()
@@ -18,7 +18,8 @@ export const playlist: AppCommand = {
       new SlashCommandSubcommandBuilder().setName('queue').setDescription('Queue the music in your playlist.')
     )
     .setName('playlist')
-    .setDescription('Manage your playlist.'),
+    .setDescription('Manage your playlist.')
+    .toJSON(),
   execute: async (context, interaction) => {
     await interaction.reply({
       ephemeral: true,

@@ -1,14 +1,14 @@
-import { AppContext } from '@app/context';
+import type { AppContext } from '@app/context';
 import { LavalinkSource, LoadResultType, Player } from '@app/link';
 import { logger } from '@app/logger';
 import { handleQueueSelection, handleSearch, handleTracks } from '@app/player/handlers';
-import { Requester } from '@app/requester';
+import type { Requester } from '@app/requester';
 import { handleSpotifyAlbum, handleSpotifyPlaylist, handleSpotifyTrack } from '@app/spotify/handlers';
 import { hasVoiceState, isSpotify, trimEllipse } from '@app/utils';
 import { ChatInputCommandInteraction, SlashCommandBuilder, SlashCommandStringOption } from 'discord.js';
-import { parse as parseSpotifyUri } from 'spotify-uri';
-import { AppCommand } from './command';
 import i18next from 'i18next';
+import { parse as parseSpotifyUri } from 'spotify-uri';
+import type { AppCommand } from './command';
 
 export const play: AppCommand = {
   data: new SlashCommandBuilder()
@@ -29,7 +29,8 @@ export const play: AppCommand = {
         )
     )
     .setName('play')
-    .setDescription('Play a music or queue it in the music queue.'),
+    .setDescription('Play a music or queue it in the music queue.')
+    .toJSON(),
   execute: async (context, interaction) => {
     const source = <LavalinkSource>interaction.options.getString('source') ?? LavalinkSource.YOUTUBE_MUSIC;
     await playMusic({ context, interaction, source });
@@ -70,7 +71,7 @@ const playMusic = async (options: {
 }) => {
   const { context, interaction, source } = options;
 
-  if (!interaction.guild || !interaction.guildId) {
+  if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
     await interaction.reply({
       content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
       ephemeral: true

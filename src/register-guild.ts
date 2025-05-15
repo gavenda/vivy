@@ -1,6 +1,6 @@
 import { REST, Routes } from 'discord.js';
-import { logger } from './logger';
 import { commands } from './commands';
+import { logger } from './logger';
 
 if (!process.env.TOKEN) {
   throw new Error('TOKEN is required.');
@@ -18,7 +18,7 @@ try {
   const clientId = process.env.CLIENT_ID;
   const guildId = process.env.GUILD_ID;
 
-  const commandList = commands.map((command) => command.data.toJSON());
+  const commandList = commands.map((command) => command.data);
 
   logger.info(`Started refreshing ${commandList.length} application (/) commands on guild id: ${guildId}.`);
 

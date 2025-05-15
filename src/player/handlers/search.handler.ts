@@ -1,7 +1,7 @@
 import { AppEmoji } from '@app/emojis';
-import { Player, SearchLoadResult } from '@app/link';
+import { Player, type SearchLoadResult } from '@app/link';
 import { logger } from '@app/logger';
-import { Requester } from '@app/requester';
+import type { Requester } from '@app/requester';
 import { trimEllipse } from '@app/utils/trim-ellipses';
 import {
   ActionRowBuilder,
@@ -10,9 +10,9 @@ import {
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder
 } from 'discord.js';
+import i18next from 'i18next';
 import { handleQueueSelection } from './queue-selection.handler';
 import { handleTrack } from './track.handler';
-import i18next from 'i18next';
 
 export const handleSearch = async (options: {
   query: string;
@@ -71,7 +71,8 @@ export const handleSearch = async (options: {
     } else {
       await handleTrack({ interaction, track, player, queue: 'later' });
     }
-  } catch (e) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error: unknown) {
     await interaction.editReply({
       content: i18next.t('reply.failed_music_selection', { lng: interaction.locale }),
       components: []

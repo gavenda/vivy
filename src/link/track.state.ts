@@ -1,4 +1,4 @@
-import { Track } from './payload';
+import type { Track } from './payload';
 
 export interface TrackState<UserData> {
   current: Track<UserData> | null;

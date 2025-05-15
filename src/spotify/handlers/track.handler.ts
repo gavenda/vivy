@@ -1,12 +1,12 @@
-import { AppContext } from '@app/context';
+import type { AppContext } from '@app/context';
 import { LavalinkSource, Player } from '@app/link';
 import { logger } from '@app/logger';
 import { handleQueueSelection, handleTrack } from '@app/player/handlers';
 import { lookupTrack } from '@app/player/lookup';
-import { Requester } from '@app/requester';
+import type { Requester } from '@app/requester';
 import { ChatInputCommandInteraction } from 'discord.js';
 import i18next from 'i18next';
-import { ParsedSpotifyUri } from 'spotify-uri';
+import type { ParsedSpotifyUri } from 'spotify-uri';
 
 export const handleSpotifyTrack = async (options: {
   context: AppContext;

@@ -2,8 +2,8 @@ import { SpotifyApi } from '@spotify/web-api-ts-sdk';
 import { Client } from 'discord.js';
 import { createClient } from 'redis';
 import { Lavalink } from './link';
-import { Requester } from './requester';
 import { ListenMoe } from './listen.moe';
+import type { Requester } from './requester';
 
 export interface AppContext {
   applicationId: string;

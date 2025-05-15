@@ -1,4 +1,4 @@
-import { Awaitable } from '@app/utils';
+import type { Awaitable } from '@app/utils';
 
 export interface ListenMoeEvents {
   /**

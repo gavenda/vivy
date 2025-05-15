@@ -4,7 +4,7 @@ import { createPlayerComponents, createPlayerEmbed } from '@app/player';
 import { chunkSize } from '@app/utils';
 import { Events } from 'discord.js';
 import i18next from 'i18next';
-import { AppEvent } from './event';
+import type { AppEvent } from './event';
 
 export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
   event: Events.InteractionCreate,
@@ -13,7 +13,7 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
     if (interaction.applicationId != context.applicationId) return;
     if (!interaction.isButton()) return;
     if (!interaction.customId.startsWith('player')) return;
-    if (!interaction.guild || !interaction.guildId) {
+    if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
       await interaction.reply({
         content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
         ephemeral: true

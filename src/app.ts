@@ -1,15 +1,15 @@
 import { SpotifyApi } from '@spotify/web-api-ts-sdk';
-import { ActivityType, Client, Events, GatewayIntentBits, GatewayReceivePayload } from 'discord.js';
+import { ActivityType, Client, Events, GatewayIntentBits, type GatewayReceivePayload } from 'discord.js';
 import i18next from 'i18next';
 import { createClient } from 'redis';
-import { AppContext } from './context';
+import type { AppContext } from './context';
 import { events } from './events';
+import { Lavalink } from './link';
+import { LISTEN_MOE_JPOP_STREAM, LISTEN_MOE_KPOP_STREAM, LISTEN_MOE_STREAMS, ListenMoe, RadioType } from './listen.moe';
 import en from './locales/en.json';
 import { logger } from './logger';
 import { updatePlayer } from './player';
-import { Requester } from './requester';
-import { Lavalink } from './link';
-import { LISTEN_MOE_JPOP_STREAM, LISTEN_MOE_KPOP_STREAM, LISTEN_MOE_STREAMS, ListenMoe, RadioType } from './listen.moe';
+import type { Requester } from './requester';
 
 if (!process.env.TOKEN) {
   throw new Error('TOKEN is required.');

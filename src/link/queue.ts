@@ -1,6 +1,6 @@
 import { Lavalink } from './link';
-import { Track } from './payload';
-import { TrackState } from './track.state';
+import type { Track } from './payload';
+import type { TrackState } from './track.state';
 
 export interface TrackQueueOptions<UserData> {
   link: Lavalink<UserData>;

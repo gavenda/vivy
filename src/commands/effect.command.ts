@@ -1,7 +1,7 @@
-import { AppContext } from '@app/context';
+import type { AppContext } from '@app/context';
 import { Player } from '@app/link';
 import { logger } from '@app/logger';
-import { Requester } from '@app/requester';
+import type { Requester } from '@app/requester';
 import { hasVoiceState } from '@app/utils';
 import {
   ChatInputCommandInteraction,
@@ -11,7 +11,7 @@ import {
   SlashCommandSubcommandGroupBuilder
 } from 'discord.js';
 import i18next from 'i18next';
-import { AppCommand } from './command';
+import type { AppCommand } from './command';
 
 export const effect: AppCommand = {
   data: new SlashCommandBuilder()
@@ -51,9 +51,10 @@ export const effect: AppCommand = {
         )
     )
     .setName('effect')
-    .setDescription('Apply an effect to the playing music.'),
+    .setDescription('Apply an effect to the playing music.')
+    .toJSON(),
   execute: async (context, interaction) => {
-    if (!interaction.guild || !interaction.guildId) {
+    if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
       await interaction.reply({
         content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
         ephemeral: true

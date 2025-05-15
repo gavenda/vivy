@@ -2,12 +2,12 @@ import { logger } from '@app/logger';
 import { createPlayerComponents, createPlayerEmbed } from '@app/player';
 import { SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
-import { AppCommand } from './command';
+import type { AppCommand } from './command';
 
 export const player: AppCommand = {
-  data: new SlashCommandBuilder().setName('player').setDescription('Creates a music player in this channel.'),
+  data: new SlashCommandBuilder().setName('player').setDescription('Creates a music player in this channel.').toJSON(),
   execute: async (context, interaction) => {
-    if (!interaction.guild || !interaction.guildId) {
+    if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
       await interaction.reply({
         content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
         ephemeral: true
@@ -46,8 +46,8 @@ export const player: AppCommand = {
             await previousMessage.delete();
           }
         }
-      } catch (e) {
-        logger.warn(`Unable to delete previous message`, { guildId: interaction.guildId });
+      } catch (e: unknown) {
+        logger.warn(`Unable to delete previous message`, { guildId: interaction.guildId, e });
       }
     }
 

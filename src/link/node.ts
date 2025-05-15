@@ -1,24 +1,23 @@
+import { logger } from '@app/logger';
+import { version } from '@app/version';
 import WebSocket from 'ws';
 import { Lavalink } from './link';
 import {
   EventType,
-  LavalinkEventReceivePayload,
-  LavalinkReceivePayload,
+  type LavalinkEventReceivePayload,
+  type LavalinkReceivePayload,
   OpCode,
-  PlayerUpdatePayload,
-  ReadyPayload,
-  Stats,
-  StatsPayload,
+  type PlayerUpdatePayload,
+  type ReadyPayload,
+  type Stats,
+  type StatsPayload,
   TrackEndReason,
-  UpdatePlayerOptions,
-  VoiceState
+  type UpdatePlayerOptions,
+  type VoiceState
 } from './payload';
-import { RepeatMode } from './player';
-import { PlayerState } from './player.state';
+import { Player, type PlayerOptions, RepeatMode } from './player';
+import type { PlayerState } from './player.state';
 import { LavalinkRestApi } from './rest';
-import { Player, PlayerOptions } from './player';
-import { version } from '@app/version';
-import { logger } from '@app/logger';
 
 export interface LavalinkNodeOptions {
   /**

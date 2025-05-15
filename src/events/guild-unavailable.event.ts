@@ -1,5 +1,5 @@
 import { Events } from 'discord.js';
-import { AppEvent } from './event';
+import type { AppEvent } from './event';
 
 export const guildUnavailable: AppEvent<Events.GuildUnavailable> = {
   event: Events.GuildUnavailable,

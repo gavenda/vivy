@@ -1,5 +1,5 @@
 import { Events } from 'discord.js';
-import { AppEvent } from './event';
+import type { AppEvent } from './event';
 
 export const guildAvailable: AppEvent<Events.GuildAvailable> = {
   event: Events.GuildAvailable,

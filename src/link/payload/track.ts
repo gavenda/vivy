@@ -1,4 +1,4 @@
-import { Exception } from './payload';
+import type { Exception } from './payload';
 
 export interface Track<UserData> {
   /**

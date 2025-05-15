@@ -1,7 +1,7 @@
 import { commands } from '@app/commands';
 import { logger } from '@app/logger';
 import { Events } from 'discord.js';
-import { AppEvent } from './event';
+import type { AppEvent } from './event';
 
 export const autocompleteInteraction: AppEvent<Events.InteractionCreate> = {
   event: Events.InteractionCreate,
@@ -27,8 +27,8 @@ export const autocompleteInteraction: AppEvent<Events.InteractionCreate> = {
 
     try {
       await command.autocomplete(context, interaction);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error: unknown) {
       if (!interaction.responded) {
         await interaction.respond([]);
       }

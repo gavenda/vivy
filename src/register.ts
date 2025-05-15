@@ -14,7 +14,7 @@ const rest = new REST().setToken(process.env.TOKEN);
 try {
   const clientId = process.env.CLIENT_ID;
 
-  const commandList = commands.map((command) => command.data.toJSON());
+  const commandList = commands.map((command) => command.data);
 
   logger.info(`Started refreshing ${commandList.length} application (/) commands.`);
 

@@ -3,6 +3,7 @@ export const isValidHttpUrl = (url: string) => {
 
   try {
     urlObj = new URL(url);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (_) {
     return false;
   }

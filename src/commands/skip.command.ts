@@ -1,15 +1,16 @@
 import { hasVoiceState } from '@app/utils';
 import { SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
-import { AppCommand } from './command';
+import type { AppCommand } from './command';
 
 export const skip: AppCommand = {
   // prettier-ignore
   data: new SlashCommandBuilder()
     .setName('skip')
-    .setDescription('Skip the currently playing music.'),
+    .setDescription('Skip the currently playing music.')
+    .toJSON(),
   execute: async ({ link }, interaction) => {
-    if (!interaction.guild || !interaction.guildId) {
+    if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
       await interaction.reply({
         content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
         ephemeral: true

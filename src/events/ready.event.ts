@@ -1,6 +1,6 @@
 import { logger } from '@app/logger';
 import { Events } from 'discord.js';
-import { AppEvent } from './event';
+import type { AppEvent } from './event';
 
 export const readyEvent: AppEvent<Events.ClientReady> = {
   event: Events.ClientReady,

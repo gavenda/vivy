@@ -1,4 +1,4 @@
-import { Track } from './track';
+import type { Track } from './track';
 
 export enum OpCode {
   /**

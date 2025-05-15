@@ -1,7 +1,7 @@
 import { hasVoiceState } from '@app/utils';
 import { SlashCommandBuilder, SlashCommandIntegerOption } from 'discord.js';
 import i18next from 'i18next';
-import { AppCommand } from './command';
+import type { AppCommand } from './command';
 
 export const remove: AppCommand = {
   data: new SlashCommandBuilder()
@@ -17,9 +17,10 @@ export const remove: AppCommand = {
         .setDescription('The last number of the music in the queue you want to remove.')
     )
     .setName('remove')
-    .setDescription('Remove a music in the music queue.'),
+    .setDescription('Remove a music in the music queue.')
+    .toJSON(),
   execute: async ({ link }, interaction) => {
-    if (!interaction.guild || !interaction.guildId) {
+    if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
       await interaction.reply({
         content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
         ephemeral: true

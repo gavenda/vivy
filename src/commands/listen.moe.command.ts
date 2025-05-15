@@ -1,12 +1,12 @@
-import { AppContext } from '@app/context';
+import type { AppContext } from '@app/context';
 import { LoadResultType, Player } from '@app/link';
 import { LISTEN_MOE_JPOP_M38U, LISTEN_MOE_KPOP_M38U, RadioType } from '@app/listen.moe';
 import { updatePlayer } from '@app/player';
-import { Requester } from '@app/requester';
+import type { Requester } from '@app/requester';
 import { hasVoiceState } from '@app/utils/has-voice-state';
 import { ChatInputCommandInteraction, SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
 import i18next from 'i18next';
-import { AppCommand } from './command';
+import type { AppCommand } from './command';
 
 export const listenMoe: AppCommand = {
   data: new SlashCommandBuilder()
@@ -21,9 +21,10 @@ export const listenMoe: AppCommand = {
         .setDescription('Listen to a k-pop radio stream provided by Listen.MOE')
     )
     .setName('radio')
-    .setDescription('Listen to a radio'),
+    .setDescription('Listen to a radio')
+    .toJSON(),
   execute: async (context, interaction) => {
-    if (!interaction.guild || !interaction.guildId) {
+    if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
       await interaction.reply({
         content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
         ephemeral: true

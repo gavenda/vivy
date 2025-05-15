@@ -1,4 +1,4 @@
-import { VoiceState } from './payload';
+import type { VoiceState } from './payload';
 import { RepeatMode } from './player';
 
 export interface PlayerState {

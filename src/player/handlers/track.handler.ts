@@ -1,7 +1,7 @@
-import { Player, Track } from '@app/link';
+import { Player, type Track } from '@app/link';
 import { logger } from '@app/logger';
-import { QueueType } from '@app/player';
-import { Requester } from '@app/requester';
+import type { QueueType } from '@app/player';
+import type { Requester } from '@app/requester';
 import { ButtonInteraction, ChatInputCommandInteraction, StringSelectMenuInteraction } from 'discord.js';
 import i18next from 'i18next';
 

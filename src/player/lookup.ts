@@ -1,7 +1,7 @@
-import { AppContext } from '@app/context';
-import { LavalinkSource, LoadResultType, Track } from '@app/link';
+import type { AppContext } from '@app/context';
+import { LavalinkSource, LoadResultType, type Track } from '@app/link';
 import { logger } from '@app/logger';
-import { Requester } from '@app/requester';
+import type { Requester } from '@app/requester';
 import { ChatInputCommandInteraction } from 'discord.js';
 
 export const lookupTrack = async (options: {

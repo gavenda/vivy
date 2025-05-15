@@ -2,9 +2,9 @@ import { GatewayOpcodes } from 'discord.js';
 import { LavalinkFilter } from './filter';
 import { Lavalink } from './link';
 import { LavalinkNode } from './node';
-import { Track, UpdatePlayerOptions, VoiceState } from './payload';
+import type { Track, UpdatePlayerOptions, VoiceState } from './payload';
+import type { PlayerState } from './player.state';
 import { TrackQueue } from './queue';
-import { PlayerState } from './player.state';
 
 export const DEFAULT_AUTO_LEAVE_MS = 1000 * 60 * 5;
 

@@ -1,19 +1,24 @@
 {
   "compilerOptions": {
-    "module": "ES2022",
+    /* Base Options: */
     "esModuleInterop": true,
-    "target": "esnext",
-    "moduleResolution": "bundler",
-    "sourceMap": true,
-    "outDir": "dist",
-    "rootDir": "src",
+    "skipLibCheck": true,
+    "target": "es2022",
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "moduleDetection": "force",
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
     "strict": true,
-    "forceConsistentCasingInFileNames": true,
+    "noUncheckedIndexedAccess": false,
+    "noImplicitOverride": true,
+    "module": "preserve",
+    "noEmit": true,
+    "lib": ["es2022"],
     "paths": {
       "@app/*": ["./src/*"]
     }
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["dist", "node_modules"],
-  "lib": ["esnext"]
+  "exclude": ["dist", "node_modules"]
 }

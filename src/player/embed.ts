@@ -1,4 +1,4 @@
-import { AppContext } from '@app/context';
+import type { AppContext } from '@app/context';
 import { AppEmoji } from '@app/emojis';
 import { RepeatMode } from '@app/link';
 import { chunk, msToTime, trimEllipse } from '@app/utils';
@@ -80,7 +80,7 @@ export const createPlayerEmbed = (context: AppContext, guildId: string, pageInde
     .setTitle(`${client.user?.username ?? 'Vivy'} Song List`)
     .setDescription(queue)
     .setColor(0x00ffff)
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+
     .setImage(track?.info.artworkUrl ?? null)
     .addFields(
       {

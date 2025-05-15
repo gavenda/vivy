@@ -1,4 +1,14 @@
-import { ChannelMix, Distortion, Equalizer, Karaoke, LowPass, Rotation, Timescale, Tremolo, Vibrato } from './payload';
+import type {
+  ChannelMix,
+  Distortion,
+  Equalizer,
+  Karaoke,
+  LowPass,
+  Rotation,
+  Timescale,
+  Tremolo,
+  Vibrato
+} from './payload';
 import { Player } from './player';
 
 export class LavalinkFilter<UserData> {

@@ -1,6 +1,6 @@
-import { Awaitable } from '@app/utils/awaitable';
+import type { Awaitable } from '@app/utils/awaitable';
 import { LavalinkNode } from './node';
-import { Exception, Track, TrackEndReason } from './payload';
+import { type Exception, type Track, TrackEndReason } from './payload';
 import { Player } from './player';
 
 export interface LavalinkEvents<UserData> {

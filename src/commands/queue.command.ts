@@ -1,15 +1,16 @@
 import { createPlayerEmbed } from '@app/player';
 import { SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
-import { AppCommand } from './command';
+import type { AppCommand } from './command';
 
 export const queue: AppCommand = {
   // prettier-ignore
   data: new SlashCommandBuilder()
     .setName('queue')
-    .setDescription('Show the music queue.'),
+    .setDescription('Show the music queue.')
+    .toJSON(),
   execute: async (context, interaction) => {
-    if (!interaction.guild || !interaction.guildId) {
+    if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
       await interaction.reply({
         content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
         ephemeral: true

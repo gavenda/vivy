@@ -1,5 +1,5 @@
 import { LavalinkNode } from './node';
-import { LavalinkTrackLoadResult, UpdatePlayerOptions, UpdateSession } from './payload';
+import type { LavalinkTrackLoadResult, UpdatePlayerOptions, UpdateSession } from './payload';
 
 export interface LavalinkRestApiOptions {
   host: string;
@@ -44,7 +44,7 @@ export class LavalinkRestApi<UserData> {
       },
       body: JSON.stringify(options)
     });
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
     return response.json() as Promise<UpdateSession>;
   }
 
@@ -82,7 +82,7 @@ export class LavalinkRestApi<UserData> {
     loadTracksUrl.searchParams.set('identifier', identifier);
 
     const response = await fetch(loadTracksUrl, { headers });
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
     return response.json() as Promise<LavalinkTrackLoadResult<UserData>>;
   }
 }

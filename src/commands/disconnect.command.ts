@@ -1,12 +1,15 @@
 import { hasVoiceState } from '@app/utils';
 import { SlashCommandBuilder } from 'discord.js';
-import { AppCommand } from './command';
 import i18next from 'i18next';
+import type { AppCommand } from './command';
 
 export const disconnect: AppCommand = {
-  data: new SlashCommandBuilder().setName('disconnect').setDescription('Disconnect the player from the voice channel.'),
+  data: new SlashCommandBuilder()
+    .setName('disconnect')
+    .setDescription('Disconnect the player from the voice channel.')
+    .toJSON(),
   execute: async ({ link }, interaction) => {
-    if (!interaction.guild || !interaction.guildId) {
+    if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
       await interaction.reply({
         content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
         ephemeral: true

@@ -1,8 +1,8 @@
+import { RepeatMode } from '@app/link';
 import { hasVoiceState } from '@app/utils/has-voice-state';
 import { SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
-import { AppCommand } from './command';
-import { RepeatMode } from '@app/link';
 import i18next from 'i18next';
+import type { AppCommand } from './command';
 
 export const loop: AppCommand = {
   data: new SlashCommandBuilder()
@@ -11,9 +11,10 @@ export const loop: AppCommand = {
     )
     .addSubcommand(new SlashCommandSubcommandBuilder().setName('queue').setDescription('Loop the entire music queue.'))
     .setName('loop')
-    .setDescription('Loop the music queue.'),
+    .setDescription('Loop the music queue.')
+    .toJSON(),
   execute: async ({ link }, interaction) => {
-    if (!interaction.guild || !interaction.guildId) {
+    if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
       await interaction.reply({
         content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
         ephemeral: true

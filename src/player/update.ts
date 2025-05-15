@@ -1,7 +1,7 @@
-import { AppContext } from '@app/context';
+import type { AppContext } from '@app/context';
+import { LISTEN_MOE_STREAMS } from '@app/listen.moe';
 import { logger } from '@app/logger';
 import { createListenMoeComponents, createListenMoeEmbed, createPlayerComponents, createPlayerEmbed } from './embed';
-import { LISTEN_MOE_STREAMS } from '@app/listen.moe';
 
 export const updatePlayer = async (context: AppContext, guildId: string) => {
   const { client, redis, link } = context;

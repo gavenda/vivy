@@ -1,7 +1,7 @@
 import { hasVoiceState } from '@app/utils';
 import { SlashCommandBuilder, SlashCommandNumberOption } from 'discord.js';
 import i18next from 'i18next';
-import { AppCommand } from './command';
+import type { AppCommand } from './command';
 
 export const volume: AppCommand = {
   data: new SlashCommandBuilder()
@@ -12,9 +12,10 @@ export const volume: AppCommand = {
         .setDescription('The volume amount (maximum of 100, minimum of 0).')
     )
     .setName('volume')
-    .setDescription('The volume level you want to set (maximum of 100, minimum of 0).'),
+    .setDescription('The volume level you want to set (maximum of 100, minimum of 0).')
+    .toJSON(),
   execute: async ({ link }, interaction) => {
-    if (!interaction.guild || !interaction.guildId) {
+    if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
       await interaction.reply({
         content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
         ephemeral: true

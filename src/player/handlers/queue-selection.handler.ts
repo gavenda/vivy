@@ -1,16 +1,16 @@
-import { Player, Track } from '@app/link';
-import { Requester } from '@app/requester';
+import { Player, type Track } from '@app/link';
+import type { Requester } from '@app/requester';
 import {
-  ChatInputCommandInteraction,
+  ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  ActionRowBuilder,
+  ChatInputCommandInteraction,
   ComponentType,
   StringSelectMenuInteraction
 } from 'discord.js';
-import { handleTrack } from './track.handler';
-import { QueueType } from '../queue.type';
 import i18next from 'i18next';
+import type { QueueType } from '../queue.type';
+import { handleTrack } from './track.handler';
 
 export const handleQueueSelection = async (options: {
   track: Track<Requester>;
@@ -63,7 +63,8 @@ export const handleQueueSelection = async (options: {
     await buttonClick.deferUpdate();
 
     await handleTrack({ interaction: buttonClick, track, player, queue });
-  } catch (e) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error: unknown) {
     await interaction.followUp({
       ephemeral: true,
       content: i18next.t('reply.failed_queue_question', { lng: interaction.locale }),

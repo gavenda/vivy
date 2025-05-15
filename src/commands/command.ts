@@ -1,8 +1,12 @@
-import { AppContext } from '@app/context';
-import { AutocompleteInteraction, ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
+import type { AppContext } from '@app/context';
+import {
+  AutocompleteInteraction,
+  ChatInputCommandInteraction,
+  type RESTPostAPIChatInputApplicationCommandsJSONBody
+} from 'discord.js';
 
 export interface AppCommand {
-  data: SlashCommandBuilder;
+  data: RESTPostAPIChatInputApplicationCommandsJSONBody;
   execute: (context: AppContext, interaction: ChatInputCommandInteraction) => Promise<void>;
   autocomplete?: (context: AppContext, interaction: AutocompleteInteraction) => Promise<void>;
 }
