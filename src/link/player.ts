@@ -93,7 +93,7 @@ export class Player<UserData> {
    */
   autoLeaveMs: number;
 
-  #voiceState: Partial<VoiceState> | null = null;
+  voiceState: Partial<VoiceState> = {};
 
   constructor(link: Lavalink<UserData>, node: LavalinkNode<UserData>, options: PlayerOptions) {
     this.link = link;
@@ -111,21 +111,9 @@ export class Player<UserData> {
     return this.voiceChannelId !== undefined;
   }
 
-  get voiceState(): Partial<VoiceState> {
-    if (!this.#voiceState) {
-      throw new Error('No voice state is set!');
-    }
-    return this.#voiceState;
-  }
-
-  set voiceState(value: Partial<VoiceState>) {
-    logger.info('New discord voice state set', { state: value });
-    this.#voiceState = value;
-  }
-
   clearVoiceSession() {
     logger.info('Discord voice session cleared');
-    this.#voiceState = {};
+    this.voiceState = {};
   }
 
   private get stateKey(): string {
@@ -139,7 +127,7 @@ export class Player<UserData> {
       repeatMode: this.repeatMode,
       volume: this.volume,
       guildId: this.guildId,
-      voiceState: this.#voiceState,
+      voiceState: this.voiceState,
       position: this.position,
       autoLeave: this.autoLeave,
       autoLeaveMs: this.autoLeaveMs
@@ -266,7 +254,7 @@ export class Player<UserData> {
    * @param voiceChannelId voice channel id
    */
   async connect(voiceChannelId: string) {
-    if (this.voiceConnected && this.#voiceState?.sessionId) return;
+    if (this.voiceConnected && this.voiceState.sessionId) return;
 
     await this.link.sendVoiceUpdate(this.guildId, {
       op: 4,

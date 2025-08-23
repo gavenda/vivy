@@ -2,8 +2,9 @@ import type { AppContext } from '@app/context';
 import { LISTEN_MOE_STREAMS } from '@app/listen.moe';
 import { logger } from '@app/logger';
 import { createListenMoeComponents, createListenMoeEmbed, createPlayerComponents, createPlayerEmbed } from './embed';
+import pDebounce from 'p-debounce';
 
-export const updatePlayer = async (context: AppContext, guildId: string) => {
+export const updatePlayerNow = async (context: AppContext, guildId: string) => {
   const { client, redis, link } = context;
   const playerEmbedKey = `player:embed:${guildId}`;
   const playerEmbed = await redis.get(playerEmbedKey);
@@ -39,3 +40,5 @@ export const updatePlayer = async (context: AppContext, guildId: string) => {
     logger.info(`Removing embed key from cache`, { playerEmbedKey });
   }
 };
+
+export const updatePlayer = pDebounce(updatePlayerNow, 1000);

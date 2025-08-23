@@ -1,12 +1,13 @@
+import { logger } from '@app/logger';
 import { type Awaitable, isValidHttpUrl } from '@app/utils';
 import {
+  type APIVoiceState,
   ChannelType,
   type GatewayChannelDeleteDispatch,
   GatewayDispatchEvents,
   type GatewayReceivePayload,
   type GatewaySendPayload,
-  type GatewayVoiceServerUpdateDispatch,
-  type GatewayVoiceStateUpdateDispatch
+  type GatewayVoiceServerUpdateDispatchData
 } from 'discord.js';
 import EventEmitter from 'events';
 import { createClient } from 'redis';
@@ -14,7 +15,6 @@ import type { LavalinkEvents } from './link.events';
 import { LavalinkNode, type LavalinkNodeOptions } from './node';
 import { LoadResultType } from './payload';
 import type { PlayerOptions } from './player';
-import { logger } from '@app/logger';
 
 /**
  * Lavalink sources.
@@ -132,16 +132,6 @@ export class Lavalink<UserData> extends EventEmitter {
   }
 
   /**
-   * Returns an instance of {@link Player} within this client.
-   * @param guildId the voice session id of the player, provided by discord
-   * @returns the player instance, or `null` if not found.
-   */
-  findPlayerByVoiceSessionId(voiceSessionId: string) {
-    const node = this.nodes.find((node) => node.hasVoiceSessionId(voiceSessionId));
-    return node?.findByVoiceSessionId(voiceSessionId);
-  }
-
-  /**
    * Creates a player instance on an available node.
    * @param options player options
    */
@@ -165,20 +155,18 @@ export class Lavalink<UserData> extends EventEmitter {
 
   /**
    * Handle raw data coming from the discord gateway.
-   * @param data raw data coming from discord.js
+   * @param payload raw data coming from discord.js
    */
-  async handleRawData(data: GatewayReceivePayload) {
-    logger.info(`Receiving gateway payload`, { payload: data });
-
-    switch (data.t) {
+  async handleRawData(payload: GatewayReceivePayload) {
+    switch (payload.t) {
       case GatewayDispatchEvents.ChannelDelete:
-        await this.handleChannelDelete(data);
+        await this.handleChannelDelete(payload);
         break;
       case GatewayDispatchEvents.VoiceServerUpdate:
-        await this.handleVoiceServerUpdate(data);
+        await this.handleVoiceServerUpdate(payload.d);
         break;
       case GatewayDispatchEvents.VoiceStateUpdate:
-        await this.handleVoiceStateUpdate(data);
+        await this.handleVoiceStateUpdate(payload.d);
         break;
     }
   }
@@ -218,44 +206,51 @@ export class Lavalink<UserData> extends EventEmitter {
 
   /**
    * Handle channel delete.
-   * @param data channel delete data from discord.js
+   * @param payload channel delete payload from discord.js
    */
-  private async handleChannelDelete(data: GatewayChannelDeleteDispatch) {
-    if (data.d.type !== ChannelType.GuildVoice) return;
-    if (!data.d.guild_id) return;
+  private async handleChannelDelete(payload: GatewayChannelDeleteDispatch) {
+    const data = payload.d;
+    if (data.type !== ChannelType.GuildVoice) return;
+    if (!data.guild_id) return;
 
-    const player = this.findPlayerByGuildId(data.d.guild_id);
+    const player = this.findPlayerByGuildId(data.guild_id);
 
     if (!player) return;
 
-    await player.node.destroyPlayer(data.d.guild_id);
+    await player.node.destroyPlayer(data.guild_id);
   }
 
   /**
    * Handle voice state update.
    * @param data voice update dispatch data from discord.js
    */
-  private async handleVoiceStateUpdate(data: GatewayVoiceStateUpdateDispatch) {
-    if (!data.d.member) return;
-    if (data.d.user_id !== this.userId) return;
+  private async handleVoiceStateUpdate(data: Partial<APIVoiceState>) {
+    logger.info(`Receiving voice state update`, { payload: data });
 
-    const player = this.findPlayerByVoiceSessionId(data.d.session_id);
+    if (!data.member) return;
+    if (!data.channel_id) return;
+    if (!data.guild_id) return;
+    if (data.user_id !== this.userId) return;
+
+    const player = this.findPlayerByGuildId(data.guild_id);
 
     if (!player) return;
 
-    if (data.d.channel_id && data.d.channel_id !== player.voiceChannelId && player.voiceChannelId) {
-      player.voiceChannelId = data.d.channel_id;
+    if (data.channel_id && data.channel_id !== player.voiceChannelId && player.voiceChannelId) {
+      player.voiceChannelId = data.channel_id;
 
-      this.emit('playerMove', player, player.voiceChannelId, data.d.channel_id);
+      this.emit('playerMove', player, player.voiceChannelId, data.channel_id);
     }
 
-    if (!data.d.channel_id || !data.d.session_id) {
+    if (!data.channel_id || !data.session_id) {
       player.voiceState = {};
 
       this.emit('playerDisconnected', player);
     }
 
-    player.voiceState.sessionId = data.d.session_id;
+    player.voiceState.sessionId = data.session_id;
+
+    logger.info('Discord voice session id set', { sessionId: data.session_id });
 
     if (!player.voiceState.token) return;
     if (!player.voiceState.endpoint) return;
@@ -264,7 +259,7 @@ export class Lavalink<UserData> extends EventEmitter {
       voice: {
         token: player.voiceState.token,
         endpoint: player.voiceState.endpoint,
-        sessionId: data.d.session_id
+        sessionId: data.session_id
       }
     });
   }
@@ -273,21 +268,25 @@ export class Lavalink<UserData> extends EventEmitter {
    * Handle voice server update.
    * @param data voice server update data coming from discord.js
    */
-  private async handleVoiceServerUpdate(data: GatewayVoiceServerUpdateDispatch) {
-    const player = this.findPlayerByGuildId(data.d.guild_id);
+  private async handleVoiceServerUpdate(data: GatewayVoiceServerUpdateDispatchData) {
+    const player = this.findPlayerByGuildId(data.guild_id);
+
+    logger.info(`Receiving voice server update`, { data });
 
     if (!player) return;
-    if (!data.d.endpoint) return;
+    if (!data.endpoint) return;
 
-    player.voiceState.endpoint = data.d.endpoint;
-    player.voiceState.token = data.d.token;
+    player.voiceState.endpoint = data.endpoint;
+    player.voiceState.token = data.token;
+
+    logger.info('Discord voice endpoint and token set', { endpoint: data.endpoint, token: data.token });
 
     if (!player.voiceState.sessionId) return;
 
     await player.update({
       voice: {
-        token: data.d.token,
-        endpoint: data.d.endpoint,
+        token: data.token,
+        endpoint: data.endpoint,
         sessionId: player.voiceState.sessionId
       }
     });

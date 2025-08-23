@@ -278,5 +278,5 @@ export interface UpdatePlayerOptions<UserData> {
   /**
    * Information required for connecting to Discord.
    */
-  voice?: VoiceState;
+  voice?: Partial<VoiceState>;
 }

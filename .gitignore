@@ -4,6 +4,9 @@ node_modules
 .env.dev
 .env.staging
 .env.production
+plugins
+docker-compose.yaml
+application.yaml
 dump.rdb
 logs/*.log
 dist

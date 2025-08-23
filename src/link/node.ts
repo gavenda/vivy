@@ -67,9 +67,7 @@ export class LavalinkNode<UserData> {
   hasDisconnected = false;
 
   // Private
-  #playerToGuildId = new Map<string, Player<UserData>>();
-  #playerToVoiceSessionId = new Map<string, Player<UserData>>();
-  #players: Array<Player<UserData>> = [];
+  #players = new Map<string, Player<UserData>>();
   #rest: LavalinkRestApi<UserData>;
   #sessionId: string | null = null;
 
@@ -86,7 +84,7 @@ export class LavalinkNode<UserData> {
    * Returns a list of players that belong to this node.
    */
   get players() {
-    return this.#players;
+    return [...this.#players.values()];
   }
 
   /**
@@ -118,26 +116,15 @@ export class LavalinkNode<UserData> {
   }
 
   hasGuildId(guildId: string) {
-    return this.#playerToGuildId.has(guildId);
-  }
-
-  hasVoiceSessionId(voiceSessionId: string) {
-    return this.#playerToVoiceSessionId.has(voiceSessionId);
+    return this.#players.has(guildId);
   }
 
   findByGuildId(guildId: string) {
-    return this.#playerToGuildId.get(guildId);
+    return this.#players.get(guildId);
   }
 
-  findByVoiceSessionId(voiceSessionId: string) {
-    return this.#playerToGuildId.get(voiceSessionId);
-  }
-
-  private clearVoiceSessionIds() {
-    for (const player of this.#playerToVoiceSessionId.values()) {
-      player.clearVoiceSession();
-    }
-    for (const player of this.#playerToVoiceSessionId.values()) {
+  private clearVoiceSessions() {
+    for (const player of this.#players.values()) {
       player.clearVoiceSession();
     }
   }
@@ -175,7 +162,7 @@ export class LavalinkNode<UserData> {
 
   private async onWebSocketClose() {
     this.clearSessionId();
-    this.clearVoiceSessionIds();
+    this.clearVoiceSessions();
     this.hasDisconnected = true;
     this.link.emit('nodeDisconnected', this);
 
@@ -381,14 +368,12 @@ export class LavalinkNode<UserData> {
           token: state.voiceState.token
         }
       });
-
-      this.#playerToVoiceSessionId.set(state.voiceState.sessionId, player);
     }
 
     // Calling init to restore queue
     await player.init();
     // Add to map
-    this.#playerToGuildId.set(guildId, player);
+    this.#players.set(guildId, player);
 
     // Sync playing state
     if (state.playing && state.voiceChannelId) {
@@ -404,7 +389,7 @@ export class LavalinkNode<UserData> {
    */
   async createPlayer(options: PlayerOptions) {
     // Check existing players
-    const existing = this.#players.find((player) => player.guildId === options.guildId);
+    const existing = this.findByGuildId(options.guildId);
 
     if (existing) {
       return existing;
@@ -412,8 +397,7 @@ export class LavalinkNode<UserData> {
       const player = new Player(this.link, this, options);
       await player.init();
 
-      this.#players.push(player);
-      this.#playerToGuildId.set(options.guildId, player);
+      this.#players.set(options.guildId, player);
 
       return player;
     }
@@ -431,7 +415,7 @@ export class LavalinkNode<UserData> {
    * Disconnect all players in this node.
    */
   async disconnectPlayers() {
-    for (const player of this.#players) {
+    for (const player of this.#players.values()) {
       await player.disconnect();
     }
   }
@@ -440,14 +424,12 @@ export class LavalinkNode<UserData> {
    * Destroy all players in this node.
    */
   async destroyPlayers() {
-    for (const player of this.#players) {
+    for (const player of this.#players.values()) {
       await player.deleteState();
       await this.#rest.destroyPlayer(player.guildId);
     }
 
-    this.#playerToGuildId.clear();
-    this.#playerToVoiceSessionId.clear();
-    this.#players = [];
+    this.#players.clear();
   }
 
   /**
@@ -455,16 +437,12 @@ export class LavalinkNode<UserData> {
    * @param guildId guild id
    */
   async destroyPlayer(guildId: string) {
-    const player = this.#players.find((player) => player.guildId === guildId);
+    const player = this.findByGuildId(guildId);
 
     if (player) {
       await player.deleteState();
 
-      this.#playerToGuildId.delete(player.guildId);
-
-      if (player.voiceState.sessionId) {
-        this.#playerToVoiceSessionId.delete(player.voiceState.sessionId);
-      }
+      this.#players.delete(player.guildId);
     }
 
     await this.#rest.destroyPlayer(guildId);
@@ -483,8 +461,6 @@ export class LavalinkNode<UserData> {
     if (options.voice) {
       logger.info('Connected to discord voice', { ...options.voice });
       player.voiceState = options.voice;
-
-      this.#playerToVoiceSessionId.set(options.voice.sessionId, player);
     }
 
     if (options.track && !player.voiceConnected) {

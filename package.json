@@ -24,6 +24,7 @@
     "@spotify/web-api-ts-sdk": "^1.2.0",
     "discord.js": "^14.22.1",
     "i18next": "^25.4.0",
+    "p-debounce": "^4.0.0",
     "redis": "^5.8.2",
     "spotify-uri": "^4.1.0",
     "winston": "^3.17.0",
