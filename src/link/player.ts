@@ -93,7 +93,6 @@ export class Player<UserData> {
    */
   autoLeaveMs: number;
 
-  #voiceSessionId: string | null = null;
   #voiceState: Partial<VoiceState> | null = null;
 
   constructor(link: Lavalink<UserData>, node: LavalinkNode<UserData>, options: PlayerOptions) {
@@ -109,7 +108,7 @@ export class Player<UserData> {
    * Returns `true` if this player has connected to a voice channel.
    */
   get voiceConnected() {
-    return this.#voiceState !== null;
+    return this.voiceChannelId !== null;
   }
 
   get voiceState(): Partial<VoiceState> {
