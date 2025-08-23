@@ -1,6 +1,6 @@
 {
   "name": "vivy",
-  "version": "1.5.7",
+  "version": "1.5.8",
   "description": "My mission is to make everyone happy by singing.",
   "main": "./src/app.ts",
   "scripts": {
