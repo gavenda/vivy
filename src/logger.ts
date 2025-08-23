@@ -11,14 +11,20 @@ export const logger = createLogger({
     format.splat(),
     format.json()
   ),
-  transports: [
+  exitOnError: false,
+  exceptionHandlers: [
     new transports.File({
       filename: 'error.log',
-      level: 'error',
       dirname: 'logs',
       tailable: true,
       maxsize: 1024 * 100
     }),
+    new transports.Console({
+      format: format.combine(format.colorize(), format.simple()),
+      level: process.env.APP_ENV === 'production' ? 'info' : 'debug'
+    })
+  ],
+  transports: [
     new transports.File({
       filename: 'vivy.log',
       level: 'debug',

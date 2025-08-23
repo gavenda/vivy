@@ -41,6 +41,8 @@ jobs:
           # list of Docker images to use as base name for tags
           images: |
             gavenda/vivy
+          flavor: |
+            latest=true
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}

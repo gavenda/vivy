@@ -14,6 +14,7 @@ import type { LavalinkEvents } from './link.events';
 import { LavalinkNode, type LavalinkNodeOptions } from './node';
 import { LoadResultType } from './payload';
 import type { PlayerOptions } from './player';
+import { logger } from '@app/logger';
 
 /**
  * Lavalink sources.
@@ -167,6 +168,8 @@ export class Lavalink<UserData> extends EventEmitter {
    * @param data raw data coming from discord.js
    */
   async handleRawData(data: GatewayReceivePayload) {
+    logger.info(`Receiving gateway payload`, { payload: data });
+
     switch (data.t) {
       case GatewayDispatchEvents.ChannelDelete:
         await this.handleChannelDelete(data);
