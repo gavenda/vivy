@@ -196,8 +196,8 @@ export class Player<UserData> {
       return;
     }
 
-    await this.node.updatePlayer(this.guildId, { track });
     this.playing = true;
+    await this.node.updatePlayer(this.guildId, { track });
   }
 
   /**
