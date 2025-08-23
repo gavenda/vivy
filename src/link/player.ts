@@ -108,7 +108,7 @@ export class Player<UserData> {
    * Returns `true` if this player has connected to a voice channel.
    */
   get voiceConnected() {
-    return this.voiceChannelId !== null;
+    return this.voiceChannelId !== undefined;
   }
 
   get voiceState(): Partial<VoiceState> {

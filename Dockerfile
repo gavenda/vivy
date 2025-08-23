@@ -1,4 +1,4 @@
-FROM node:latest
+FROM node:24-alpine
 
 # Enable pnpm
 RUN corepack enable pnpm
