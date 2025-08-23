@@ -8,7 +8,9 @@ export const updatePlayer = async (context: AppContext, guildId: string) => {
   const playerEmbedKey = `player:embed:${guildId}`;
   const playerEmbed = await redis.get(playerEmbedKey);
 
-  if (!playerEmbed) return;
+  if (!playerEmbed) {
+    logger.warn(`Player embed cache is empty`, { playerEmbedKey });
+  }
 
   const player = link.getPlayer(guildId);
   const isListenMoe = LISTEN_MOE_STREAMS.includes(player?.queue?.current?.info?.identifier ?? '');
