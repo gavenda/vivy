@@ -10,6 +10,7 @@ export const updatePlayer = async (context: AppContext, guildId: string) => {
 
   if (!playerEmbed) {
     logger.warn(`Player embed cache is empty`, { playerEmbedKey });
+    return;
   }
 
   const player = link.getPlayer(guildId);
