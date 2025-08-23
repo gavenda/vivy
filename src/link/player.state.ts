@@ -1,10 +1,11 @@
-import type { VoiceState } from './payload';
+import type { Filters, VoiceState } from './payload';
 import { RepeatMode } from './player';
 
 export interface PlayerState {
   guildId: string;
   voiceChannelId?: string;
   voiceState: Partial<VoiceState> | null;
+  filters: Filters;
   repeatMode: RepeatMode;
   playing: boolean;
   volume: number;

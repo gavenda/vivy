@@ -3,7 +3,7 @@ import { GatewayOpcodes } from 'discord.js';
 import { LavalinkFilter } from './filter';
 import { Lavalink } from './link';
 import { LavalinkNode } from './node';
-import type { Track, UpdatePlayerOptions, VoiceState } from './payload';
+import type { Filters, Track, UpdatePlayerOptions, VoiceState } from './payload';
 import type { PlayerState } from './player.state';
 import { TrackQueue } from './queue';
 
@@ -124,6 +124,7 @@ export class Player<UserData> {
     return {
       playing: this.playing,
       voiceChannelId: this.voiceChannelId,
+      filters: this.filter.raw,
       repeatMode: this.repeatMode,
       volume: this.volume,
       guildId: this.guildId,
@@ -221,24 +222,27 @@ export class Player<UserData> {
    */
   async stop() {
     this.queue.current = null;
-    await this.node.updatePlayer(this.guildId, { track: { encoded: null } });
     this.playing = false;
+
+    await this.node.updatePlayer(this.guildId, { track: { encoded: null } });
   }
 
   /**
    * Pauses this player.
    */
   async pause() {
-    await this.node.updatePlayer(this.guildId, { paused: true });
     this.playing = false;
+
+    await this.node.updatePlayer(this.guildId, { paused: true });
   }
 
   /**
    * Resumes playing if paused.
    */
   async resume() {
-    await this.node.updatePlayer(this.guildId, { paused: false });
     this.playing = true;
+
+    await this.node.updatePlayer(this.guildId, { paused: false });
   }
 
   /**
@@ -247,6 +251,14 @@ export class Player<UserData> {
    */
   async applyVolume(volume: number) {
     await this.filter.applyVolume(volume);
+  }
+
+  /**
+   * Applies the amount of volume given to this player
+   * @param volume the volume amount in floating numbers i.e (0 - 1.0)
+   */
+  async applyFilters(filters: Filters) {
+    await this.filter.applyFilters(filters);
   }
 
   /**
@@ -274,7 +286,9 @@ export class Player<UserData> {
    */
   async disconnect() {
     if (!this.voiceConnected) return;
+
     this.playing = false;
+
     await this.link.sendVoiceUpdate(this.guildId, {
       op: GatewayOpcodes.VoiceStateUpdate,
       d: {

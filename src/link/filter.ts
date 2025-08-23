@@ -2,6 +2,7 @@ import type {
   ChannelMix,
   Distortion,
   Equalizer,
+  Filters,
   Karaoke,
   LowPass,
   Rotation,
@@ -14,6 +15,7 @@ import { Player } from './player';
 export class LavalinkFilter<UserData> {
   volume: number = 1.0;
   player: Player<UserData>;
+  raw: Filters = {};
 
   constructor(player: Player<UserData>) {
     this.player = player;
@@ -21,56 +23,63 @@ export class LavalinkFilter<UserData> {
 
   async reset() {
     const { volume } = this;
-    await this.player.update({ filters: { volume } });
+    this.raw = { volume };
+    await this.player.update({ filters: this.raw });
+  }
+
+  async applyFilters(filter: Filters) {
+    const { volume } = this;
+    this.raw = { ...filter, volume };
+    await this.player.update({ filters: this.raw });
   }
 
   async applyEqualizer(equalizer: Equalizer[]) {
-    const { volume } = this;
-    await this.player.update({ filters: { volume, equalizer } });
+    this.raw = { ...this.raw, equalizer };
+    await this.player.update({ filters: this.raw });
   }
 
   async applyKaraoke(karaoke: Karaoke) {
-    const { volume } = this;
-    await this.player.update({ filters: { volume, karaoke } });
+    this.raw = { ...this.raw, karaoke };
+    await this.player.update({ filters: this.raw });
   }
 
   async applyTimescale(timescale: Timescale) {
-    const { volume } = this;
-    await this.player.update({ filters: { volume, timescale } });
+    this.raw = { ...this.raw, timescale };
+    await this.player.update({ filters: this.raw });
   }
 
   async applyTremolo(tremolo: Tremolo) {
-    const { volume } = this;
-    await this.player.update({ filters: { volume, tremolo } });
+    this.raw = { ...this.raw, tremolo };
+    await this.player.update({ filters: this.raw });
   }
 
   async applyVibrato(vibrato: Vibrato) {
-    const { volume } = this;
-    await this.player.update({ filters: { volume, vibrato } });
+    this.raw = { ...this.raw, vibrato };
+    await this.player.update({ filters: this.raw });
   }
 
   async applyRotation(rotation: Rotation) {
-    const { volume } = this;
-    await this.player.update({ filters: { volume, rotation } });
+    this.raw = { ...this.raw, rotation };
+    await this.player.update({ filters: this.raw });
   }
 
   async applyDistortion(distortion: Distortion) {
-    const { volume } = this;
-    await this.player.update({ filters: { volume, distortion } });
+    this.raw = { ...this.raw, distortion };
+    await this.player.update({ filters: this.raw });
   }
 
   async applyChannelMix(channelMix: ChannelMix) {
-    const { volume } = this;
-    await this.player.update({ filters: { volume, channelMix } });
+    this.raw = { ...this.raw, channelMix };
+    await this.player.update({ filters: this.raw });
   }
 
   async applyLowPass(lowPass: LowPass) {
-    const { volume } = this;
-    await this.player.update({ filters: { volume, lowPass } });
+    this.raw = { ...this.raw, lowPass };
+    await this.player.update({ filters: this.raw });
   }
 
   async applyVolume(volume: number) {
     this.volume = volume;
-    await this.player.update({ filters: { volume } });
+    await this.player.update({ filters: this.raw });
   }
 }

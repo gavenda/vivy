@@ -354,10 +354,13 @@ export class LavalinkNode<UserData> {
     });
 
     // Begin sync
+    player.playing = state.playing;
     player.repeatMode = state.repeatMode;
 
     // Sync volume
     await player.applyVolume(state.volume);
+    // Sync filters
+    await player.applyFilters(state.filters);
 
     // Sync voice state
     if (state.voiceState?.endpoint && state.voiceState.sessionId && state.voiceState.token) {
