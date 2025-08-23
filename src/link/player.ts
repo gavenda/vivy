@@ -266,7 +266,7 @@ export class Player<UserData> {
    * @param voiceChannelId voice channel id
    */
   async connect(voiceChannelId: string) {
-    if (this.voiceConnected) return;
+    if (this.voiceConnected && this.#voiceState?.sessionId) return;
 
     await this.link.sendVoiceUpdate(this.guildId, {
       op: 4,
