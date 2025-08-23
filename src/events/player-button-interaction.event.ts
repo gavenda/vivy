@@ -2,7 +2,7 @@ import { RepeatMode } from '@app/link';
 import { logger } from '@app/logger';
 import { createPlayerComponents, createPlayerEmbed } from '@app/player';
 import { chunkSize } from '@app/utils';
-import { Events } from 'discord.js';
+import { Events, MessageFlags } from 'discord.js';
 import i18next from 'i18next';
 import type { AppEvent } from './event';
 
@@ -16,16 +16,16 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
     if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
       await interaction.reply({
         content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
       return;
     }
     const { link, redis } = context;
-    const player = link.getPlayer(interaction.guild.id);
+    const player = link.findPlayerByGuildId(interaction.guild.id);
 
     if (!player) {
       await interaction.reply({
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         content: i18next.t('reply.not_playing', { lng: interaction.locale })
       });
       return;

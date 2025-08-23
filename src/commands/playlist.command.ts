@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
+import { MessageFlags, SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
 import i18next from 'i18next';
 import type { AppCommand } from './command';
 
@@ -22,7 +22,7 @@ export const playlist: AppCommand = {
     .toJSON(),
   execute: async (context, interaction) => {
     await interaction.reply({
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
       content: i18next.t('reply.not_yet_implemented', { lng: interaction.locale })
     });
   }

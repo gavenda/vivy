@@ -1,5 +1,5 @@
 import { hasVoiceState } from '@app/utils';
-import { SlashCommandBuilder, SlashCommandIntegerOption } from 'discord.js';
+import { MessageFlags, SlashCommandBuilder, SlashCommandIntegerOption } from 'discord.js';
 import i18next from 'i18next';
 import type { AppCommand } from './command';
 
@@ -23,30 +23,30 @@ export const remove: AppCommand = {
     if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
       await interaction.reply({
         content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
       return;
     }
     if (!hasVoiceState(interaction.member)) {
       await interaction.reply({
         content: i18next.t('reply.illegal_non_gateway_request', { lng: interaction.locale }),
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
       return;
     }
     if (!interaction.member.voice.channel) {
       await interaction.reply({
         content: i18next.t('reply.not_in_voice', { lng: interaction.locale }),
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
       return;
     }
 
-    const player = link.getPlayer(interaction.guildId);
+    const player = link.findPlayerByGuildId(interaction.guildId);
 
     if (!player) {
       await interaction.reply({
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         content: i18next.t('reply.not_playing', { lng: interaction.locale })
       });
       return;
@@ -57,7 +57,7 @@ export const remove: AppCommand = {
 
     if (from >= player.queue.size) {
       await interaction.reply({
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         content: i18next.t('reply.position_not_greater_than_queue_size', { lng: interaction.locale })
       });
       return;
@@ -66,7 +66,7 @@ export const remove: AppCommand = {
     if (to) {
       if (from >= to) {
         await interaction.reply({
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
           content: i18next.t('reply.position_not_greater_than_max', { lng: interaction.locale })
         });
         return;
@@ -75,7 +75,7 @@ export const remove: AppCommand = {
       player.queue.slice(from, to);
 
       await interaction.reply({
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         content: i18next.t('reply.remove_track_range_from_queue', { lng: interaction.locale, from, to })
       });
     } else {
@@ -83,7 +83,7 @@ export const remove: AppCommand = {
 
       if (!track) {
         await interaction.reply({
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
           content: i18next.t('reply.invalid_range', { lng: interaction.locale })
         });
         return;
@@ -92,7 +92,7 @@ export const remove: AppCommand = {
       player.queue.slice(from + 1);
 
       await interaction.reply({
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         content: i18next.t('reply.remove_track_from_queue', { lng: interaction.locale, track: track.info.title })
       });
     }

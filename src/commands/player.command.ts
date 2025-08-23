@@ -1,6 +1,6 @@
 import { logger } from '@app/logger';
 import { createPlayerComponents, createPlayerEmbed } from '@app/player';
-import { SlashCommandBuilder } from 'discord.js';
+import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
 import type { AppCommand } from './command';
 
@@ -10,7 +10,7 @@ export const player: AppCommand = {
     if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
       await interaction.reply({
         content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
       return;
     }
@@ -18,7 +18,7 @@ export const player: AppCommand = {
     if (!interaction.channel) {
       await interaction.reply({
         content: i18next.t('reply.not_in_text_channel', { lng: interaction.locale }),
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
       return;
     }
@@ -27,7 +27,7 @@ export const player: AppCommand = {
 
     // Might take long contacting redis, defer
     await interaction.deferReply({
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
 
     // Delete previous message, if any
@@ -63,7 +63,7 @@ export const player: AppCommand = {
 
     await interaction.followUp({
       content: i18next.t('reply.player_embed_created', { lng: interaction.locale, channelId: interaction.channelId }),
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   }
 };

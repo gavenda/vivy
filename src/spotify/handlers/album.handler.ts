@@ -4,7 +4,7 @@ import { logger } from '@app/logger';
 import { handleTracks } from '@app/player/handlers';
 import { lookupTrack } from '@app/player/lookup';
 import type { Requester } from '@app/requester';
-import { ChatInputCommandInteraction } from 'discord.js';
+import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import i18next from 'i18next';
 import type { ParsedSpotifyUri } from 'spotify-uri';
 
@@ -23,7 +23,7 @@ export const handleSpotifyAlbum = async (options: {
   logger.debug(`Queuing spotify album`, { album: spotifyAlbum.name });
 
   await interaction.followUp({
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
     content: i18next.t('reply.spotify_queued_album', { lng: interaction.locale, album: spotifyAlbum.name })
   });
 

@@ -1,7 +1,7 @@
 import { commands } from '@app/commands';
 import { logger } from '@app/logger';
 import { updatePlayer } from '@app/player';
-import { Events } from 'discord.js';
+import { Events, MessageFlags } from 'discord.js';
 import i18next from 'i18next';
 import type { AppEvent } from './event';
 
@@ -44,12 +44,12 @@ export const chatInputCommandInteraction: AppEvent<Events.InteractionCreate> = {
       if (interaction.replied || interaction.deferred) {
         await interaction.followUp({
           content: i18next.t('reply.error_command_execution', { lng: interaction.locale }),
-          ephemeral: true
+          flags: MessageFlags.Ephemeral
         });
       } else {
         await interaction.reply({
           content: i18next.t('reply.error_command_execution', { lng: interaction.locale }),
-          ephemeral: true
+          flags: MessageFlags.Ephemeral
         });
       }
     }

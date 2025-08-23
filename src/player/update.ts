@@ -13,7 +13,7 @@ export const updatePlayer = async (context: AppContext, guildId: string) => {
     return;
   }
 
-  const player = link.getPlayer(guildId);
+  const player = link.findPlayerByGuildId(guildId);
   const isListenMoe = LISTEN_MOE_STREAMS.includes(player?.queue?.current?.info?.identifier ?? '');
 
   try {

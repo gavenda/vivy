@@ -12,8 +12,7 @@ import {
   type Stats,
   type StatsPayload,
   TrackEndReason,
-  type UpdatePlayerOptions,
-  type VoiceState
+  type UpdatePlayerOptions
 } from './payload';
 import { Player, type PlayerOptions, RepeatMode } from './player';
 import type { PlayerState } from './player.state';
@@ -65,13 +64,14 @@ export class LavalinkNode<UserData> {
   nodeId: string;
   userId: string;
   reconnectTimeout: number;
-  players = new Map<string, Player<UserData>>();
   hasDisconnected = false;
 
   // Private
+  #playerToGuildId = new Map<string, Player<UserData>>();
+  #playerToVoiceSessionId = new Map<string, Player<UserData>>();
+  #players: Array<Player<UserData>> = [];
   #rest: LavalinkRestApi<UserData>;
   #sessionId: string | null = null;
-  #voiceState: VoiceState | null = null;
 
   constructor(link: Lavalink<UserData>, userId: string, options: LavalinkNodeOptions) {
     this.link = link;
@@ -83,17 +83,10 @@ export class LavalinkNode<UserData> {
   }
 
   /**
-   * Returns `true` if this node is connected.
+   * Returns a list of players that belong to this node.
    */
-  get connected() {
-    return this.sessionId !== null;
-  }
-
-  /**
-   * Returns `true` if this node has connected to a voice channel.
-   */
-  get voiceConnected() {
-    return this.#voiceState !== null;
+  get players() {
+    return this.#players;
   }
 
   /**
@@ -101,6 +94,10 @@ export class LavalinkNode<UserData> {
    */
   get authorization() {
     return this.options.authorization;
+  }
+
+  get connected() {
+    return this.sessionId !== null;
   }
 
   get sessionId(): string {
@@ -118,6 +115,31 @@ export class LavalinkNode<UserData> {
   clearSessionId() {
     logger.info('Session cleared');
     this.#sessionId = null;
+  }
+
+  hasGuildId(guildId: string) {
+    return this.#playerToGuildId.has(guildId);
+  }
+
+  hasVoiceSessionId(voiceSessionId: string) {
+    return this.#playerToVoiceSessionId.has(voiceSessionId);
+  }
+
+  findByGuildId(guildId: string) {
+    return this.#playerToGuildId.get(guildId);
+  }
+
+  findByVoiceSessionId(voiceSessionId: string) {
+    return this.#playerToGuildId.get(voiceSessionId);
+  }
+
+  private clearVoiceSessionIds() {
+    for (const player of this.#playerToVoiceSessionId.values()) {
+      player.clearVoiceSession();
+    }
+    for (const player of this.#playerToVoiceSessionId.values()) {
+      player.clearVoiceSession();
+    }
   }
 
   /**
@@ -153,6 +175,7 @@ export class LavalinkNode<UserData> {
 
   private async onWebSocketClose() {
     this.clearSessionId();
+    this.clearVoiceSessionIds();
     this.hasDisconnected = true;
     this.link.emit('nodeDisconnected', this);
 
@@ -239,11 +262,11 @@ export class LavalinkNode<UserData> {
   }
 
   private async handlePlayerUpdate(payload: PlayerUpdatePayload) {
-    const player = this.players.get(payload.guildId);
+    const player = this.findByGuildId(payload.guildId);
 
     if (!player) return;
 
-    if (player.connected != payload.state.connected) {
+    if (player.voiceConnected != payload.state.connected) {
       if (payload.state.connected) {
         this.link.emit('playerConnected', player);
       } else {
@@ -255,7 +278,6 @@ export class LavalinkNode<UserData> {
     player.position = payload.state.position;
     player.ping = payload.state.ping;
     player.time = payload.state.time;
-    player.connected = payload.state.connected;
 
     // Save state
     await player.queue.saveState();
@@ -263,7 +285,7 @@ export class LavalinkNode<UserData> {
   }
 
   private async handleEvent(payload: LavalinkEventReceivePayload<UserData>) {
-    const player = this.players.get(payload.guildId);
+    const player = this.findByGuildId(payload.guildId);
 
     if (!player) return;
 
@@ -351,20 +373,22 @@ export class LavalinkNode<UserData> {
     await player.applyVolume(state.volume);
 
     // Sync voice state
-    if (state.voice.endpoint && state.voice.sessionId && state.voice.token) {
+    if (state.voiceState?.endpoint && state.voiceState.sessionId && state.voiceState.token) {
       await player.update({
         voice: {
-          endpoint: state.voice.endpoint,
-          sessionId: state.voice.sessionId,
-          token: state.voice.token
+          endpoint: state.voiceState.endpoint,
+          sessionId: state.voiceState.sessionId,
+          token: state.voiceState.token
         }
       });
+
+      this.#playerToVoiceSessionId.set(state.voiceState.sessionId, player);
     }
 
     // Calling init to restore queue
     await player.init();
     // Add to map
-    this.players.set(guildId, player);
+    this.#playerToGuildId.set(guildId, player);
 
     // Sync playing state
     if (state.playing && state.voiceChannelId) {
@@ -380,18 +404,17 @@ export class LavalinkNode<UserData> {
    */
   async createPlayer(options: PlayerOptions) {
     // Check existing players
-    if (this.players.has(options.guildId)) {
-      const player = this.players.get(options.guildId);
+    const existing = this.#players.find((player) => player.guildId === options.guildId);
 
-      if (!player) {
-        throw new Error('Possible race condition occured');
-      }
-
-      return player;
+    if (existing) {
+      return existing;
     } else {
       const player = new Player(this.link, this, options);
       await player.init();
-      this.players.set(options.guildId, player);
+
+      this.#players.push(player);
+      this.#playerToGuildId.set(options.guildId, player);
+
       return player;
     }
   }
@@ -408,7 +431,7 @@ export class LavalinkNode<UserData> {
    * Disconnect all players in this node.
    */
   async disconnectPlayers() {
-    for (const player of this.players.values()) {
+    for (const player of this.#players) {
       await player.disconnect();
     }
   }
@@ -417,11 +440,14 @@ export class LavalinkNode<UserData> {
    * Destroy all players in this node.
    */
   async destroyPlayers() {
-    for (const player of this.players.values()) {
+    for (const player of this.#players) {
       await player.deleteState();
       await this.#rest.destroyPlayer(player.guildId);
     }
-    this.players.clear();
+
+    this.#playerToGuildId.clear();
+    this.#playerToVoiceSessionId.clear();
+    this.#players = [];
   }
 
   /**
@@ -429,15 +455,19 @@ export class LavalinkNode<UserData> {
    * @param guildId guild id
    */
   async destroyPlayer(guildId: string) {
-    const player = this.players.get(guildId);
+    const player = this.#players.find((player) => player.guildId === guildId);
 
     if (player) {
       await player.deleteState();
+
+      this.#playerToGuildId.delete(player.guildId);
+
+      if (player.voiceState.sessionId) {
+        this.#playerToVoiceSessionId.delete(player.voiceState.sessionId);
+      }
     }
 
     await this.#rest.destroyPlayer(guildId);
-
-    this.players.delete(guildId);
   }
 
   /**
@@ -446,16 +476,22 @@ export class LavalinkNode<UserData> {
    * @param options player update options
    */
   async updatePlayer(guildId: string, options: UpdatePlayerOptions<UserData>) {
+    const player = this.findByGuildId(guildId);
+
+    if (!player) return;
+
     if (options.voice) {
       logger.info('Connected to discord voice', { ...options.voice });
-      this.#voiceState = options.voice;
+      player.voiceState = options.voice;
+
+      this.#playerToVoiceSessionId.set(options.voice.sessionId, player);
     }
 
-    if (options.track && !this.voiceConnected) {
+    if (options.track && !player.voiceConnected) {
       logger.warn('Load track attempt while not connected to voice, delaying update...');
 
       setTimeout(async () => {
-        if (this.voiceConnected) {
+        if (player.voiceConnected) {
           await this.#rest.updatePlayer(guildId, options);
         } else {
           logger.error('Load track attempt failed, still not connected to discord after 5000ms');

@@ -7,7 +7,7 @@ export const guildUnavailable: AppEvent<Events.GuildUnavailable> = {
   execute: async (context, guild) => {
     if (context.link.connectedNodes.length === 0) return;
 
-    const player = context.link.getPlayer(guild.id);
+    const player = context.link.findPlayerByGuildId(guild.id);
 
     if (!player) return;
 

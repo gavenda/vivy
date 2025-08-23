@@ -1,6 +1,6 @@
 import { Player, type Track } from '@app/link';
 import type { Requester } from '@app/requester';
-import { ChatInputCommandInteraction } from 'discord.js';
+import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import i18next from 'i18next';
 
 export const handleTracks = async (options: {
@@ -15,7 +15,7 @@ export const handleTracks = async (options: {
 
   if (!interaction.replied) {
     await interaction.followUp({
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
       content: i18next.t('reply.music_queued', { lng: interaction.locale, track: name })
     });
   }

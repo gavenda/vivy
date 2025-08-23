@@ -1,5 +1,5 @@
 import { hasVoiceState } from '@app/utils';
-import { SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
+import { MessageFlags, SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
 import i18next from 'i18next';
 import type { AppCommand } from './command';
 
@@ -18,30 +18,30 @@ export const clear: AppCommand = {
     if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
       await interaction.reply({
         content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
       return;
     }
     if (!hasVoiceState(interaction.member)) {
       await interaction.reply({
         content: i18next.t('reply.illegal_non_gateway_request', { lng: interaction.locale }),
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
       return;
     }
     if (!interaction.member.voice.channel) {
       await interaction.reply({
         content: i18next.t('reply.not_in_voice', { lng: interaction.locale }),
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
       return;
     }
 
-    const player = link.getPlayer(interaction.guildId);
+    const player = link.findPlayerByGuildId(interaction.guildId);
 
     if (!player) {
       await interaction.reply({
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         content: i18next.t('reply.not_playing', { lng: interaction.locale })
       });
       return;
@@ -53,14 +53,14 @@ export const clear: AppCommand = {
       case 'queue':
         await player.queue.clear();
         await interaction.reply({
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
           content: i18next.t('reply.cleared_queue', { lng: interaction.locale })
         });
         break;
       case 'effect':
         await player.filter.reset();
         await interaction.reply({
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
           content: i18next.t('reply.cleared_effect', { lng: interaction.locale })
         });
         break;

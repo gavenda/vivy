@@ -125,9 +125,19 @@ export class Lavalink<UserData> extends EventEmitter {
    * @param guildId the guild of the player
    * @returns the player instance, or `null` if not found.
    */
-  getPlayer(guildId: string) {
-    const node = this.nodes.find((node) => node.players.has(guildId));
-    return node?.players.get(guildId);
+  findPlayerByGuildId(guildId: string) {
+    const node = this.nodes.find((node) => node.hasGuildId(guildId));
+    return node?.findByGuildId(guildId);
+  }
+
+  /**
+   * Returns an instance of {@link Player} within this client.
+   * @param guildId the voice session id of the player, provided by discord
+   * @returns the player instance, or `null` if not found.
+   */
+  findPlayerByVoiceSessionId(voiceSessionId: string) {
+    const node = this.nodes.find((node) => node.hasVoiceSessionId(voiceSessionId));
+    return node?.findByVoiceSessionId(voiceSessionId);
   }
 
   /**
@@ -211,7 +221,7 @@ export class Lavalink<UserData> extends EventEmitter {
     if (data.d.type !== ChannelType.GuildVoice) return;
     if (!data.d.guild_id) return;
 
-    const player = this.getPlayer(data.d.guild_id);
+    const player = this.findPlayerByGuildId(data.d.guild_id);
 
     if (!player) return;
 
@@ -223,10 +233,10 @@ export class Lavalink<UserData> extends EventEmitter {
    * @param data voice update dispatch data from discord.js
    */
   private async handleVoiceStateUpdate(data: GatewayVoiceStateUpdateDispatch) {
-    if (!data.d.guild_id) return;
+    if (!data.d.member) return;
     if (data.d.user_id !== this.userId) return;
 
-    const player = this.getPlayer(data.d.guild_id);
+    const player = this.findPlayerByVoiceSessionId(data.d.session_id);
 
     if (!player) return;
 
@@ -236,22 +246,21 @@ export class Lavalink<UserData> extends EventEmitter {
       this.emit('playerMove', player, player.voiceChannelId, data.d.channel_id);
     }
 
-    if (!data.d.channel_id) {
-      player.voice = {};
-      player.connected = false;
+    if (!data.d.channel_id || !data.d.session_id) {
+      player.voiceState = {};
 
       this.emit('playerDisconnected', player);
     }
 
-    player.voice.sessionId = data.d.session_id;
+    player.voiceState.sessionId = data.d.session_id;
 
-    if (!player.voice.token) return;
-    if (!player.voice.endpoint) return;
+    if (!player.voiceState.token) return;
+    if (!player.voiceState.endpoint) return;
 
     await player.update({
       voice: {
-        token: player.voice.token,
-        endpoint: player.voice.endpoint,
+        token: player.voiceState.token,
+        endpoint: player.voiceState.endpoint,
         sessionId: data.d.session_id
       }
     });
@@ -262,21 +271,21 @@ export class Lavalink<UserData> extends EventEmitter {
    * @param data voice server update data coming from discord.js
    */
   private async handleVoiceServerUpdate(data: GatewayVoiceServerUpdateDispatch) {
-    const player = this.getPlayer(data.d.guild_id);
+    const player = this.findPlayerByGuildId(data.d.guild_id);
 
     if (!player) return;
     if (!data.d.endpoint) return;
 
-    player.voice.endpoint = data.d.endpoint;
-    player.voice.token = data.d.token;
+    player.voiceState.endpoint = data.d.endpoint;
+    player.voiceState.token = data.d.token;
 
-    if (!player.voice.sessionId) return;
+    if (!player.voiceState.sessionId) return;
 
     await player.update({
       voice: {
         token: data.d.token,
         endpoint: data.d.endpoint,
-        sessionId: player.voice.sessionId
+        sessionId: player.voiceState.sessionId
       }
     });
   }

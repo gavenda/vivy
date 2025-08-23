@@ -1,5 +1,5 @@
 import { hasVoiceState } from '@app/utils';
-import { SlashCommandBuilder } from 'discord.js';
+import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
 import type { AppCommand } from './command';
 
@@ -13,30 +13,30 @@ export const skip: AppCommand = {
     if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
       await interaction.reply({
         content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
       return;
     }
     if (!hasVoiceState(interaction.member)) {
       await interaction.reply({
         content: i18next.t('reply.illegal_non_gateway_request', { lng: interaction.locale }),
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
       return;
     }
     if (!interaction.member.voice.channel) {
       await interaction.reply({
         content: i18next.t('reply.not_in_voice', { lng: interaction.locale }),
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
       return;
     }
 
-    const player = link.getPlayer(interaction.guildId);
+    const player = link.findPlayerByGuildId(interaction.guildId);
 
     if (!player) {
       await interaction.reply({
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         content: i18next.t('reply.not_playing', { lng: interaction.locale })
       });
       return;
@@ -44,7 +44,7 @@ export const skip: AppCommand = {
 
     if (!player.queue.current) {
       await interaction.reply({
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         content: i18next.t('reply.nothing_playing', { lng: interaction.locale })
       });
       return;
@@ -53,7 +53,7 @@ export const skip: AppCommand = {
     const track = player.queue.current;
 
     await interaction.reply({
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
       content: i18next.t('reply.music_skipped', { lng: interaction.locale, track: track.info.title })
     });
 

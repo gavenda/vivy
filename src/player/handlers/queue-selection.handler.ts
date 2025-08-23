@@ -6,6 +6,7 @@ import {
   ButtonStyle,
   ChatInputCommandInteraction,
   ComponentType,
+  MessageFlags,
   StringSelectMenuInteraction
 } from 'discord.js';
 import i18next from 'i18next';
@@ -66,7 +67,7 @@ export const handleQueueSelection = async (options: {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error: unknown) {
     await interaction.followUp({
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
       content: i18next.t('reply.failed_queue_question', { lng: interaction.locale }),
       components: []
     });

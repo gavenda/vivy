@@ -5,7 +5,7 @@ import { handleQueueSelection, handleSearch, handleTracks } from '@app/player/ha
 import type { Requester } from '@app/requester';
 import { handleSpotifyAlbum, handleSpotifyPlaylist, handleSpotifyTrack } from '@app/spotify/handlers';
 import { hasVoiceState, isSpotify, trimEllipse } from '@app/utils';
-import { ChatInputCommandInteraction, SlashCommandBuilder, SlashCommandStringOption } from 'discord.js';
+import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder, SlashCommandStringOption } from 'discord.js';
 import i18next from 'i18next';
 import { parse as parseSpotifyUri } from 'spotify-uri';
 import type { AppCommand } from './command';
@@ -74,27 +74,27 @@ const playMusic = async (options: {
   if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
     await interaction.reply({
       content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
     return;
   }
   if (!hasVoiceState(interaction.member)) {
     await interaction.reply({
       content: i18next.t('reply.illegal_non_gateway_request', { lng: interaction.locale }),
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
     return;
   }
   if (!interaction.member.voice.channel) {
     await interaction.reply({
       content: i18next.t('reply.not_in_voice', { lng: interaction.locale }),
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
     return;
   }
 
   // Passed the guards, defer (might be delayed)
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const { link } = context;
   const query = interaction.options.getString('query', true);
@@ -104,7 +104,7 @@ const playMusic = async (options: {
   });
 
   // Connect to the voice channel if not connected
-  if (!player.connected) {
+  if (!player.voiceConnected) {
     await player.connect(interaction.member.voice.channel.id);
     logger.debug(`Connected to voice channel: ${interaction.member.voice.channel.name}`);
   }
@@ -152,7 +152,7 @@ const handleQuery = async (
         logger.debug('Give up in searching track', { retryCount });
         // Responding with an error message if loading fails
         await interaction.followUp({
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
           content: i18next.t('reply.error_lookup', { lng: interaction.locale })
         });
       }
@@ -161,7 +161,7 @@ const handleQuery = async (
     case LoadResultType.EMPTY: {
       // Responding with a message if the search returns no results
       await interaction.followUp({
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         content: i18next.t('reply.error_no_match', { lng: interaction.locale })
       });
       return;

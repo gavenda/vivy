@@ -1,3 +1,4 @@
+import { logger } from '@app/logger';
 import { GatewayOpcodes } from 'discord.js';
 import { LavalinkFilter } from './filter';
 import { Lavalink } from './link';
@@ -60,17 +61,9 @@ export class Player<UserData> {
    */
   voiceChannelId?: string;
   /**
-   * Discord voice state of this player.
-   */
-  voice: Partial<VoiceState> = {};
-  /**
    * The position this player is playing music.
    */
   position: number = 0;
-  /**
-   * The connected state of this player.
-   */
-  connected: boolean = false;
   /**
    * The server time of this player.
    */
@@ -100,6 +93,9 @@ export class Player<UserData> {
    */
   autoLeaveMs: number;
 
+  #voiceSessionId: string | null = null;
+  #voiceState: Partial<VoiceState> | null = null;
+
   constructor(link: Lavalink<UserData>, node: LavalinkNode<UserData>, options: PlayerOptions) {
     this.link = link;
     this.node = node;
@@ -107,6 +103,30 @@ export class Player<UserData> {
     this.autoLeave = options.autoLeave;
     this.autoLeaveMs = options.autoLeaveMs ?? DEFAULT_AUTO_LEAVE_MS;
     this.queue = new TrackQueue([], { link, guildId: options.guildId });
+  }
+
+  /**
+   * Returns `true` if this player has connected to a voice channel.
+   */
+  get voiceConnected() {
+    return this.#voiceState !== null;
+  }
+
+  get voiceState(): Partial<VoiceState> {
+    if (!this.#voiceState) {
+      throw new Error('No voice state is set!');
+    }
+    return this.#voiceState;
+  }
+
+  set voiceState(value: Partial<VoiceState>) {
+    logger.info('New discord voice state set', { state: value });
+    this.#voiceState = value;
+  }
+
+  clearVoiceSession() {
+    logger.info('Discord voice session cleared');
+    this.#voiceState = {};
   }
 
   private get stateKey(): string {
@@ -120,7 +140,7 @@ export class Player<UserData> {
       repeatMode: this.repeatMode,
       volume: this.volume,
       guildId: this.guildId,
-      voice: this.voice,
+      voiceState: this.#voiceState,
       position: this.position,
       autoLeave: this.autoLeave,
       autoLeaveMs: this.autoLeaveMs
@@ -247,7 +267,7 @@ export class Player<UserData> {
    * @param voiceChannelId voice channel id
    */
   async connect(voiceChannelId: string) {
-    if (this.connected) return;
+    if (this.voiceConnected) return;
 
     await this.link.sendVoiceUpdate(this.guildId, {
       op: 4,
@@ -266,7 +286,7 @@ export class Player<UserData> {
    * Disconnect from the voice channel.
    */
   async disconnect() {
-    if (!this.connected) return;
+    if (!this.voiceConnected) return;
     this.playing = false;
     await this.link.sendVoiceUpdate(this.guildId, {
       op: GatewayOpcodes.VoiceStateUpdate,

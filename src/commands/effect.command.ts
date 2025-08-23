@@ -5,6 +5,7 @@ import type { Requester } from '@app/requester';
 import { hasVoiceState } from '@app/utils';
 import {
   ChatInputCommandInteraction,
+  MessageFlags,
   SlashCommandBuilder,
   SlashCommandIntegerOption,
   SlashCommandSubcommandBuilder,
@@ -57,31 +58,31 @@ export const effect: AppCommand = {
     if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
       await interaction.reply({
         content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
       return;
     }
     if (!hasVoiceState(interaction.member)) {
       await interaction.reply({
         content: i18next.t('reply.illegal_non_gateway_request', { lng: interaction.locale }),
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
       return;
     }
     if (!interaction.member.voice.channel) {
       await interaction.reply({
         content: i18next.t('reply.not_in_voice', { lng: interaction.locale }),
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
       return;
     }
 
     const { link } = context;
-    const player = link.getPlayer(interaction.guildId);
+    const player = link.findPlayerByGuildId(interaction.guildId);
 
     if (!player) {
       await interaction.reply({
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         content: i18next.t('reply.not_playing', { lng: interaction.locale })
       });
       return;
@@ -117,14 +118,14 @@ const handleFilter = async (options: {
       const max = 300;
       if (speed > max) {
         await interaction.reply({
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
           content: i18next.t('reply.speed_not_greater_than_max', { lng: interaction.locale, max })
         });
         return;
       }
       if (speed < min) {
         await interaction.reply({
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
           content: i18next.t('reply.speed_not_less_than_min', { lng: interaction.locale, min })
         });
         return;
@@ -148,7 +149,7 @@ const handleFilter = async (options: {
   }
 
   await interaction.reply({
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
     content: i18next.t('reply.applied_filter', { lng: interaction.locale })
   });
 };
@@ -203,7 +204,7 @@ const handleEqualizer = async (options: {
   }
 
   await interaction.reply({
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
     content: i18next.t('reply.applied_equalizer', { lng: interaction.locale })
   });
 };

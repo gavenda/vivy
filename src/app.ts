@@ -110,7 +110,7 @@ const context: AppContext = {
 // listen moe events
 listenMoe.on('trackUpdate', async () => {
   for (const node of link.connectedNodes) {
-    for (const player of node.players.values()) {
+    for (const player of node.players) {
       if (player.queue.current && LISTEN_MOE_STREAMS.includes(player.queue.current.info.identifier)) {
         await updatePlayer(context, player.guildId);
       }
@@ -212,7 +212,7 @@ for (const { once, event, execute } of events) {
 process.on('SIGINT', async () => {
   logger.info('Received SIGINT, cleaning up');
   if (redis.isReady) {
-    await redis.disconnect();
+    redis.destroy();
   }
   if (client.isReady()) {
     await client.destroy();

@@ -1,6 +1,6 @@
 import { RepeatMode } from '@app/link';
 import { hasVoiceState } from '@app/utils/has-voice-state';
-import { SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
+import { MessageFlags, SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
 import i18next from 'i18next';
 import type { AppCommand } from './command';
 
@@ -17,30 +17,30 @@ export const loop: AppCommand = {
     if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
       await interaction.reply({
         content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
       return;
     }
     if (!hasVoiceState(interaction.member)) {
       await interaction.reply({
         content: i18next.t('reply.illegal_non_gateway_request', { lng: interaction.locale }),
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
       return;
     }
     if (!interaction.member.voice.channel) {
       await interaction.reply({
         content: i18next.t('reply.not_in_voice', { lng: interaction.locale }),
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
       return;
     }
 
-    const player = link.getPlayer(interaction.guildId);
+    const player = link.findPlayerByGuildId(interaction.guildId);
 
     if (!player) {
       await interaction.reply({
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         content: i18next.t('reply.not_playing', { lng: interaction.locale })
       });
       return;
@@ -53,7 +53,7 @@ export const loop: AppCommand = {
         player.repeatMode = RepeatMode.TRACK;
 
         await interaction.reply({
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
           content: i18next.t('reply.loop_track', { lng: interaction.locale })
         });
         break;
@@ -61,7 +61,7 @@ export const loop: AppCommand = {
         player.repeatMode = RepeatMode.QUEUE;
 
         await interaction.reply({
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
           content: i18next.t('reply.loop_queue', { lng: interaction.locale })
         });
         break;

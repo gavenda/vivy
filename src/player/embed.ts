@@ -6,7 +6,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, Locale } fr
 import i18next from 'i18next';
 
 export const createPlayerQueue = ({ client, link }: AppContext, guildId: string, pageIndex = 0) => {
-  const player = link.getPlayer(guildId);
+  const player = link.findPlayerByGuildId(guildId);
   const lng = client.guilds.cache.get(guildId)?.preferredLocale ?? Locale.EnglishUS;
   const queue: string[] = [];
 
@@ -32,7 +32,7 @@ export const createPlayerQueue = ({ client, link }: AppContext, guildId: string,
 export const createListenMoeEmbed = (context: AppContext, guildId: string) => {
   const { link, client, listenMoe } = context;
   const lng = client.guilds.cache.get(guildId)?.preferredLocale ?? Locale.EnglishUS;
-  const player = link.getPlayer(guildId);
+  const player = link.findPlayerByGuildId(guildId);
 
   const listenMoeEmbed = new EmbedBuilder()
     .setTitle(`${client.user?.username ?? 'Vivy'} Song List`)
@@ -69,7 +69,7 @@ export const createListenMoeEmbed = (context: AppContext, guildId: string) => {
 export const createPlayerEmbed = (context: AppContext, guildId: string, pageIndex: number = 0) => {
   const { link, client } = context;
   const lng = client.guilds.cache.get(guildId)?.preferredLocale ?? Locale.EnglishUS;
-  const player = link.getPlayer(guildId);
+  const player = link.findPlayerByGuildId(guildId);
   const track = player?.queue.current;
   const requester = track?.userData.userId ? `<@${track.userData.userId}>` : '-';
   const duration = msToTime(player?.duration ?? 0);
@@ -129,7 +129,7 @@ export const createPlayerEmbed = (context: AppContext, guildId: string, pageInde
 };
 
 export const createListenMoeComponents = ({ link }: AppContext, guildId: string): ActionRowBuilder<ButtonBuilder>[] => {
-  const player = link.getPlayer(guildId);
+  const player = link.findPlayerByGuildId(guildId);
   const playing = player?.playing ?? false;
 
   const pausePlayButton = new ButtonBuilder()
@@ -165,7 +165,7 @@ export const createListenMoeComponents = ({ link }: AppContext, guildId: string)
 };
 
 export const createPlayerComponents = ({ link }: AppContext, guildId: string): ActionRowBuilder<ButtonBuilder>[] => {
-  const player = link.getPlayer(guildId);
+  const player = link.findPlayerByGuildId(guildId);
   const playing = player?.playing ?? false;
   const disablePagination = (player?.queue?.size ?? 0) < 15;
 

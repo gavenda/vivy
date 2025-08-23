@@ -4,7 +4,12 @@ import { LISTEN_MOE_JPOP_M38U, LISTEN_MOE_KPOP_M38U, RadioType } from '@app/list
 import { updatePlayer } from '@app/player';
 import type { Requester } from '@app/requester';
 import { hasVoiceState } from '@app/utils/has-voice-state';
-import { ChatInputCommandInteraction, SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
+import {
+  ChatInputCommandInteraction,
+  MessageFlags,
+  SlashCommandBuilder,
+  SlashCommandSubcommandBuilder
+} from 'discord.js';
 import i18next from 'i18next';
 import type { AppCommand } from './command';
 
@@ -27,21 +32,21 @@ export const listenMoe: AppCommand = {
     if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
       await interaction.reply({
         content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
       return;
     }
     if (!hasVoiceState(interaction.member)) {
       await interaction.reply({
         content: i18next.t('reply.illegal_non_gateway_request', { lng: interaction.locale }),
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
       return;
     }
     if (!interaction.member.voice.channel) {
       await interaction.reply({
         content: i18next.t('reply.not_in_voice', { lng: interaction.locale }),
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
       return;
     }
@@ -49,11 +54,11 @@ export const listenMoe: AppCommand = {
     const { guildId } = interaction;
     const { link } = context;
 
-    const player = link.getPlayer(guildId);
+    const player = link.findPlayerByGuildId(guildId);
 
     if (!player) {
       await interaction.reply({
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         content: i18next.t('reply.not_playing', { lng: interaction.locale })
       });
       return;
@@ -62,7 +67,7 @@ export const listenMoe: AppCommand = {
     const type = interaction.options.getSubcommand(true);
     const radioType = type === 'anime' ? RadioType.JPOP : RadioType.KPOP;
 
-    if (!player.connected) {
+    if (!player.voiceConnected) {
       await player.connect(interaction.member.voice.channel.id);
     }
 
@@ -70,7 +75,7 @@ export const listenMoe: AppCommand = {
 
     if (!listenAttempt) {
       await interaction.reply({
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         content: i18next.t('reply.error_radio', { lng: interaction.locale })
       });
       return;
@@ -78,12 +83,12 @@ export const listenMoe: AppCommand = {
 
     if (radioType === RadioType.JPOP) {
       await interaction.reply({
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         content: i18next.t('reply.listen_jpop', { lng: interaction.locale })
       });
     } else {
       await interaction.reply({
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         content: i18next.t('reply.listen_kpop', { lng: interaction.locale })
       });
     }

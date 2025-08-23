@@ -1,5 +1,5 @@
 import { createPlayerEmbed } from '@app/player';
-import { SlashCommandBuilder } from 'discord.js';
+import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
 import type { AppCommand } from './command';
 
@@ -13,7 +13,7 @@ export const queue: AppCommand = {
     if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
       await interaction.reply({
         content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
       return;
     }
@@ -21,7 +21,7 @@ export const queue: AppCommand = {
     const playerEmbed = createPlayerEmbed(context, interaction.guildId);
 
     await interaction.reply({
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
       embeds: [playerEmbed]
     });
   }
