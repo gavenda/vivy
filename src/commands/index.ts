@@ -1,4 +1,5 @@
 import { clear } from './clear.command';
+import { connect } from './connect.command';
 import { disconnect } from './disconnect.command';
 import { effect } from './effect.command';
 import { listenMoe } from './listen.moe.command';
@@ -16,14 +17,15 @@ import { stop } from './stop.command';
 import { volume } from './volume.command';
 
 export const commands = [
-  player,
   clear,
+  connect,
   disconnect,
   effect,
   listenMoe,
   loop,
   pause,
   play,
+  player,
   playlist,
   queue,
   remove,
@@ -36,6 +38,7 @@ export const commands = [
 
 export {
   clear,
+  connect,
   disconnect,
   effect,
   listenMoe,

@@ -42,6 +42,7 @@
       "cleared_queue": "Queue cleared.",
       "cleared_effect": "Effects cleared.",
       "disconnected_from_channel": "Disconnected from voice channel.",
+      "connected_to_channel": "Connected to `{{ channel }}`.",
       "applied_equalizer": "Equalizer applied.",
       "applied_filter": "Filter applied.",
       "speed_not_greater_than_max": "Speed should not be greater than {{ max }}.",
