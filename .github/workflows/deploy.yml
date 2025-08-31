@@ -3,11 +3,12 @@ name: Deploy
 on:
   push:
     tags:
-      - '*'
+      - 'v*'
 
 jobs:
   build:
-    name: Build
+    environment: production
+    name: Build and Register
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,6 +29,12 @@ jobs:
           pnpm clean
           pnpm build
         name: Build
+      - run: |
+          pnpm register
+        name: Register
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
   docker:
     name: Push to Docker
     needs: build
