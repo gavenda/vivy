@@ -6,7 +6,7 @@ export interface VoiceState {
   /**
    * The Discord voice endpoint to connect to.
    */
-  endpoint: string;
+  endpoint: string | null;
   /**
    * The Discord voice session id to authenticate with.
    */

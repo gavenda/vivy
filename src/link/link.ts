@@ -244,6 +244,7 @@ export class Lavalink<UserData> extends EventEmitter {
 
     if (!data.channel_id || !data.session_id) {
       player.voiceState = {};
+      player.voiceChannelId = undefined;
 
       this.emit('playerDisconnected', player);
     }
@@ -274,7 +275,6 @@ export class Lavalink<UserData> extends EventEmitter {
     logger.info(`Receiving voice server update`, { data });
 
     if (!player) return;
-    if (!data.endpoint) return;
 
     player.voiceState.endpoint = data.endpoint;
     player.voiceState.token = data.token;

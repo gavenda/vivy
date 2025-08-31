@@ -288,6 +288,8 @@ export class Player<UserData> {
     if (!this.voiceConnected) return;
 
     this.playing = false;
+    this.voiceChannelId = undefined;
+    this.voiceState = {};
 
     await this.link.sendVoiceUpdate(this.guildId, {
       op: GatewayOpcodes.VoiceStateUpdate,
