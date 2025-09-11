@@ -46,7 +46,10 @@
       "applied_equalizer": "Equalizer applied.",
       "applied_filter": "Filter applied.",
       "speed_not_greater_than_max": "Speed should not be greater than {{ max }}.",
-      "speed_not_less_than_min": "Speed should not be less than {{ min }}."
+      "speed_not_less_than_min": "Speed should not be less than {{ min }}.",
+      "queue_remember_question": "Do you want to remember how you queue your music? You will no longer be asked what type of queueing after answering this.",
+      "queue_remember_question_failure": "You failed answering how you want to remember your queue setting, you will be asked again later.",
+      "queue_remember_question_success": "Remembered. We will always queue your music that way starting now."
     },
     "placeholder": {
       "select_music": "Please select music to play"
@@ -67,7 +70,9 @@
     "button": {
       "queue_later": "Reserve Later",
       "queue_next": "Play Next",
-      "queue_now": "Play Now"
+      "queue_now": "Play Now",
+      "queue_remember_yes": "Yes, remember my queue setting",
+      "queue_remember_no": "No, I want to choose each time"
     }
   }
 }

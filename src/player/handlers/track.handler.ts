@@ -1,6 +1,6 @@
 import { Player, type Track } from '@app/link';
 import { logger } from '@app/logger';
-import type { QueueType } from '@app/player';
+import { QueueType } from '@app/player';
 import type { Requester } from '@app/requester';
 import { ButtonInteraction, ChatInputCommandInteraction, StringSelectMenuInteraction } from 'discord.js';
 import i18next from 'i18next';
@@ -16,7 +16,7 @@ export const handleTrack = async (options: {
   logger.debug(`Handling track, queue type: ${queue}`);
 
   switch (queue) {
-    case 'later': {
+    case QueueType.LATER: {
       if (!player.queue.current) {
         await player.play(track);
       } else {
@@ -24,7 +24,7 @@ export const handleTrack = async (options: {
       }
       break;
     }
-    case 'next': {
+    case QueueType.NEXT: {
       if (!player.queue.current) {
         await player.play(track);
       } else {
@@ -32,7 +32,7 @@ export const handleTrack = async (options: {
       }
       break;
     }
-    case 'now': {
+    case QueueType.NOW: {
       await player.play(track);
 
       if (player.queue.previous) {

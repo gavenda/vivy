@@ -3,6 +3,7 @@ import type { Requester } from '@app/requester';
 import {
   ActionRowBuilder,
   ButtonBuilder,
+  ButtonInteraction,
   ButtonStyle,
   ChatInputCommandInteraction,
   ComponentType,
@@ -10,15 +11,18 @@ import {
   StringSelectMenuInteraction
 } from 'discord.js';
 import i18next from 'i18next';
-import type { QueueType } from '../queue.type';
+import { QueueType } from '../queue.type';
 import { handleTrack } from './track.handler';
+import type { AppContext } from '@app/context';
 
 export const handleQueueSelection = async (options: {
+  context: AppContext;
   track: Track<Requester>;
   interaction: ChatInputCommandInteraction | StringSelectMenuInteraction;
   player: Player<Requester>;
+  queueType: QueueType;
 }) => {
-  const { interaction, player, track } = options;
+  const { context, track, interaction, player, queueType } = options;
   try {
     const queueLaterButton = new ButtonBuilder()
       .setCustomId('queue:later')
@@ -63,7 +67,9 @@ export const handleQueueSelection = async (options: {
 
     await buttonClick.deferUpdate();
 
-    await handleTrack({ interaction: buttonClick, track, player, queue });
+    const askQueueRemember = await handleQueueRemember({ context, interaction: buttonClick, queueType });
+
+    await handleTrack({ interaction: askQueueRemember, track, player, queue });
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error: unknown) {
     await interaction.followUp({
@@ -72,7 +78,77 @@ export const handleQueueSelection = async (options: {
       components: []
     });
 
-    await handleTrack({ interaction, track, player, queue: 'later' });
-    return;
+    await handleTrack({ interaction, track, player, queue: QueueType.LATER });
   }
+};
+
+export const handleQueueRemember = async (options: {
+  context: AppContext;
+  interaction: ChatInputCommandInteraction | StringSelectMenuInteraction | ButtonInteraction;
+  queueType: QueueType;
+}): Promise<ChatInputCommandInteraction | StringSelectMenuInteraction | ButtonInteraction> => {
+  const { context, interaction, queueType } = options;
+
+  // Check prefs if we want to ask the question
+  const queueQuestionAlreadyAnswered = await context.redis.get(
+    `user-prefs:${interaction.user.id}:queue-question-answered`
+  );
+
+  // If answered, we do nothing
+  if (queueQuestionAlreadyAnswered) {
+    return interaction;
+  }
+
+  try {
+    const queueRememberYes = new ButtonBuilder()
+      .setCustomId('queue:remember-yes')
+      .setStyle(ButtonStyle.Primary)
+      .setLabel(i18next.t('button.queue_remember_yes', { lng: interaction.locale }));
+    const queueRememberNo = new ButtonBuilder()
+      .setCustomId('queue:remember-no')
+      .setStyle(ButtonStyle.Danger)
+      .setLabel(i18next.t('button.queue_remember_no', { lng: interaction.locale }));
+
+    const queueRememberActionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      queueRememberYes,
+      queueRememberNo
+    );
+
+    const queueRememberQuestion = await interaction.editReply({
+      content: i18next.t('reply.queue_remember_question', { lng: interaction.locale }),
+      components: [queueRememberActionRow]
+    });
+
+    const buttonClick = await queueRememberQuestion.awaitMessageComponent({
+      filter: (i) => i.user.id === interaction.user.id && i.message.id === queueRememberQuestion.id,
+      componentType: ComponentType.Button,
+      time: 15_000
+    });
+
+    const answer = buttonClick.customId.split(':')[1];
+
+    await buttonClick.deferUpdate();
+
+    if (answer === 'remember-yes') {
+      await context.redis.set(`user-prefs:${interaction.user.id}:queue-type`, queueType);
+    }
+
+    await context.redis.set(`user-prefs:${interaction.user.id}:queue-question-answered`, 1);
+
+    await buttonClick.editReply({
+      content: i18next.t('reply.queue_remember_question_success', { lng: interaction.locale }),
+      components: []
+    });
+
+    return buttonClick;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error: unknown) {
+    await interaction.followUp({
+      flags: MessageFlags.Ephemeral,
+      content: i18next.t('reply.queue_remember_question_failure', { lng: interaction.locale }),
+      components: []
+    });
+  }
+
+  return interaction;
 };

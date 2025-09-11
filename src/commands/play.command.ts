@@ -9,6 +9,7 @@ import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder, SlashCo
 import i18next from 'i18next';
 import { parse as parseSpotifyUri } from 'spotify-uri';
 import type { AppCommand } from './command';
+import { QueueType } from '@app/player';
 
 export const play: AppCommand = {
   data: new SlashCommandBuilder()
@@ -18,6 +19,16 @@ export const play: AppCommand = {
         .setDescription('The music or url you want to play.')
         .setAutocomplete(true)
         .setRequired(true)
+    )
+    .addStringOption(
+      new SlashCommandStringOption()
+        .setName('queue-type')
+        .setDescription('The type of queue you are making.')
+        .addChoices(
+          { name: 'Reserve', value: QueueType.LATER },
+          { name: 'Reserve Next', value: QueueType.NEXT },
+          { name: 'Play Now', value: QueueType.NOW }
+        )
     )
     .addStringOption(
       new SlashCommandStringOption()
@@ -32,8 +43,12 @@ export const play: AppCommand = {
     .setDescription('Play a music or queue it in the music queue.')
     .toJSON(),
   execute: async (context, interaction) => {
+    const defaultQueueType =
+      <QueueType>await context.redis.get(`user-prefs:${interaction.user.id}:queue-type`) ?? QueueType.LATER;
+
     const source = <LavalinkSource>interaction.options.getString('source') ?? LavalinkSource.YOUTUBE_MUSIC;
-    await playMusic({ context, interaction, source });
+    const queueType = <QueueType>interaction.options.getString('queue-type') ?? defaultQueueType;
+    await playMusic({ context, interaction, source, queueType });
   },
   autocomplete: async (context, interaction) => {
     const focusedValue = interaction.options.getFocused();
@@ -68,8 +83,9 @@ const playMusic = async (options: {
   context: AppContext;
   interaction: ChatInputCommandInteraction;
   source: LavalinkSource;
+  queueType: QueueType;
 }) => {
-  const { context, interaction, source } = options;
+  const { context, interaction, source, queueType } = options;
 
   if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
     await interaction.reply({
@@ -112,7 +128,7 @@ const playMusic = async (options: {
   if (isSpotify(query)) {
     await handleSpotify({ query, player, context, interaction });
   } else {
-    await handleQuery({ query, player, context, interaction, source });
+    await handleQuery({ query, player, context, interaction, source, queueType });
   }
 };
 
@@ -123,12 +139,13 @@ const handleQuery = async (
     context: AppContext;
     interaction: ChatInputCommandInteraction;
     source: LavalinkSource;
+    queueType: QueueType;
   },
   retry = true,
   retryCount = 5
 ) => {
-  const { link } = options.context;
-  const { query, interaction, player, source } = options;
+  const { query, interaction, player, source, queueType, context } = options;
+  const { link } = context;
 
   const result = await link.search({
     query,
@@ -179,7 +196,7 @@ const handleQuery = async (
     }
     case LoadResultType.TRACK: {
       // Handle track result
-      await handleQueueSelection({ interaction, track: result.data, player });
+      await handleQueueSelection({ context, interaction, track: result.data, player, queueType });
       break;
     }
     case LoadResultType.SEARCH: {
