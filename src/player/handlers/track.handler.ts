@@ -9,13 +9,13 @@ export const handleTrack = async (options: {
   interaction: ChatInputCommandInteraction | StringSelectMenuInteraction | ButtonInteraction;
   track: Track<Requester>;
   player: Player<Requester>;
-  queue: QueueType;
+  queueType: QueueType;
 }) => {
-  const { interaction, track, player, queue } = options;
+  const { interaction, track, player, queueType } = options;
 
-  logger.debug(`Handling track, queue type: ${queue}`);
+  logger.debug(`Handling track, queue type: ${queueType}`);
 
-  switch (queue) {
+  switch (queueType) {
     case QueueType.LATER: {
       if (!player.queue.current) {
         await player.play(track);

@@ -69,7 +69,7 @@ export const handleQueueSelection = async (options: {
 
     const askQueueRemember = await handleQueueRemember({ context, interaction: buttonClick, queueType });
 
-    await handleTrack({ interaction: askQueueRemember, track, player, queue });
+    await handleTrack({ interaction: askQueueRemember, track, player, queueType: queue });
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error: unknown) {
     await interaction.followUp({
@@ -78,7 +78,7 @@ export const handleQueueSelection = async (options: {
       components: []
     });
 
-    await handleTrack({ interaction, track, player, queue: QueueType.LATER });
+    await handleTrack({ interaction, track, player, queueType: QueueType.LATER });
   }
 };
 

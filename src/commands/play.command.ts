@@ -126,7 +126,7 @@ const playMusic = async (options: {
   }
 
   if (isSpotify(query)) {
-    await handleSpotify({ query, player, context, interaction });
+    await handleSpotify({ query, player, context, interaction, queueType });
   } else {
     await handleQuery({ query, player, context, interaction, source, queueType });
   }
@@ -201,7 +201,7 @@ const handleQuery = async (
     }
     case LoadResultType.SEARCH: {
       // Handle search result
-      await handleSearch({ interaction, query, player, result });
+      await handleSearch({ context, interaction, query, player, result, queueType });
       break;
     }
   }
@@ -212,8 +212,9 @@ const handleSpotify = async (options: {
   player: Player<Requester>;
   context: AppContext;
   interaction: ChatInputCommandInteraction;
+  queueType: QueueType;
 }) => {
-  const { query, interaction, player, context } = options;
+  const { query, interaction, player, context, queueType } = options;
   const spotifyUri = parseSpotifyUri(query);
 
   switch (spotifyUri.type) {
@@ -224,7 +225,7 @@ const handleSpotify = async (options: {
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
     case 'track': {
-      await handleSpotifyTrack({ context, interaction, spotifyUri, player });
+      await handleSpotifyTrack({ context, queueType, interaction, spotifyUri, player });
       break;
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
