@@ -44,7 +44,7 @@ export const play: AppCommand = {
     .toJSON(),
   execute: async (context, interaction) => {
     const defaultQueueType =
-      <QueueType>await context.redis.get(`user-prefs:${interaction.user.id}:queue-type`) ?? QueueType.LATER;
+      <QueueType>await context.redis.get(`user-prefs:${interaction.user.id}:queue-type`) ?? QueueType.ASK;
 
     const source = <LavalinkSource>interaction.options.getString('source') ?? LavalinkSource.YOUTUBE_MUSIC;
     const queueType = <QueueType>interaction.options.getString('queue-type') ?? defaultQueueType;

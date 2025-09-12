@@ -16,6 +16,9 @@ export const handleTrack = async (options: {
   logger.debug(`Handling track, queue type: ${queueType}`);
 
   switch (queueType) {
+    case QueueType.ASK:
+      logger.warn('Queue type being handled is of QueueType.ASK, this is an error and should be reported');
+      return;
     case QueueType.LATER: {
       if (!player.queue.current) {
         await player.play(track);

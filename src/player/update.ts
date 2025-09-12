@@ -37,7 +37,7 @@ export const updatePlayerNow = async (context: AppContext, guildId: string) => {
   } catch (error) {
     logger.error(`Unable to send player update`, { guildId, error });
     await redis.del(playerEmbedKey);
-    logger.info(`Removing embed key from cache`, { playerEmbedKey });
+    logger.debug(`Removing embed key from cache`, { playerEmbedKey });
   }
 };
 

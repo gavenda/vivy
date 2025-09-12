@@ -112,7 +112,7 @@ export class Player<UserData> {
   }
 
   clearVoiceSession() {
-    logger.info('Discord voice session cleared');
+    logger.debug('Discord voice session cleared');
     this.voiceState = {};
   }
 

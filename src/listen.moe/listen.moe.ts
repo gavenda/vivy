@@ -131,7 +131,7 @@ export class ListenMoe extends EventEmitter {
       this.info.cover = null;
     }
 
-    logger.info('Listen.MOE track update', { track: this.info });
+    logger.debug('Listen.MOE track update', { track: this.info });
 
     this.emit('trackUpdate');
   }

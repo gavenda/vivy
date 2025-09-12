@@ -106,12 +106,12 @@ export class LavalinkNode<UserData> {
   }
 
   set sessionId(value: string) {
-    logger.info('New session id set', { sessionId: value });
+    logger.debug('New session id set', { sessionId: value });
     this.#sessionId = value;
   }
 
   clearSessionId() {
-    logger.info('Session cleared');
+    logger.debug('Session cleared');
     this.#sessionId = null;
   }
 
@@ -462,7 +462,7 @@ export class LavalinkNode<UserData> {
     if (!player) return;
 
     if (options.voice) {
-      logger.info('Connected to discord voice', { ...options.voice });
+      logger.debug('Connected to discord voice', { ...options.voice });
       player.voiceState = options.voice;
     }
 

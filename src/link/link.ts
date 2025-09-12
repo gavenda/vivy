@@ -225,7 +225,7 @@ export class Lavalink<UserData> extends EventEmitter {
    * @param data voice update dispatch data from discord.js
    */
   private async handleVoiceStateUpdate(data: Partial<APIVoiceState>) {
-    logger.info(`Receiving voice state update`, { payload: data });
+    logger.debug(`Receiving voice state update`, { payload: data });
 
     if (!data.member) return;
     if (!data.channel_id) return;
@@ -251,7 +251,7 @@ export class Lavalink<UserData> extends EventEmitter {
 
     player.voiceState.sessionId = data.session_id;
 
-    logger.info('Discord voice session id set', { sessionId: data.session_id });
+    logger.debug('Discord voice session id set', { sessionId: data.session_id });
 
     if (!player.voiceState.token) return;
     if (!player.voiceState.endpoint) return;
@@ -272,14 +272,14 @@ export class Lavalink<UserData> extends EventEmitter {
   private async handleVoiceServerUpdate(data: GatewayVoiceServerUpdateDispatchData) {
     const player = this.findPlayerByGuildId(data.guild_id);
 
-    logger.info(`Receiving voice server update`, { data });
+    logger.debug(`Receiving voice server update`, { data });
 
     if (!player) return;
 
     player.voiceState.endpoint = data.endpoint;
     player.voiceState.token = data.token;
 
-    logger.info('Discord voice endpoint and token set', { endpoint: data.endpoint, token: data.token });
+    logger.debug('Discord voice endpoint and token set', { endpoint: data.endpoint, token: data.token });
 
     if (!player.voiceState.sessionId) return;
 

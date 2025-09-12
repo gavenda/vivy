@@ -22,7 +22,13 @@ export const handleQueueSelection = async (options: {
   player: Player<Requester>;
   queueType: QueueType;
 }) => {
-  const { context, track, interaction, player, queueType } = options;
+  const { context, track, interaction, player } = options;
+
+  if (options.queueType !== QueueType.ASK) {
+    await handleTrack({ interaction, track, player, queueType: options.queueType });
+    return;
+  }
+
   try {
     const queueLaterButton = new ButtonBuilder()
       .setCustomId('queue:later')
@@ -63,13 +69,14 @@ export const handleQueueSelection = async (options: {
       time: 15_000
     });
 
-    const queue = <QueueType>buttonClick.customId.split(':')[1];
+    const queueType = <QueueType>buttonClick.customId.split(':')[1];
+
+    // Attempt to ask queue remember
+    await handleQueueRemember({ context, interaction, queueType });
 
     await buttonClick.deferUpdate();
 
-    const askQueueRemember = await handleQueueRemember({ context, interaction: buttonClick, queueType });
-
-    await handleTrack({ interaction: askQueueRemember, track, player, queueType: queue });
+    await handleTrack({ interaction: buttonClick, track, player, queueType });
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error: unknown) {
     await interaction.followUp({
@@ -114,7 +121,8 @@ export const handleQueueRemember = async (options: {
       queueRememberNo
     );
 
-    const queueRememberQuestion = await interaction.editReply({
+    const queueRememberQuestion = await interaction.followUp({
+      flags: MessageFlags.Ephemeral,
       content: i18next.t('reply.queue_remember_question', { lng: interaction.locale }),
       components: [queueRememberActionRow]
     });

@@ -135,7 +135,7 @@ link.on('nodeReady', async (node) => {
 
 link.on('nodeError', (node, error) => {
   const { host } = node.options;
-  logger.info(`Error on node`, { host, error });
+  logger.error(`Error on node`, { host, error });
 });
 
 link.on('nodeResumed', (node) => {
@@ -145,21 +145,21 @@ link.on('nodeResumed', (node) => {
 
 link.on('nodeDisconnected', (node) => {
   const { host } = node.options;
-  logger.info(`Disconnected from node`, { host });
+  logger.debug(`Disconnected from node`, { host });
 });
 
 link.on('playerMove', (player, oldVoiceChannelId, newVoiceChannelId) => {
   const { guildId } = player;
-  logger.info('Player moved', { guildId, oldVoiceChannelId, newVoiceChannelId });
+  logger.debug('Player moved', { guildId, oldVoiceChannelId, newVoiceChannelId });
 });
 
 link.on('playerSocketClosed', (player, code, byRemote, reason) => {
   const { guildId } = player;
-  logger.info('Player socket closed', { guildId, code, byRemote, reason });
+  logger.debug('Player socket closed', { guildId, code, byRemote, reason });
 });
 
 link.on('trackStart', async (player, track) => {
-  logger.info('Track start', { title: track.info.title, guild: player.guildId });
+  logger.debug('Track start', { title: track.info.title, guild: player.guildId });
 
   if (track.info.identifier === LISTEN_MOE_JPOP_STREAM) {
     listenMoe.connect(RadioType.JPOP);
@@ -172,7 +172,7 @@ link.on('trackStart', async (player, track) => {
 });
 
 link.on('trackEnd', async (player, track, reason) => {
-  logger.info('Track end', { title: track.info.title, guild: player.guildId, reason });
+  logger.debug('Track end', { title: track.info.title, guild: player.guildId, reason });
 
   if (LISTEN_MOE_STREAMS.includes(track.info.identifier)) {
     listenMoe.disconnect();
@@ -191,7 +191,7 @@ link.on('trackError', async (player, track, exception) => {
 });
 
 link.on('trackStuck', async (player, track) => {
-  logger.info('Track stuck', { title: track.info.title, guild: player.guildId });
+  logger.debug('Track stuck', { title: track.info.title, guild: player.guildId });
   await player.skip();
 });
 
