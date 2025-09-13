@@ -1,0 +1,9 @@
+[Unit]
+Description=Vivy
+
+[Network]
+Driver=bridge
+NetworkName=vivy
+
+[Install]
+WantedBy=default.target

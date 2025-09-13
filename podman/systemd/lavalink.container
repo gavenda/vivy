@@ -1,0 +1,17 @@
+[Unit]
+Description=Lavalink
+After=podman-user-wait-network-online.service
+Wants=podman-user-wait-network-online.service
+
+[Container]
+ContainerName=vivy-lavalink
+AutoUpdate=registry
+Image=ghcr.io/lavalink-devs/lavalink:4-alpine
+Volume=/home/vivy/application.yaml:/opt/Lavalink/application.yml:Z
+Pod=vivy.pod
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
