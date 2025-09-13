@@ -56,7 +56,7 @@
     },
     "about_embed": {
       "title": "Who is Vivy?",
-      "about": "My mission is to make everyone happy by singing.",
+      "description": "My mission is to make everyone happy by singing.",
       "footer": "You can help with the development by dropping by on GitHub.",
       "field_version": "Version",
       "field_language": "Language",

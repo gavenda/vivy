@@ -27,7 +27,7 @@ export const about: AppCommand = {
     const selfAvatarUrl = client.user.avatarURL();
 
     const aboutEmbed = new EmbedBuilder()
-      .setTitle(i18next.t('about_embed.now_playing', { lng }))
+      .setTitle(i18next.t('about_embed.title', { lng }))
       .setURL(`https://vivy.gavenda.dev`)
       .setDescription(i18next.t('about_embed.description', { lng }))
       .setThumbnail(selfAvatarUrl)
@@ -45,6 +45,11 @@ export const about: AppCommand = {
         {
           name: i18next.t('about_embed.field_platform', { lng }),
           value: '[DigitalOcean](https://www.digitalocean.com/)',
+          inline: true
+        },
+        {
+          name: i18next.t('about_embed.field_source', { lng }),
+          value: '[Source](https://github.com/gavenda/vivy)',
           inline: true
         },
         {
