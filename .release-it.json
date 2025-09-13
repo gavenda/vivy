@@ -2,10 +2,11 @@
   "npm": {
     "publish": false
   },
-  "commitMessage": "${version}",
   "git": {
-    "requireCleanWorkingDir": true,
-    "tagAnnotation": "v${version}"
+    "commitMessage": "${version}",
+    "requireCleanWorkingDir": false,
+    "tagAnnotation": "v${version}",
+    "tagArgs": ["-s"]
   },
   "github": {
     "release": true,
