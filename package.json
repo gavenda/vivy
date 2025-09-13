@@ -14,7 +14,8 @@
     "clean": "rimraf dist",
     "build": "tsc",
     "prettier": "prettier src --write",
-    "prepare": "husky"
+    "prepare": "husky",
+    "release": "release-it"
   },
   "type": "module",
   "author": "Enda <enda@gavenda.dev> (https://gavenda.dev/)",
