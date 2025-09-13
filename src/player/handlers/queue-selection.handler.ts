@@ -71,12 +71,12 @@ export const handleQueueSelection = async (options: {
 
     const queueType = <QueueType>buttonClick.customId.split(':')[1];
 
-    // Attempt to ask queue remember
-    await handleQueueRemember({ context, interaction, queueType });
-
     await buttonClick.deferUpdate();
 
     await handleTrack({ interaction: buttonClick, track, player, queueType });
+
+    // Attempt to ask queue remember
+    await handleQueueRemember({ context, interaction, queueType });
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error: unknown) {
     await interaction.followUp({
