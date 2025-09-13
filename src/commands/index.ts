@@ -1,3 +1,4 @@
+import { about } from './about.command';
 import { clear } from './clear.command';
 import { connect } from './connect.command';
 import { disconnect } from './disconnect.command';
@@ -17,6 +18,7 @@ import { stop } from './stop.command';
 import { volume } from './volume.command';
 
 export const commands = [
+  about,
   clear,
   connect,
   disconnect,
@@ -37,6 +39,7 @@ export const commands = [
 ];
 
 export {
+  about,
   clear,
   connect,
   disconnect,
