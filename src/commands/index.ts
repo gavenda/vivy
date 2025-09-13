@@ -8,7 +8,6 @@ import { loop } from './loop.command';
 import { pause } from './pause.command';
 import { play } from './play.command';
 import { player } from './player.command';
-import { playlist } from './playlist.command';
 import { queue } from './queue.command';
 import { remove } from './remove.command';
 import { resume } from './resume.command';
@@ -28,7 +27,6 @@ export const commands = [
   pause,
   play,
   player,
-  playlist,
   queue,
   remove,
   resume,
@@ -49,7 +47,6 @@ export {
   pause,
   play,
   player,
-  playlist,
   queue,
   remove,
   resume,
