@@ -61,7 +61,8 @@
       "field_version": "Version",
       "field_language": "Language",
       "field_platform": "Platform",
-      "field_date_created": "Date Created"
+      "field_date_created": "Date Created",
+      "field_source": "Source"
     },
     "player_embed": {
       "description_queue_empty": "The audience has not requested me to sing anything.",
