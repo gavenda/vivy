@@ -1,0 +1,16 @@
+services:
+  vivy:
+    container_name: vivy
+    depends_on:
+      - lavalink
+      - redis
+    build: .
+    env_file: .env
+  lavalink:
+    container_name: vivy-lavalink
+    image: ghcr.io/lavalink-devs/lavalink:4
+    volumes:
+      - ./application.yaml:/opt/Lavalink/application.yml
+  redis:
+    container_name: vivy-redis
+    image: redis:latest
