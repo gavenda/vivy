@@ -49,7 +49,9 @@ export const createPlayerComponentsV2 = (context: AppContext, guildId: string, p
   const disablePagination = (player?.queue?.size ?? 0) < 15;
   const queue = createPlayerQueue(context, guildId, pageIndex);
   const track = player?.queue.current;
-  const requester = track?.userData.userId ? `<@${track.userData.userId}>` : '—';
+  const requester = track?.userData.userId ? ` — <@${track.userData.userId}>` : '';
+  const nowPlaying = track?.info.title ? `[${track?.info.title}](${track?.info.uri})` : '—';
+  const artist = track?.info.author ?? '—';
 
   const container = new ContainerBuilder();
 
@@ -99,7 +101,7 @@ export const createPlayerComponentsV2 = (context: AppContext, guildId: string, p
   const nowPlayingSection = new SectionBuilder()
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `-# ${i18next.t('player_embed.now_playing', { lng }).toLocaleUpperCase(lng)} — ${requester}\n[${track?.info.title}](${track?.info.uri})`
+        `-# ${i18next.t('player_embed.now_playing', { lng }).toLocaleUpperCase(lng)}${requester}\n${nowPlaying}`
       )
     )
     .setButtonAccessory(volumeUpButton);
@@ -107,7 +109,7 @@ export const createPlayerComponentsV2 = (context: AppContext, guildId: string, p
   const artistSection = new SectionBuilder()
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `-# ${i18next.t('player_embed.artist', { lng }).toLocaleUpperCase(lng)}\n${track?.info.author}`
+        `-# ${i18next.t('player_embed.artist', { lng }).toLocaleUpperCase(lng)}\n${artist}`
       )
     )
     .setButtonAccessory(volumeDownButton);
