@@ -33,6 +33,8 @@ export class ListenMoe extends EventEmitter {
   private socket: WebSocket | null = null;
   private heartbeatTimerId?: NodeJS.Timeout;
 
+  type: RadioType = RadioType.JPOP;
+
   info: RadioInfo = {
     song: '-',
     artist: '-',
@@ -50,6 +52,7 @@ export class ListenMoe extends EventEmitter {
       socketUrl.pathname = '/kpop/gateway_v2';
     }
 
+    this.type = type;
     this.socket = new WebSocket(socketUrl);
     this.socket.on('open', this.onWebSocketOpen.bind(this));
     this.socket.on('message', this.onWebSocketMessage.bind(this));

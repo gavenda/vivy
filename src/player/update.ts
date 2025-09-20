@@ -1,8 +1,9 @@
 import type { AppContext } from '@app/context';
 import { LISTEN_MOE_STREAMS } from '@app/listen.moe';
 import { logger } from '@app/logger';
-import { createListenMoeComponents, createListenMoeEmbed, createPlayerComponents, createPlayerEmbed } from './embed';
+import { createMusicMoeComponentsV2, createPlayerComponentsV2 } from './embed';
 import pDebounce from 'p-debounce';
+import { MessageFlags } from 'discord.js';
 
 export const updatePlayerNow = async (context: AppContext, guildId: string) => {
   const { client, redis, link } = context;
@@ -24,14 +25,13 @@ export const updatePlayerNow = async (context: AppContext, guildId: string) => {
     if (channel?.isTextBased()) {
       const message = channel.messages.cache.get(messageId) ?? (await channel.messages.fetch(messageId));
 
-      const playerEmbed = isListenMoe ? createListenMoeEmbed(context, guildId) : createPlayerEmbed(context, guildId);
-      const playerComponents = isListenMoe
-        ? createListenMoeComponents(context, guildId)
-        : createPlayerComponents(context, guildId);
+      const container = isListenMoe
+        ? createMusicMoeComponentsV2(context, guildId)
+        : createPlayerComponentsV2(context, guildId);
 
       await message.edit({
-        embeds: [playerEmbed],
-        components: playerComponents
+        flags: MessageFlags.IsComponentsV2,
+        components: [container]
       });
     }
   } catch (error) {

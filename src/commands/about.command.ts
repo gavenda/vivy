@@ -1,4 +1,14 @@
-import { EmbedBuilder, Locale, MessageFlags, SlashCommandBuilder } from 'discord.js';
+import {
+  ButtonBuilder,
+  ButtonStyle,
+  Locale,
+  MessageFlags,
+  SectionBuilder,
+  SeparatorBuilder,
+  SlashCommandBuilder,
+  TextDisplayBuilder,
+  ThumbnailBuilder
+} from 'discord.js';
 import type { AppCommand } from './command';
 import { version } from '@app/version';
 import i18next from 'i18next';
@@ -24,47 +34,32 @@ export const about: AppCommand = {
     }
 
     const dateCreated = client.user.createdAt;
-    const selfAvatarUrl = client.user.avatarURL();
+    const selfAvatarUrl = client.user.avatarURL()!;
 
-    const aboutEmbed = new EmbedBuilder()
-      .setTitle(i18next.t('about_embed.title', { lng }))
-      .setURL(`https://vivy.gavenda.dev`)
-      .setDescription(i18next.t('about_embed.description', { lng }))
-      .setThumbnail(selfAvatarUrl)
-      .addFields(
-        {
-          name: i18next.t('about_embed.field_version', { lng }),
-          value: version,
-          inline: true
-        },
-        {
-          name: i18next.t('about_embed.field_language', { lng }),
-          value: '[TypeScript](https://typescriptlang.org/)',
-          inline: true
-        },
-        {
-          name: i18next.t('about_embed.field_platform', { lng }),
-          value: '[DigitalOcean](https://www.digitalocean.com/)',
-          inline: true
-        },
-        {
-          name: i18next.t('about_embed.field_source', { lng }),
-          value: '[Source](https://github.com/gavenda/vivy)',
-          inline: true
-        },
-        {
-          name: i18next.t('about_embed.field_date_created', { lng }),
-          value: Intl.DateTimeFormat('en-US', { dateStyle: 'long', timeStyle: 'long' }).format(dateCreated)
-        }
+    const aboutSection = new SectionBuilder()
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(`# ${i18next.t('about_embed.title', { lng })}`),
+        new TextDisplayBuilder().setContent(i18next.t('about_embed.description', { lng }))
       )
-      .setFooter({
-        text: i18next.t('about_embed.footer', { lng }),
-        iconURL: `https://github.com/fluidicon.png`
-      });
+      .setThumbnailAccessory(new ThumbnailBuilder().setURL(selfAvatarUrl));
+    const seperator = new SeparatorBuilder();
+
+    const sourceSection = new SectionBuilder()
+      .addTextDisplayComponents(new TextDisplayBuilder().setContent(i18next.t('about_embed.footer', { lng })))
+      .setButtonAccessory(
+        new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel(`GitHub`).setURL(`https://github.com/gavenda/vivy`)
+      );
+
+    let detailedText = `-# ${i18next.t('about_embed.field_version', { lng })}\n${version}\n`;
+    detailedText += `-# ${i18next.t('about_embed.field_language', { lng })}\n[TypeScript](https://typescriptlang.org/)\n`;
+    detailedText += `-# ${i18next.t('about_embed.field_platform', { lng })}\n[DigitalOcean](https://www.digitalocean.com/)\n`;
+    detailedText += `-# ${i18next.t('about_embed.field_date_created', { lng })}\n${Intl.DateTimeFormat('en-US', { dateStyle: 'long', timeStyle: 'long' }).format(dateCreated)}\n`;
+
+    const detailedTextDisplay = new TextDisplayBuilder().setContent(detailedText);
 
     await interaction.reply({
-      flags: MessageFlags.Ephemeral,
-      embeds: [aboutEmbed]
+      flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
+      components: [aboutSection, detailedTextDisplay, seperator, sourceSection]
     });
   }
 };

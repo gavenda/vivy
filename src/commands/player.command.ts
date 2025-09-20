@@ -1,5 +1,5 @@
 import { logger } from '@app/logger';
-import { createPlayerComponents, createPlayerEmbed } from '@app/player';
+import { createPlayerComponentsV2 } from '@app/player';
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
 import type { AppCommand } from './command';
@@ -51,12 +51,11 @@ export const player: AppCommand = {
       }
     }
 
-    const playerEmbed = createPlayerEmbed(context, interaction.guildId);
-    const playerComponents = createPlayerComponents(context, interaction.guildId);
+    const container = createPlayerComponentsV2(context, interaction.guildId);
 
     const message = await interaction.channel.send({
-      embeds: [playerEmbed],
-      components: playerComponents
+      flags: MessageFlags.IsComponentsV2,
+      components: [container]
     });
 
     await redis.set(`player:embed:${interaction.guildId}`, `${interaction.channelId}:${message.id}`);

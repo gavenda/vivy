@@ -68,6 +68,7 @@
       "description_queue_empty": "The audience has not requested me to sing anything.",
       "description_listen_moe": "Listening to [Listen.MOE](https://listen.moe/)",
       "now_playing": "Now Playing",
+      "queue": "Song List",
       "artist": "Artist",
       "album": "Album",
       "duration": "Duration",

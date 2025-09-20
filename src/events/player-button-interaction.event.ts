@@ -1,6 +1,6 @@
 import { RepeatMode } from '@app/link';
 import { logger } from '@app/logger';
-import { createPlayerComponents, createPlayerEmbed } from '@app/player';
+import { createPlayerComponentsV2 } from '@app/player';
 import { chunkSize } from '@app/utils';
 import { Events, MessageFlags } from 'discord.js';
 import i18next from 'i18next';
@@ -96,12 +96,11 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
       }
     }
 
-    const playerEmbed = createPlayerEmbed(context, interaction.guildId, pageIndex);
-    const playerComponents = createPlayerComponents(context, interaction.guildId);
+    const container = createPlayerComponentsV2(context, interaction.guildId, pageIndex);
     await redis.set(pageKey, pageIndex);
     await interaction.update({
-      embeds: [playerEmbed],
-      components: playerComponents
+      flags: MessageFlags.IsComponentsV2,
+      components: [container]
     });
   }
 };

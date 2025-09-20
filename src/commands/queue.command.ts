@@ -1,4 +1,4 @@
-import { createPlayerEmbed } from '@app/player';
+import { createPlayerComponentsV2 } from '@app/player';
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
 import type { AppCommand } from './command';
@@ -18,11 +18,11 @@ export const queue: AppCommand = {
       return;
     }
 
-    const playerEmbed = createPlayerEmbed(context, interaction.guildId);
+    const container = createPlayerComponentsV2(context, interaction.guildId);
 
     await interaction.reply({
-      flags: MessageFlags.Ephemeral,
-      embeds: [playerEmbed]
+      flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
+      components: [container]
     });
   }
 };
