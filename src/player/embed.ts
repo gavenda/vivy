@@ -24,6 +24,8 @@ export const createPlayerQueue = ({ client, link }: AppContext, guildId: string,
   if (player && player.queue.size > 0) {
     const tracksChunked = chunk(player.queue.toArray(), 15);
     const tracks = tracksChunked[pageIndex];
+    const maxLenStr = '' + player.queue.size;
+    const maxLen = maxLenStr.length;
 
     for (const [index, track] of tracks.entries()) {
       const title = trimEllipse(track.info.title, 100);
@@ -33,7 +35,7 @@ export const createPlayerQueue = ({ client, link }: AppContext, guildId: string,
       const duration = msToTime(track.info.length ?? 0);
       // # `00:00` [Track Title](URL) <@user-id>
       queue.push(
-        `\`${trackNoText.padStart(player.queue.size, '0')}\` \`${String(duration.minutes).padStart(2, '0')}:${String(duration.seconds).padStart(2, '0')}\` [${title}](${track.info.uri}) ${requester}`
+        `\`${trackNoText.padStart(maxLen, '0')}\` \`${String(duration.minutes).padStart(2, '0')}:${String(duration.seconds).padStart(2, '0')}\` [${title}](${track.info.uri}) ${requester}`
       );
     }
   }
