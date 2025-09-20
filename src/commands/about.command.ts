@@ -1,6 +1,7 @@
 import {
   ButtonBuilder,
   ButtonStyle,
+  ContainerBuilder,
   Locale,
   MessageFlags,
   SectionBuilder,
@@ -36,13 +37,14 @@ export const about: AppCommand = {
     const dateCreated = client.user.createdAt;
     const selfAvatarUrl = client.user.avatarURL()!;
 
+    const container = new ContainerBuilder();
+
     const aboutSection = new SectionBuilder()
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(`# ${i18next.t('about_embed.title', { lng })}`),
         new TextDisplayBuilder().setContent(i18next.t('about_embed.description', { lng }))
       )
       .setThumbnailAccessory(new ThumbnailBuilder().setURL(selfAvatarUrl));
-    const seperator = new SeparatorBuilder();
 
     const sourceSection = new SectionBuilder()
       .addTextDisplayComponents(new TextDisplayBuilder().setContent(i18next.t('about_embed.footer', { lng })))
@@ -50,16 +52,24 @@ export const about: AppCommand = {
         new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel(`GitHub`).setURL(`https://github.com/gavenda/vivy`)
       );
 
-    let detailedText = `-# ${i18next.t('about_embed.field_version', { lng })}\n${version}\n`;
-    detailedText += `-# ${i18next.t('about_embed.field_language', { lng })}\n[TypeScript](https://typescriptlang.org/)\n`;
-    detailedText += `-# ${i18next.t('about_embed.field_platform', { lng })}\n[DigitalOcean](https://www.digitalocean.com/)\n`;
-    detailedText += `-# ${i18next.t('about_embed.field_date_created', { lng })}\n${Intl.DateTimeFormat('en-US', { dateStyle: 'long', timeStyle: 'long' }).format(dateCreated)}\n`;
+    const versionText = `-# ${i18next.t('about_embed.field_version', { lng })}\n${version}\n`;
+    const languageText = `-# ${i18next.t('about_embed.field_language', { lng })}\n[TypeScript](https://typescriptlang.org/)\n`;
+    const platformText = `-# ${i18next.t('about_embed.field_platform', { lng })}\n[DigitalOcean](https://www.digitalocean.com/)\n`;
+    const dateCreatedText = `-# ${i18next.t('about_embed.field_date_created', { lng })}\n${Intl.DateTimeFormat('en-US', { dateStyle: 'long', timeStyle: 'long' }).format(dateCreated)}\n`;
 
-    const detailedTextDisplay = new TextDisplayBuilder().setContent(detailedText);
+    container.addSectionComponents(aboutSection);
+    container.addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(versionText),
+      new TextDisplayBuilder().setContent(languageText),
+      new TextDisplayBuilder().setContent(platformText),
+      new TextDisplayBuilder().setContent(dateCreatedText)
+    );
+    container.addSeparatorComponents(new SeparatorBuilder());
+    container.addSectionComponents(sourceSection);
 
     await interaction.reply({
       flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
-      components: [aboutSection, detailedTextDisplay, seperator, sourceSection]
+      components: [container]
     });
   }
 };
