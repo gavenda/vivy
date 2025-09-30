@@ -8,10 +8,10 @@ import { hasVoiceState, isSpotify, trimEllipse } from '@app/utils';
 import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder, SlashCommandStringOption } from 'discord.js';
 import i18next from 'i18next';
 import { parse as parseSpotifyUri } from 'spotify-uri';
-import type { AppCommand } from './command';
+import type { AppChatInputCommand } from './chat-input-command';
 import { QueueType } from '@app/player';
 
-export const play: AppCommand = {
+export const play: AppChatInputCommand = {
   data: new SlashCommandBuilder()
     .addStringOption(
       new SlashCommandStringOption()

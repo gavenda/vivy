@@ -1,18 +1,13 @@
 import { hasVoiceState } from '@app/utils';
-import { MessageFlags, SlashCommandBuilder, SlashCommandNumberOption } from 'discord.js';
+import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
-import type { AppCommand } from './command';
+import type { AppChatInputCommand } from './chat-input-command';
 
-export const volume: AppCommand = {
+export const shuffle: AppChatInputCommand = {
+  // prettier-ignore
   data: new SlashCommandBuilder()
-    .addNumberOption(
-      new SlashCommandNumberOption()
-        .setName('volume')
-        .setRequired(true)
-        .setDescription('The volume amount (maximum of 100, minimum of 0).')
-    )
-    .setName('volume')
-    .setDescription('The volume level you want to set (maximum of 100, minimum of 0).')
+    .setName('shuffle')
+    .setDescription('Shuffle the music queue.')
     .toJSON(),
   execute: async ({ link }, interaction) => {
     if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
@@ -47,29 +42,11 @@ export const volume: AppCommand = {
       return;
     }
 
-    const volume = interaction.options.getNumber('volume', true);
-
-    if (volume > 100) {
-      await interaction.reply({
-        flags: MessageFlags.Ephemeral,
-        content: i18next.t('reply.volume_not_greater_than_max', { lng: interaction.locale, max: 100 })
-      });
-      return;
-    }
-
-    if (volume < 0) {
-      await interaction.reply({
-        flags: MessageFlags.Ephemeral,
-        content: i18next.t('reply.volume_not_less_than_zero', { lng: interaction.locale })
-      });
-      return;
-    }
-
-    await player.applyVolume(volume / 100);
+    player.queue.shuffle();
 
     await interaction.reply({
       flags: MessageFlags.Ephemeral,
-      content: i18next.t('reply.volume_applied', { lng: interaction.locale, volume })
+      content: i18next.t('reply.queue_shuffled', { lng: interaction.locale })
     });
   }
 };

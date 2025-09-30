@@ -1,44 +1,37 @@
-import { chatInputCommands } from '@app/commands/chat-input';
 import { logger } from '@app/logger';
-import { updatePlayer } from '@app/player';
 import { Events, MessageFlags } from 'discord.js';
-import i18next from 'i18next';
 import type { AppEvent } from './event';
+import { modalSubmitHandlers } from '@app/handlers/modals';
+import i18next from 'i18next';
 
-export const chatInputCommandInteraction: AppEvent<Events.InteractionCreate> = {
+export const modalSubmitInteraction: AppEvent<Events.InteractionCreate> = {
   event: Events.InteractionCreate,
   once: false,
   execute: async (context, interaction) => {
     if (interaction.applicationId != context.applicationId) return;
-    if (!interaction.isChatInputCommand()) return;
+    if (!interaction.isModalSubmit()) return;
 
-    const chatInputCommand = chatInputCommands.find((command) => command.data.name === interaction.commandName);
+    const modalSubmitHandler = modalSubmitHandlers.find((command) => command.customId === interaction.customId);
 
-    const commandContext = {
-      command: interaction.commandName,
+    const modalSubmitContext = {
+      customId: interaction.customId,
       user: interaction.user.tag,
       userId: interaction.user.id
     };
 
-    logger.debug(`Received chat input interaction`, commandContext);
+    logger.debug(`Received modal submit interaction`, modalSubmitContext);
 
-    if (!chatInputCommand) {
-      logger.warn(`No matching chat input interaction was found`, commandContext);
+    if (!modalSubmitHandler) {
+      logger.warn(`No matching modal submit interaction was found`, modalSubmitContext);
       return;
     }
 
     try {
-      await chatInputCommand.execute(context, interaction);
-      // Update player after every command
-      if (interaction.guildId) {
-        const pageKey = `player:page:${interaction.guildId}`;
-        await context.redis.set(pageKey, 0);
-        await updatePlayer(context, interaction.guildId);
-      }
+      await modalSubmitHandler.handle(context, interaction);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      logger.error(error, commandContext);
+      logger.error(error, modalSubmitContext);
 
       // Make sure we reply to the user or they get an error for no response
       if (interaction.replied || interaction.deferred) {

@@ -1,9 +1,9 @@
 import { hasVoiceState } from '@app/utils';
 import { MessageFlags, SlashCommandBuilder, SlashCommandIntegerOption } from 'discord.js';
 import i18next from 'i18next';
-import type { AppCommand } from './command';
+import type { AppChatInputCommand } from './chat-input-command';
 
-export const remove: AppCommand = {
+export const remove: AppChatInputCommand = {
   data: new SlashCommandBuilder()
     .addIntegerOption(
       new SlashCommandIntegerOption()

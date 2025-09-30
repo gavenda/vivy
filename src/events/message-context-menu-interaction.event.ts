@@ -1,18 +1,19 @@
-import { chatInputCommands } from '@app/commands/chat-input';
-import { logger } from '@app/logger';
-import { updatePlayer } from '@app/player';
 import { Events, MessageFlags } from 'discord.js';
-import i18next from 'i18next';
 import type { AppEvent } from './event';
+import { messageContextMenuCommands as messageContextMenuCommands } from '@app/commands/message-context-menu';
+import { logger } from '@app/logger';
+import i18next from 'i18next';
 
-export const chatInputCommandInteraction: AppEvent<Events.InteractionCreate> = {
+export const messageContextMenuInteraction: AppEvent<Events.InteractionCreate> = {
   event: Events.InteractionCreate,
   once: false,
   execute: async (context, interaction) => {
     if (interaction.applicationId != context.applicationId) return;
-    if (!interaction.isChatInputCommand()) return;
+    if (!interaction.isMessageContextMenuCommand()) return;
 
-    const chatInputCommand = chatInputCommands.find((command) => command.data.name === interaction.commandName);
+    const messageContextMenuCommand = messageContextMenuCommands.find(
+      (command) => command.data.name === interaction.commandName
+    );
 
     const commandContext = {
       command: interaction.commandName,
@@ -20,21 +21,15 @@ export const chatInputCommandInteraction: AppEvent<Events.InteractionCreate> = {
       userId: interaction.user.id
     };
 
-    logger.debug(`Received chat input interaction`, commandContext);
+    logger.debug(`Received message context menu interaction command`, commandContext);
 
-    if (!chatInputCommand) {
-      logger.warn(`No matching chat input interaction was found`, commandContext);
+    if (!messageContextMenuCommand) {
+      logger.warn(`No matching message context menu interaction was found`, commandContext);
       return;
     }
 
     try {
-      await chatInputCommand.execute(context, interaction);
-      // Update player after every command
-      if (interaction.guildId) {
-        const pageKey = `player:page:${interaction.guildId}`;
-        await context.redis.set(pageKey, 0);
-        await updatePlayer(context, interaction.guildId);
-      }
+      await messageContextMenuCommand.execute(context, interaction);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument

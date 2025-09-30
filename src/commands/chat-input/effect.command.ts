@@ -12,9 +12,9 @@ import {
   SlashCommandSubcommandGroupBuilder
 } from 'discord.js';
 import i18next from 'i18next';
-import type { AppCommand } from './command';
+import type { AppChatInputCommand } from './chat-input-command';
 
-export const effect: AppCommand = {
+export const effect: AppChatInputCommand = {
   data: new SlashCommandBuilder()
     .addSubcommandGroup(
       new SlashCommandSubcommandGroupBuilder()

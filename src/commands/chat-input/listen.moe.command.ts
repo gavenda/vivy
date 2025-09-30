@@ -11,9 +11,9 @@ import {
   SlashCommandSubcommandBuilder
 } from 'discord.js';
 import i18next from 'i18next';
-import type { AppCommand } from './command';
+import type { AppChatInputCommand } from './chat-input-command';
 
-export const listenMoe: AppCommand = {
+export const listenMoe: AppChatInputCommand = {
   data: new SlashCommandBuilder()
     .addSubcommand(
       new SlashCommandSubcommandBuilder()

@@ -1,9 +1,9 @@
 import { hasVoiceState } from '@app/utils';
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
-import type { AppCommand } from './command';
+import type { AppChatInputCommand } from './chat-input-command';
 
-export const stop: AppCommand = {
+export const stop: AppChatInputCommand = {
   // prettier-ignore
   data: new SlashCommandBuilder()
     .setName('stop')

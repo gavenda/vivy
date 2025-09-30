@@ -1,13 +1,12 @@
-import { hasVoiceState } from '@app/utils/has-voice-state';
+import { hasVoiceState } from '@app/utils';
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
-import type { AppCommand } from './command';
+import type { AppChatInputCommand } from './chat-input-command';
 
-export const pause: AppCommand = {
-  // prettier-ignore
+export const disconnect: AppChatInputCommand = {
   data: new SlashCommandBuilder()
-    .setName('pause')
-    .setDescription('Pause the playing music.')
+    .setName('disconnect')
+    .setDescription('Disconnect the player from the voice channel.')
     .toJSON(),
   execute: async ({ link }, interaction) => {
     if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
@@ -42,11 +41,11 @@ export const pause: AppCommand = {
       return;
     }
 
-    await player.pause();
+    await player.disconnect();
 
     await interaction.reply({
       flags: MessageFlags.Ephemeral,
-      content: i18next.t('reply.music_paused', { lng: interaction.locale })
+      content: i18next.t('reply.disconnected_from_channel', { lng: interaction.locale })
     });
   }
 };

@@ -1,4 +1,4 @@
-import { commands } from '@app/commands';
+import { chatInputCommands } from '@app/commands/chat-input';
 import { logger } from '@app/logger';
 import { Events } from 'discord.js';
 import type { AppEvent } from './event';
@@ -10,7 +10,7 @@ export const autocompleteInteraction: AppEvent<Events.InteractionCreate> = {
     if (interaction.applicationId != context.applicationId) return;
     if (!interaction.isAutocomplete()) return;
 
-    const command = commands.find((command) => command.data.name === interaction.commandName);
+    const chatInputCommand = chatInputCommands.find((command) => command.data.name === interaction.commandName);
 
     const autocompleteContext = {
       command: interaction.commandName,
@@ -20,13 +20,13 @@ export const autocompleteInteraction: AppEvent<Events.InteractionCreate> = {
 
     logger.debug(`Received autocomplete interaction`, autocompleteContext);
 
-    if (!command || !command.autocomplete) {
+    if (!chatInputCommand || !chatInputCommand.autocomplete) {
       logger.warn(`No matching autocomplete interaction was found`, autocompleteContext);
       return;
     }
 
     try {
-      await command.autocomplete(context, interaction);
+      await chatInputCommand.autocomplete(context, interaction);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error: unknown) {
       if (!interaction.responded) {

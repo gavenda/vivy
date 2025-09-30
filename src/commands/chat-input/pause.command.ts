@@ -1,12 +1,13 @@
-import { hasVoiceState } from '@app/utils';
+import { hasVoiceState } from '@app/utils/has-voice-state';
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
-import type { AppCommand } from './command';
+import type { AppChatInputCommand } from './chat-input-command';
 
-export const connect: AppCommand = {
+export const pause: AppChatInputCommand = {
+  // prettier-ignore
   data: new SlashCommandBuilder()
-    .setName('connect')
-    .setDescription('Connect the player to the voice channel.')
+    .setName('pause')
+    .setDescription('Pause the playing music.')
     .toJSON(),
   execute: async ({ link }, interaction) => {
     if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
@@ -31,23 +32,21 @@ export const connect: AppCommand = {
       return;
     }
 
-    let player = link.findPlayerByGuildId(interaction.guildId);
+    const player = link.findPlayerByGuildId(interaction.guildId);
 
     if (!player) {
-      player = await link.createPlayer({
-        guildId: interaction.guild.id,
-        autoLeave: true
+      await interaction.reply({
+        flags: MessageFlags.Ephemeral,
+        content: i18next.t('reply.not_playing', { lng: interaction.locale })
       });
+      return;
     }
 
-    await player.connect(interaction.member.voice.channel.id);
+    await player.pause();
 
     await interaction.reply({
       flags: MessageFlags.Ephemeral,
-      content: i18next.t('reply.connected_to_channel', {
-        lng: interaction.locale,
-        channel: interaction.member.voice.channel.name
-      })
+      content: i18next.t('reply.music_paused', { lng: interaction.locale })
     });
   }
 };

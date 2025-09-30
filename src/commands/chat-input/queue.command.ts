@@ -1,9 +1,9 @@
 import { createPlayerComponentsV2 } from '@app/player';
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
-import type { AppCommand } from './command';
+import type { AppChatInputCommand } from './chat-input-command';
 
-export const queue: AppCommand = {
+export const queue: AppChatInputCommand = {
   // prettier-ignore
   data: new SlashCommandBuilder()
     .setName('queue')

@@ -16,7 +16,7 @@ import { skip } from './skip.command';
 import { stop } from './stop.command';
 import { volume } from './volume.command';
 
-export const commands = [
+export const chatInputCommands = [
   about,
   clear,
   connect,

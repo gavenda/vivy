@@ -1,13 +1,13 @@
 import { hasVoiceState } from '@app/utils';
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
-import type { AppCommand } from './command';
+import type { AppChatInputCommand } from './chat-input-command';
 
-export const resume: AppCommand = {
+export const skip: AppChatInputCommand = {
   // prettier-ignore
   data: new SlashCommandBuilder()
-    .setName('resume')
-    .setDescription('Resume the paused music.')
+    .setName('skip')
+    .setDescription('Skip the currently playing music.')
     .toJSON(),
   execute: async ({ link }, interaction) => {
     if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
@@ -42,11 +42,21 @@ export const resume: AppCommand = {
       return;
     }
 
-    await player.resume();
+    if (!player.queue.current) {
+      await interaction.reply({
+        flags: MessageFlags.Ephemeral,
+        content: i18next.t('reply.nothing_playing', { lng: interaction.locale })
+      });
+      return;
+    }
+
+    const track = player.queue.current;
 
     await interaction.reply({
       flags: MessageFlags.Ephemeral,
-      content: i18next.t('reply.music_resumed', { lng: interaction.locale })
+      content: i18next.t('reply.music_skipped', { lng: interaction.locale, track: track.info.title })
     });
+
+    await player.skip();
   }
 };

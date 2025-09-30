@@ -220,8 +220,10 @@ process.on('SIGINT', async () => {
 });
 
 try {
-  // Connect to redis
-  await redis.connect();
+  if (!process.env.INTERACTIONS_ONLY) {
+    // Connect to redis
+    await redis.connect();
+  }
 } catch (error) {
   logger.error('Unable to connect to redis', { error });
   process.exit(1);

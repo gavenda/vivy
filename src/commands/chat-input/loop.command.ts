@@ -2,9 +2,9 @@ import { RepeatMode } from '@app/link';
 import { hasVoiceState } from '@app/utils/has-voice-state';
 import { MessageFlags, SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
 import i18next from 'i18next';
-import type { AppCommand } from './command';
+import type { AppChatInputCommand } from './chat-input-command';
 
-export const loop: AppCommand = {
+export const loop: AppChatInputCommand = {
   data: new SlashCommandBuilder()
     .addSubcommand(
       new SlashCommandSubcommandBuilder().setName('track').setDescription('Loop the current playing music.')

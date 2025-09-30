@@ -1,12 +1,12 @@
 import { hasVoiceState } from '@app/utils';
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
-import type { AppCommand } from './command';
+import type { AppChatInputCommand } from './chat-input-command';
 
-export const disconnect: AppCommand = {
+export const connect: AppChatInputCommand = {
   data: new SlashCommandBuilder()
-    .setName('disconnect')
-    .setDescription('Disconnect the player from the voice channel.')
+    .setName('connect')
+    .setDescription('Connect the player to the voice channel.')
     .toJSON(),
   execute: async ({ link }, interaction) => {
     if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
@@ -31,21 +31,23 @@ export const disconnect: AppCommand = {
       return;
     }
 
-    const player = link.findPlayerByGuildId(interaction.guildId);
+    let player = link.findPlayerByGuildId(interaction.guildId);
 
     if (!player) {
-      await interaction.reply({
-        flags: MessageFlags.Ephemeral,
-        content: i18next.t('reply.not_playing', { lng: interaction.locale })
+      player = await link.createPlayer({
+        guildId: interaction.guild.id,
+        autoLeave: true
       });
-      return;
     }
 
-    await player.disconnect();
+    await player.connect(interaction.member.voice.channel.id);
 
     await interaction.reply({
       flags: MessageFlags.Ephemeral,
-      content: i18next.t('reply.disconnected_from_channel', { lng: interaction.locale })
+      content: i18next.t('reply.connected_to_channel', {
+        lng: interaction.locale,
+        channel: interaction.member.voice.channel.name
+      })
     });
   }
 };

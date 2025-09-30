@@ -2,9 +2,9 @@ import { logger } from '@app/logger';
 import { createPlayerComponentsV2 } from '@app/player';
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
-import type { AppCommand } from './command';
+import type { AppChatInputCommand } from './chat-input-command';
 
-export const player: AppCommand = {
+export const player: AppChatInputCommand = {
   data: new SlashCommandBuilder().setName('player').setDescription('Creates a music player in this channel.').toJSON(),
   execute: async (context, interaction) => {
     if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {

@@ -10,11 +10,11 @@ import {
   TextDisplayBuilder,
   ThumbnailBuilder
 } from 'discord.js';
-import type { AppCommand } from './command';
+import type { AppChatInputCommand } from './chat-input-command';
 import { version } from '@app/version';
 import i18next from 'i18next';
 
-export const about: AppCommand = {
+export const about: AppChatInputCommand = {
   // prettier-ignore
   data: new SlashCommandBuilder()
     .setName('about')
