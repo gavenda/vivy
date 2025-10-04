@@ -5,8 +5,8 @@ import type { AppContext } from '@app/context';
 import i18next from 'i18next';
 import type { Requester } from '@app/requester';
 import { LoadResultType, type LavalinkSource, type Player } from '@app/link';
-import { QueueType } from '@app/player';
-import { handleSearch } from '@app/player/handlers/agent';
+import { QueueType, updatePlayer } from '@app/player';
+import { handleSearch, handleTrack } from '@app/player/handlers/agent';
 
 interface WebhookResponse {
   type: string;
@@ -125,6 +125,12 @@ const playMusic = async (
     queueType,
     source
   });
+
+  if (message.guildId) {
+    const pageKey = `player:page:${message.guildId}`;
+    await context.redis.set(pageKey, 0);
+    await updatePlayer(context, message.guildId);
+  }
 };
 
 const handleQuery = async (
@@ -163,36 +169,26 @@ const handleQuery = async (
         }, 1000);
       } else {
         logger.debug('Give up in searching track', { retryCount });
-        // Responding with an error message if loading fails
-        // await message.reply({
-        //   flags: MessageFlags.Ephemeral,
-        //   content: i18next.t('reply.error_lookup', { lng: interaction.locale })
-        // });
       }
       break;
     }
     case LoadResultType.EMPTY: {
-      // Responding with a message if the search returns no results
-      // await interaction.followUp({
-      //   flags: MessageFlags.Ephemeral,
-      //   content: i18next.t('reply.error_no_match', { lng: interaction.locale })
-      // });
+      logger.debug('Track came up empty', { retryCount });
       return;
     }
     case LoadResultType.PLAYLIST: {
       if (!result) return;
-      // Handle playlist result
-      // await handleTracks({
-      //   interaction,
-      //   player,
-      //   tracks: result.data.tracks,
-      //   name: result.data.info.name
-      // });
+
+      player.queue.enqueue(...result.data.tracks);
+
+      if (!player.queue.current) {
+        await player.play();
+      }
       break;
     }
     case LoadResultType.TRACK: {
       // Handle track result
-      // await handleQueueSelection({ context, interaction, track: result.data, player, queueType });
+      await handleTrack({ message, track: result.data, player, queueType });
       break;
     }
     case LoadResultType.SEARCH: {

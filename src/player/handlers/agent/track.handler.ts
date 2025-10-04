@@ -43,9 +43,4 @@ export const handleTrack = async (options: {
       break;
     }
   }
-
-  // await interaction.editReply({
-  //   content: i18next.t('reply.music_queued', { lng: interaction.locale, track: track.info.title }),
-  //   components: []
-  // });
 };
