@@ -55,7 +55,12 @@ const listenMoe = new ListenMoe();
 
 // Create discord client
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildVoiceStates
+  ],
   presence: {
     status: 'online',
     activities: [{ name: `Flourite Eye's Song`, type: ActivityType.Listening }]
@@ -208,16 +213,20 @@ for (const { once, event, execute } of events) {
   }
 }
 
-// Graceful disconnect
-process.on('SIGINT', async () => {
-  logger.info('Received SIGINT, cleaning up');
+const cleanup = async () => {
+  logger.info('Received SIGINT/SIGTERM, cleaning up');
   if (redis.isReady) {
     redis.destroy();
   }
   if (client.isReady()) {
     await client.destroy();
   }
-});
+  process.exit(0);
+};
+
+// Graceful disconnect
+process.on('SIGINT', cleanup);
+process.on('SIGTERM', cleanup);
 
 try {
   if (!process.env.INTERACTIONS_ONLY) {
