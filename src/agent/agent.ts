@@ -29,11 +29,12 @@ export const agentPrompt = async (promptOpts: {
     'Content-Type': `application/json`,
     'Discord-User-Id': message.author.id,
     'Discord-User-Name': message.author.username,
-    'Music-Requester': player?.queue.current?.userData.userName || '',
-    'Music-Name': player?.queue.current?.info.title || '',
-    'Music-Author': player?.queue.current?.info.author || '',
-    'Music-URL': player?.queue.current?.info.uri || '',
-    'Music-Length': '' + (player?.queue.current?.info.length || ''),
+    'Queue-Size': '' + (player?.queue.size ?? 0),
+    'Music-Requester': player?.queue.current?.userData.userName ?? '',
+    'Music-Name': player?.queue.current?.info.title ?? '',
+    'Music-Author': player?.queue.current?.info.author ?? '',
+    'Music-URL': player?.queue.current?.info.uri ?? '',
+    'Music-Length': '' + (player?.queue.current?.info.length ?? 0),
     'Authorization': `Bearer ${process.env.N8N_AGENT_WEBHOOK_SECRET}`
   };
 

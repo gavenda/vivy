@@ -54,10 +54,10 @@ export const messageCreateEvent: AppEvent<Events.MessageCreate> = {
         });
         break;
       case ResponseType.REMOVE:
-        player?.queue.slice(prompt.from + 1);
+        player?.queue.slice(prompt.rangeStart + 1);
         break;
       case ResponseType.REMOVE_RANGE:
-        player?.queue.slice(prompt.from, prompt.to);
+        player?.queue.slice(prompt.rangeStart, prompt.rangeEnd);
         break;
       case ResponseType.CLEAR_QUEUE:
         await player?.queue.clear();

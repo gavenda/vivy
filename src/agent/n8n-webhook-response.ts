@@ -45,14 +45,14 @@ interface N8NPlayWebhookResponse extends N8NBaseWebhookResponse {
 interface N8NRemoveWebhookResponse extends N8NBaseWebhookResponse {
   type: ResponseType.REMOVE;
   message: string;
-  from: number;
+  rangeStart: number;
 }
 
 interface N8NRemoveRangeWebhookResponse extends N8NBaseWebhookResponse {
   type: ResponseType.REMOVE_RANGE;
   message: string;
-  from: number;
-  to: number;
+  rangeStart: number;
+  rangeEnd: number;
 }
 
 export type N8NWebhookResponse =
