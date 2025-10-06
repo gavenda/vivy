@@ -1,1 +1,2 @@
 pnpm exec lint-staged --quiet
+pnpm exec tsc
