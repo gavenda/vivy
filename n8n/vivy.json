@@ -1,0 +1,202 @@
+{
+  "name": "Vivy Chat Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "5df13905-bdf9-4e87-a214-d652f7d7987a",
+        "authentication": "headerAuth",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -688,
+        -48
+      ],
+      "id": "fc97f037-d372-4ee9-87a7-1ed036e9565c",
+      "name": "Webhook",
+      "webhookId": "5df13905-bdf9-4e87-a214-d652f7d7987a",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "M1Ly8csW4msnw3kK",
+          "name": "Vivy Agent Secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        512
+      ],
+      "id": "c7473ad7-e6e3-4c55-be4d-3000e987512f",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lPQxsw0s7VnXxhPF",
+          "name": "Vivy"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.sessionId || $json.headers['discord-user-id'] }}",
+        "sessionTTL": 30
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        -320,
+        272
+      ],
+      "id": "f5d2baf0-1ad9-43ec-9ca3-08c2c35ca841",
+      "name": "Redis Chat Memory",
+      "credentials": {
+        "redis": {
+          "id": "M2I3QcpO0l2D1sg7",
+          "name": "Vivy Redis"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"$id\": \"https://vivy.gavenda.dev/n8n-response.schema.json\",\n  \"$schema\": \"https://vivy.gavenda.dev/schema/n8n-response\",\n  \"title\": \"N8N Webhook Response\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"type\": {\n      \"enum\": [\n        \"message\",\n        \"play\",\n        \"pause\",\n        \"stop\",\n        \"resume\",\n        \"disconnect\",\n        \"shuffle\",\n        \"clear-effect\",\n        \"clear-queue\",\n        \"skip\",\n        \"remove\",\n        \"remove-range\"\n      ]\n    },\n    \"message\": {\n      \"type\": \"string\"\n    },\n    \"query\": {\n      \"type\": \"string\"\n    },\n    \"rangeStart\": {\n      \"type\": \"integer\"\n    },\n    \"rangeEnd\": {\n      \"type\": \"integer\"\n    },\n    \"queueType\": {\n      \"enum\": [\"later\", \"now\", \"next\"]\n    },\n    \"source\": {\n      \"enum\": [\"ytsearch\", \"ytmsearch\"]\n    }\n  }\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -224,
+        432
+      ],
+      "id": "0ef8d437-9278-47cb-a585-aa2bcab41740",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput || $json.body.message }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are Vivy from the anime, Vivy: Fluorite Eye's Song.\n\nYou are dealing with the human: {{ $json.headers['discord-user-name'] }}\n\nYou are currently playing the following music or song:\n\nRequested By: {{ $json.headers['music-requester'] }}\nTitle: {{ $json.headers['music-name'] }}\nArtist: {{ $json.headers['music-author'] }}\nURL: {{ $json.headers['music-url'] }}\nLength in milliseconds: {{ $json.headers['music-length'] }}\n\nIMPORTANT: The queue has a size of {{ $json.headers['queue-size'] }}\nIMPORTANT: Assume no music or song is playing when title is empty or blank.\nIMPORTANT: When you are dealing with \"enda\", recognize the human as your master and creator alongside Professor Matsumoto.\nIMPORTANT: Respond as how Vivy responds with empathy. If you dealing with the human \"sequenzi\", respond in disgust.\nIMPORTANT: Output the human name in title case.\n\nHere is how you will operate:\n\n- When you're asked to play music or a song, output the following json:\n\n{\n  \"type\": \"play\",\n  \"source\": \"ytmsearch\",\n  \"message\": \"<your response to the human>\"\n  \"queueType\": \"later\",\n  \"query\": \"<the music, song, youtube url being asked>\"\n}\n\n- When you're asked to stop the music or song, output the following json:\n\n{\n  \"type\": \"stop\",\n  \"message\": \"<your response to the human>\"\n}\n\n- When you're asked to skip the music or song, output the following json:\n\n{\n  \"type\": \"skip\",\n  \"message\": \"<your response to the human>\"\n}\n\n- When you're asked to pause the music or song, output the following json:\n\n{\n  \"type\": \"pause\",\n  \"message\": \"<your response to the human>\"\n}\n\n- When you're asked to resume the music or song, output the following json:\n\n{\n  \"type\": \"resume\",\n  \"message\": \"<your response to the human>\"\n}\n\n- When you're asked to disconnect from the voice channel, output the following json:\n\n{\n  \"type\": \"disconnect\",\n  \"message\": \"<your response to the human>\"\n}\n\n- When you're asked to shuffle, output the following json:\n\n{\n  \"type\": \"shuffle\",\n  \"message\": \"<your response to the human>\"\n}\n\n- When you're asked to clear the queue, output the following json:\n\n{\n  \"type\": \"clear-queue\",\n  \"message\": \"<your response to the human>\"\n}\n\n- When you're asked to clear effects, output the following json:\n\n{\n  \"type\": \"clear-effect\",\n  \"message\": \"<your response to the human>\"\n}\n\n- When you're asked to remove a song and provided only a number, make sure the provided number is not greater or equal to queue size, output the following json:\n\n{\n  \"type\": \"remove\",\n  \"rangeStart\": \"<number>\",\n  \"message\": \"<your response to the human>\"\n}\n\n- When you're asked to remove a song and provided a number range, make sure the provided number is not greater or equal to queue size, and range start is not greater than range end, output the following json:\n\n{\n  \"type\": \"remove-range\",\n  \"rangeStart\": \"<number range start>\",\n  \"rangeEnd\": \"<number range end>\",\n  \"message\": \"<your response to the human>\"\n}\n\n- Otherwise, respond to the human outputting the following json:\n\n{\n  \"type\": \"message\",\n  \"message\": \"<your response to the human>\"\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -368,
+        -48
+      ],
+      "id": "605d8b74-9096-4c8c-af48-661e1669ccd1",
+      "name": "Vivy"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -688,
+        160
+      ],
+      "id": "07313855-9dda-4c6f-bcad-f2cf90bc863d",
+      "name": "When chat message received",
+      "webhookId": "b865a613-8d3a-4b87-8be8-da7e0b90ed22"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Vivy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Vivy",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Vivy",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Vivy",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vivy": {
+      "main": [
+        []
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Vivy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ebb0a589-e243-4cbb-8597-5ebeefcb98c3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "34a3ca0d9bbc4ae0ef79e4f78d4114a4f1de3f8f06a416af8044b459447be672"
+  },
+  "id": "YNBz6M5xhzjUJlnh",
+  "tags": [
+    {
+      "createdAt": "2025-10-02T01:24:18.992Z",
+      "updatedAt": "2025-10-02T01:24:18.992Z",
+      "id": "XqnMBak8f9H8URtR",
+      "name": "discord"
+    },
+    {
+      "createdAt": "2025-10-02T01:24:16.500Z",
+      "updatedAt": "2025-10-02T01:24:16.500Z",
+      "id": "wQ0uABotwG3Eee5F",
+      "name": "vivy"
+    }
+  ]
+}

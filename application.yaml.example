@@ -11,6 +11,8 @@ plugins:
     allowDirectPlaylistIds: true # Whether just playlist IDs can match. If false, only complete URLs will be loaded.
     # The clients to use for track loading. See below for a list of valid clients.
     # Clients are queried in the order they are given (so the first client is queried first and so on...)
+    remoteCipher:
+      url: 'https://cipher.kikkia.dev/api' # The base URL of your remote cipher server.
     clients:
       - MUSIC
       - ANDROID_VR
@@ -23,7 +25,7 @@ plugins:
       skipInitialization: false
 lavalink:
   plugins:
-    - dependency: 'dev.lavalink.youtube:youtube-plugin:1.13.5'
+    - dependency: 'dev.lavalink.youtube:youtube-plugin:1.14.0'
       snapshot: false # Set to true if you want to use a snapshot version.
   server:
     password: ''
