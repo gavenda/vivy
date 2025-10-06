@@ -21,32 +21,58 @@ export const messageCreateEvent: AppEvent<Events.MessageCreate> = {
 
     if (!message.mentions.users.has(context.applicationId)) return;
     if (!message.member) return;
+    if (!message.guildId) return;
 
-    const result = await agentPrompt({
-      message: message.cleanContent,
-      userId: message.author.id,
-      userName: message.author.username
+    const prompt = await agentPrompt({
+      prompt: message.cleanContent,
+      message,
+      context
     });
 
-    if (!result) return;
+    if (!prompt) return;
 
-    logger.debug(`Received webhook response`, { result });
+    const { link } = context;
+
+    logger.debug(`Received webhook response`, { prompt });
 
     await message.reply({
-      content: result.message
+      content: prompt.message
     });
 
-    logger.debug(`Message type`, { type: result.type });
+    const player = link.findPlayerByGuildId(message.guildId);
 
-    switch (result.type) {
+    logger.debug(`Message type`, { type: prompt.type });
+
+    switch (prompt.type) {
       case ResponseType.PLAY:
         await playMusic(context, {
-          query: result.query,
-          queueType: result.queueType,
-          source: result.source,
+          query: prompt.query,
+          queueType: prompt.queueType,
+          source: prompt.source,
           member: message.member,
           message
         });
+        break;
+      case ResponseType.CLEAR_QUEUE:
+        await player?.queue.clear();
+        break;
+      case ResponseType.CLEAR_EFFECT:
+        await player?.filter.reset();
+        break;
+      case ResponseType.RESUME:
+        await player?.resume();
+        break;
+      case ResponseType.SHUFFLE:
+        player?.queue.shuffle();
+        break;
+      case ResponseType.PAUSE:
+        await player?.pause();
+        break;
+      case ResponseType.STOP:
+        await player?.stop();
+        break;
+      case ResponseType.DISCONNECT:
+        await player?.disconnect();
         break;
       default:
         break;
@@ -71,9 +97,9 @@ const playMusic = async (
 
   if (!member.voice.channel) {
     const prompt = await agentPrompt({
-      message: ResponsePrompt.NOT_IN_VOICE_CHANNEL,
-      userId: message.author.id,
-      userName: message.author.username
+      prompt: ResponsePrompt.NOT_IN_VOICE_CHANNEL,
+      message,
+      context
     });
 
     if (!prompt) return;
@@ -150,9 +176,9 @@ const handleQuery = async (
         logger.debug('Give up in searching track', { retryCount });
 
         const prompt = await agentPrompt({
-          message: ResponsePrompt.TRACK_LOAD_GIVEUP,
-          userId: message.author.id,
-          userName: message.author.username
+          prompt: ResponsePrompt.TRACK_LOAD_GIVEUP,
+          message,
+          context
         });
 
         if (!prompt) return;
@@ -167,9 +193,9 @@ const handleQuery = async (
       logger.debug('Track came up empty', { retryCount });
 
       const prompt = await agentPrompt({
-        message: ResponsePrompt.TRACK_LOAD_EMPTY,
-        userId: message.author.id,
-        userName: message.author.username
+        prompt: ResponsePrompt.TRACK_LOAD_EMPTY,
+        message,
+        context
       });
 
       if (!prompt) return;
@@ -189,9 +215,9 @@ const handleQuery = async (
       }
 
       const prompt = await agentPrompt({
-        message: ResponsePrompt.TRACK_LOAD_PLAYLIST,
-        userId: message.author.id,
-        userName: message.author.username
+        prompt: ResponsePrompt.TRACK_LOAD_PLAYLIST,
+        message,
+        context
       });
 
       if (!prompt) return;

@@ -1,26 +1,38 @@
 import { logger } from '@app/logger';
 import type { N8NWebhookResponse } from './n8n-webhook-response';
+import type { Message, OmitPartialGroupDMChannel } from 'discord.js';
+import type { AppContext } from '@app/context';
 
 /**
  * Send a prompt to the gpt agent webhook.
- * @param message
- * @param userId
- * @returns
  */
-export const agentPrompt = async (promptOpts: { message: string; userId: string; userName: string }) => {
+export const agentPrompt = async (promptOpts: {
+  context: AppContext;
+  message: OmitPartialGroupDMChannel<Message<boolean>>;
+  prompt: string;
+}) => {
   if (!process.env.N8N_AGENT_WEBHOOK) return;
   if (!process.env.N8N_AGENT_WEBHOOK_SECRET) return;
 
-  const { message, userId, userName } = promptOpts;
+  const { message, context } = promptOpts;
+  const { link } = context;
+
+  if (!message.guildId) return;
 
   const body = {
     message
   };
 
+  const player = link.findPlayerByGuildId(message.guildId);
+
   const headers = {
     'Content-Type': `application/json`,
-    'Discord-User-Id': userId,
-    'Discord-User-Name': userName,
+    'Discord-User-Id': message.author.id,
+    'Discord-User-Name': message.author.username,
+    'Music-Name': player?.queue.current?.info.title || '',
+    'Music-Author': player?.queue.current?.info.author || '',
+    'Music-URL': player?.queue.current?.info.uri || '',
+    'Music-Length': '' + player?.queue.current?.info.length || '0',
     'Authorization': `Bearer ${process.env.N8N_AGENT_WEBHOOK_SECRET}`
   };
 

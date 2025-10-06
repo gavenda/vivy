@@ -3,7 +3,14 @@ import type { QueueType } from '@app/player';
 
 export enum ResponseType {
   MESSAGE = 'message',
-  PLAY = 'play'
+  SHUFFLE = 'shuffle',
+  PLAY = 'play',
+  RESUME = 'resume',
+  PAUSE = 'pause',
+  DISCONNECT = 'disconnect',
+  STOP = 'stop',
+  CLEAR_EFFECT = 'clear-effect',
+  CLEAR_QUEUE = 'clear-queue'
 }
 
 interface N8NBaseWebhookResponse {
@@ -11,7 +18,15 @@ interface N8NBaseWebhookResponse {
 }
 
 interface N8NMessageWebhookResponse extends N8NBaseWebhookResponse {
-  type: ResponseType.MESSAGE;
+  type:
+    | ResponseType.MESSAGE
+    | ResponseType.RESUME
+    | ResponseType.PAUSE
+    | ResponseType.DISCONNECT
+    | ResponseType.STOP
+    | ResponseType.SHUFFLE
+    | ResponseType.CLEAR_EFFECT
+    | ResponseType.CLEAR_QUEUE;
   message: string;
 }
 
