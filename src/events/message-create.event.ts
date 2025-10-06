@@ -2,19 +2,11 @@ import { Events, GuildMember, Message, type OmitPartialGroupDMChannel } from 'di
 import type { AppEvent } from './event';
 import { logger } from '@app/logger';
 import type { AppContext } from '@app/context';
-import i18next from 'i18next';
 import type { Requester } from '@app/requester';
 import { LoadResultType, type LavalinkSource, type Player } from '@app/link';
 import { QueueType, updatePlayer } from '@app/player';
 import { handleSearch, handleTrack } from '@app/player/handlers/agent';
-
-interface WebhookResponse {
-  type: string;
-  message: string;
-  query: string;
-  source: LavalinkSource;
-  queueType: QueueType;
-}
+import { agentPrompt, ResponsePrompt, ResponseType } from '@app/agent';
 
 export const messageCreateEvent: AppEvent<Events.MessageCreate> = {
   event: Events.MessageCreate,
@@ -28,51 +20,30 @@ export const messageCreateEvent: AppEvent<Events.MessageCreate> = {
     });
 
     if (!message.mentions.users.has(context.applicationId)) return;
-    if (!process.env.N8N_AGENT_WEBHOOK) return;
-    if (!process.env.N8N_AGENT_WEBHOOK_SECRET) return;
     if (!message.member) return;
 
-    // Send to gpt agent webhook.
-
-    const body = {
-      message: message.cleanContent
-    };
-
-    const headers = {
-      'Content-Type': `application/json`,
-      'Discord-User-Id': message.author.id,
-      'Authorization': `Bearer ${process.env.N8N_AGENT_WEBHOOK_SECRET}`
-    };
-
-    logger.debug(`Sending webhook to n8n`, { headers, body });
-
-    const response = await fetch(process.env.N8N_AGENT_WEBHOOK, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(body)
+    const result = await agentPrompt({
+      message: message.cleanContent,
+      userId: message.author.id,
+      userName: message.author.username
     });
 
-    const json = await response.json();
-    const result = json as {
-      output: WebhookResponse;
-    };
-    const { output } = result;
+    if (!result) return;
 
-    logger.debug(`Received webhook response`, { output });
+    logger.debug(`Received webhook response`, { result });
 
     await message.reply({
-      content: output.message
+      content: result.message
     });
 
-    logger.debug(`Message type`, { type: output.type });
+    logger.debug(`Message type`, { type: result.type });
 
-    switch (output.type) {
-      case 'play':
-        logger.debug(`Playing music`);
+    switch (result.type) {
+      case ResponseType.PLAY:
         await playMusic(context, {
-          query: output.query,
-          queueType: output.queueType,
-          source: output.source,
+          query: result.query,
+          queueType: result.queueType,
+          source: result.source,
           member: message.member,
           message
         });
@@ -99,8 +70,16 @@ const playMusic = async (
   logger.debug(`Playing music`, { query, queueType });
 
   if (!member.voice.channel) {
+    const prompt = await agentPrompt({
+      message: ResponsePrompt.NOT_IN_VOICE_CHANNEL,
+      userId: message.author.id,
+      userName: message.author.username
+    });
+
+    if (!prompt) return;
+
     await message.reply({
-      content: i18next.t('reply.not_in_voice')
+      content: prompt.message
     });
     return;
   }
@@ -169,11 +148,35 @@ const handleQuery = async (
         }, 1000);
       } else {
         logger.debug('Give up in searching track', { retryCount });
+
+        const prompt = await agentPrompt({
+          message: ResponsePrompt.TRACK_LOAD_GIVEUP,
+          userId: message.author.id,
+          userName: message.author.username
+        });
+
+        if (!prompt) return;
+
+        await message.reply({
+          content: prompt.message
+        });
       }
       break;
     }
     case LoadResultType.EMPTY: {
       logger.debug('Track came up empty', { retryCount });
+
+      const prompt = await agentPrompt({
+        message: ResponsePrompt.TRACK_LOAD_EMPTY,
+        userId: message.author.id,
+        userName: message.author.username
+      });
+
+      if (!prompt) return;
+
+      await message.reply({
+        content: prompt.message
+      });
       return;
     }
     case LoadResultType.PLAYLIST: {
@@ -184,6 +187,18 @@ const handleQuery = async (
       if (!player.queue.current) {
         await player.play();
       }
+
+      const prompt = await agentPrompt({
+        message: ResponsePrompt.TRACK_LOAD_PLAYLIST,
+        userId: message.author.id,
+        userName: message.author.username
+      });
+
+      if (!prompt) return;
+
+      await message.reply({
+        content: prompt.message
+      });
       break;
     }
     case LoadResultType.TRACK: {
