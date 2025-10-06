@@ -108,6 +108,7 @@ const listenToRadio = async (options: {
     query: radioType === RadioType.JPOP ? LISTEN_MOE_JPOP_M38U : LISTEN_MOE_KPOP_M38U,
     userData: {
       textChannelId: interaction.channelId,
+      userName: interaction.user.username,
       userId: interaction.user.id
     }
   });

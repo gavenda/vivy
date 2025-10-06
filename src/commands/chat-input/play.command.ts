@@ -152,6 +152,7 @@ const handleQuery = async (
     source,
     userData: {
       userId: interaction.user.id,
+      userName: interaction.user.username,
       textChannelId: interaction.channelId
     }
   });

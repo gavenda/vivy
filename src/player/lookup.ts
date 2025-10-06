@@ -16,6 +16,7 @@ export const lookupTrack = async (options: {
     query,
     userData: {
       userId: interaction.user.id,
+      userName: interaction.user.username,
       textChannelId: interaction.channelId
     },
     source: LavalinkSource.YOUTUBE_MUSIC

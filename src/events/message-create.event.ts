@@ -53,6 +53,12 @@ export const messageCreateEvent: AppEvent<Events.MessageCreate> = {
           message
         });
         break;
+      case ResponseType.REMOVE:
+        player?.queue.slice(prompt.from + 1);
+        break;
+      case ResponseType.REMOVE_RANGE:
+        player?.queue.slice(prompt.from, prompt.to);
+        break;
       case ResponseType.CLEAR_QUEUE:
         await player?.queue.clear();
         break;
@@ -69,7 +75,12 @@ export const messageCreateEvent: AppEvent<Events.MessageCreate> = {
         await player?.pause();
         break;
       case ResponseType.STOP:
+        await player?.queue.clear();
         await player?.stop();
+        await player?.destroy();
+        break;
+      case ResponseType.SKIP:
+        await player?.skip();
         break;
       case ResponseType.DISCONNECT:
         await player?.disconnect();
@@ -158,6 +169,7 @@ const handleQuery = async (
     query,
     source,
     userData: {
+      userName: member.user.username,
       userId: member.user.id,
       textChannelId: message.channelId
     }
