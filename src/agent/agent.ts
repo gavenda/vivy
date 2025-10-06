@@ -14,13 +14,13 @@ export const agentPrompt = async (promptOpts: {
   if (!process.env.N8N_AGENT_WEBHOOK) return;
   if (!process.env.N8N_AGENT_WEBHOOK_SECRET) return;
 
-  const { message, context } = promptOpts;
+  const { message, prompt, context } = promptOpts;
   const { link } = context;
 
   if (!message.guildId) return;
 
   const body = {
-    message
+    message: prompt
   };
 
   const player = link.findPlayerByGuildId(message.guildId);
