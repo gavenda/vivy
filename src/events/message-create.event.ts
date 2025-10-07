@@ -15,8 +15,10 @@ export const messageCreateEvent: AppEvent<Events.MessageCreate> = {
     if (message.author.bot) return;
 
     logger.debug(`Received message`, {
-      content: message.content,
-      mentions: message.mentions
+      author: message.author,
+      content: `[${message.guild?.name || 'Unknown'}] ${message.author.globalName}: ${message.content}`,
+      mentions: message.mentions,
+      guild: message.guild
     });
 
     if (!message.mentions.users.has(context.applicationId)) return;
@@ -40,8 +42,6 @@ export const messageCreateEvent: AppEvent<Events.MessageCreate> = {
     });
 
     const player = link.findPlayerByGuildId(message.guildId);
-
-    logger.debug(`Message type`, { type: prompt.type });
 
     switch (prompt.type) {
       case ResponseType.PLAY:
