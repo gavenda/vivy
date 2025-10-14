@@ -3,7 +3,7 @@ import type { AppModalSubmitHandler } from './modal-handler';
 
 export const replyMessageHandler: AppModalSubmitHandler = {
   customId: 'modal:reply-message',
-  handle: async (context, interaction) => {
+  handle: async (_, interaction) => {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const messageId = interaction.fields.getTextInputValue('modal:message-id');

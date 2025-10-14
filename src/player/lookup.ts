@@ -9,7 +9,7 @@ export const lookupTrack = async (options: {
   source: LavalinkSource;
   context: AppContext;
   interaction: ChatInputCommandInteraction;
-}): Promise<Track<Requester> | null> => {
+}): Promise<Track<Requester> | undefined> => {
   const { link } = options.context;
   const { query, interaction } = options;
   const result = await link.search({
@@ -25,19 +25,17 @@ export const lookupTrack = async (options: {
   switch (result.loadType) {
     case LoadResultType.ERROR: {
       logger.warn('Lookup error', { query });
-      return null;
+      return;
     }
     case LoadResultType.PLAYLIST: {
       return result.data.tracks[result.data.info.selectedTrack];
     }
     case LoadResultType.EMPTY: {
       logger.warn('Lookup returned empty', { query });
-      return null;
+      return;
     }
     case LoadResultType.SEARCH: {
       return result.data[0];
     }
   }
-
-  return null;
 };

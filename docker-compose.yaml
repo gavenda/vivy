@@ -13,4 +13,4 @@ services:
       - ./application.yaml:/opt/Lavalink/application.yml
   redis:
     container_name: vivy-redis
-    image: redis:latest
+    image: docker.io/redis:latest

@@ -92,7 +92,7 @@ export interface LavalinkEvents<UserData> {
   /**
    * Emitted when a node has encountered an error.
    * @param node the node instance
-   * @param error the error that occured
+   * @param event the error event
    */
-  nodeError: (node: LavalinkNode<UserData>, error: Error) => Awaitable<void>;
+  nodeError: (node: LavalinkNode<UserData>, event: Event) => Awaitable<void>;
 }

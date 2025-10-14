@@ -32,7 +32,7 @@ export const handleSpotifyTrack = async (options: {
 
   if (track) {
     if (player.queue.current) {
-      await handleQueueSelection({ context, interaction, track, player, queueType });
+      await handleQueueSelection({ interaction, track, player, queueType });
     } else {
       await handleTrack({ interaction, track, player, queueType: QueueType.LATER });
     }

@@ -20,7 +20,7 @@ export const replyMessage: AppUserContextMenuCommand = {
     .setIntegrationTypes(ApplicationIntegrationType.GuildInstall)
     .setType(ApplicationCommandType.Message)
     .toJSON(),
-  execute: async (context, interaction) => {
+  execute: async (_, interaction) => {
     const modal = new ModalBuilder().setCustomId('modal:reply-message').setTitle('Reply to Message');
 
     const messageIdInput = new TextInputBuilder()

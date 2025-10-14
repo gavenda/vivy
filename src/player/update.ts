@@ -4,9 +4,10 @@ import { logger } from '@app/logger';
 import { createMusicMoeComponentsV2, createPlayerComponentsV2 } from './embed';
 import pDebounce from 'p-debounce';
 import { MessageFlags } from 'discord.js';
+import { redis } from 'bun';
 
 export const updatePlayerNow = async (context: AppContext, guildId: string) => {
-  const { client, redis, link } = context;
+  const { client, link } = context;
   const playerEmbedKey = `player:embed:${guildId}`;
   const playerEmbed = await redis.get(playerEmbedKey);
 
@@ -20,6 +21,10 @@ export const updatePlayerNow = async (context: AppContext, guildId: string) => {
 
   try {
     const [channelId, messageId] = playerEmbed.split(':');
+
+    if (!channelId) return;
+    if (!messageId) return;
+
     const channel = client.channels.cache.get(channelId) ?? (await client.channels.fetch(channelId));
 
     if (channel?.isTextBased()) {

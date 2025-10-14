@@ -13,16 +13,15 @@ import {
 import i18next from 'i18next';
 import { QueueType } from '../queue.type';
 import { handleTrack } from './track.handler';
-import type { AppContext } from '@app/context';
+import { redis } from 'bun';
 
 export const handleQueueSelection = async (options: {
-  context: AppContext;
   track: Track<Requester>;
   interaction: ChatInputCommandInteraction | StringSelectMenuInteraction;
   player: Player<Requester>;
   queueType: QueueType;
 }) => {
-  const { context, track, interaction, player } = options;
+  const { track, interaction, player } = options;
 
   if (options.queueType !== QueueType.ASK) {
     await handleTrack({ interaction, track, player, queueType: options.queueType });
@@ -76,7 +75,7 @@ export const handleQueueSelection = async (options: {
     await handleTrack({ interaction: buttonClick, track, player, queueType });
 
     // Attempt to ask queue remember
-    await handleQueueRemember({ context, interaction, queueType });
+    await handleQueueRemember({ interaction, queueType });
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error: unknown) {
     await interaction.followUp({
@@ -90,16 +89,13 @@ export const handleQueueSelection = async (options: {
 };
 
 export const handleQueueRemember = async (options: {
-  context: AppContext;
   interaction: ChatInputCommandInteraction | StringSelectMenuInteraction | ButtonInteraction;
   queueType: QueueType;
 }): Promise<ChatInputCommandInteraction | StringSelectMenuInteraction | ButtonInteraction> => {
-  const { context, interaction, queueType } = options;
+  const { interaction, queueType } = options;
 
   // Check prefs if we want to ask the question
-  const queueQuestionAlreadyAnswered = await context.redis.get(
-    `user-prefs:${interaction.user.id}:queue-question-answered`
-  );
+  const queueQuestionAlreadyAnswered = await redis.get(`user-prefs:${interaction.user.id}:queue-question-answered`);
 
   // If answered, we do nothing
   if (queueQuestionAlreadyAnswered) {
@@ -138,10 +134,10 @@ export const handleQueueRemember = async (options: {
     await buttonClick.deferUpdate();
 
     if (answer === 'remember-yes') {
-      await context.redis.set(`user-prefs:${interaction.user.id}:queue-type`, queueType);
+      await redis.set(`user-prefs:${interaction.user.id}:queue-type`, queueType);
     }
 
-    await context.redis.set(`user-prefs:${interaction.user.id}:queue-question-answered`, 1);
+    await redis.set(`user-prefs:${interaction.user.id}:queue-question-answered`, '1');
 
     await buttonClick.editReply({
       content: i18next.t('reply.queue_remember_question_success', { lng: interaction.locale }),

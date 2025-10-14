@@ -14,17 +14,15 @@ import i18next from 'i18next';
 import { handleQueueSelection } from './queue-selection.handler';
 import { handleTrack } from './track.handler';
 import { QueueType } from '../queue.type';
-import type { AppContext } from '@app/context';
 
 export const handleSearch = async (options: {
   query: string;
-  context: AppContext;
   result: SearchLoadResult<Requester>;
   interaction: ChatInputCommandInteraction;
   player: Player<Requester>;
   queueType: QueueType;
 }) => {
-  const { result, context, interaction, player, query, queueType } = options;
+  const { result, interaction, player, query, queueType } = options;
 
   const musicSelectMenu = new StringSelectMenuBuilder()
     .setCustomId(`select:music`)
@@ -71,7 +69,7 @@ export const handleSearch = async (options: {
     await selectMusic.deferUpdate();
 
     if (player.queue.current) {
-      await handleQueueSelection({ context, interaction: selectMusic, track, player, queueType });
+      await handleQueueSelection({ interaction: selectMusic, track, player, queueType });
     } else {
       await handleTrack({ interaction, track, player, queueType: QueueType.LATER });
     }

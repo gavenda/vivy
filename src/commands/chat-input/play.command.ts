@@ -10,6 +10,7 @@ import i18next from 'i18next';
 import { parse as parseSpotifyUri } from 'spotify-uri';
 import type { AppChatInputCommand } from './chat-input-command';
 import { QueueType } from '@app/player';
+import { redis } from 'bun';
 
 export const play: AppChatInputCommand = {
   data: new SlashCommandBuilder()
@@ -44,13 +45,13 @@ export const play: AppChatInputCommand = {
     .toJSON(),
   execute: async (context, interaction) => {
     const defaultQueueType =
-      <QueueType>await context.redis.get(`user-prefs:${interaction.user.id}:queue-type`) ?? QueueType.ASK;
+      <QueueType>await redis.get(`user-prefs:${interaction.user.id}:queue-type`) ?? QueueType.ASK;
 
     const source = <LavalinkSource>interaction.options.getString('source') ?? LavalinkSource.YOUTUBE_MUSIC;
     const queueType = <QueueType>interaction.options.getString('queue-type') ?? defaultQueueType;
     await playMusic({ context, interaction, source, queueType });
   },
-  autocomplete: async (context, interaction) => {
+  autocomplete: async (_, interaction) => {
     const focusedValue = interaction.options.getFocused();
 
     const queriesRegExp = /\["(.+?(?="))".+?(?=]])]]/g;
@@ -197,12 +198,12 @@ const handleQuery = async (
     }
     case LoadResultType.TRACK: {
       // Handle track result
-      await handleQueueSelection({ context, interaction, track: result.data, player, queueType });
+      await handleQueueSelection({ interaction, track: result.data, player, queueType });
       break;
     }
     case LoadResultType.SEARCH: {
       // Handle search result
-      await handleSearch({ context, interaction, query, player, result, queueType });
+      await handleSearch({ interaction, query, player, result, queueType });
       break;
     }
   }

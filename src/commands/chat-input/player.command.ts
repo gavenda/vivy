@@ -3,6 +3,7 @@ import { createPlayerComponentsV2 } from '@app/player';
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
 import type { AppChatInputCommand } from './chat-input-command';
+import { redis } from 'bun';
 
 export const player: AppChatInputCommand = {
   data: new SlashCommandBuilder().setName('player').setDescription('Creates a music player in this channel.').toJSON(),
@@ -23,7 +24,7 @@ export const player: AppChatInputCommand = {
       return;
     }
 
-    const { client, redis } = context;
+    const { client } = context;
 
     // Might take long contacting redis, defer
     await interaction.deferReply({
@@ -36,6 +37,10 @@ export const player: AppChatInputCommand = {
     if (previousPlayer) {
       try {
         const [previousChannelId, previousMessageId] = previousPlayer.split(':');
+
+        if (!previousChannelId) return;
+        if (!previousMessageId) return;
+
         const previousChannel = await client.channels.fetch(previousChannelId);
 
         if (previousChannel?.isTextBased()) {

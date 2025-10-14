@@ -1,22 +1,19 @@
-FROM node:24-alpine
+# use the official Bun image
+# see all versions at https://hub.docker.com/r/oven/bun/tags
+FROM docker.io/oven/bun:1.3-alpine AS base
+WORKDIR /usr/src/app
 
-# Enable pnpm
-RUN corepack enable pnpm
+FROM base AS install
 
-# Create app directory
-RUN mkdir -p /app/vivy
-WORKDIR /app/vivy
+RUN mkdir -p /tmp/vivy
+COPY package.json bun.lock /tmp/vivy/
+RUN cd /tmp/vivy && bun install --frozen-lockfile --production
 
-# Copy package.json, pnpm-workspace.yaml and pnpm-lock.yaml
-COPY package.json /app/vivy
-COPY pnpm-lock.yaml /app/vivy
-COPY pnpm-workspace.yaml /app/vivy
+# copy production dependencies and source code into final image
+FROM base AS release
+COPY --from=install /tmp/vivy/node_modules node_modules
+COPY . .
 
-# Run install
-RUN pnpm install
-
-# Copy source files
-COPY . /app/vivy
-
-# Start app
-CMD ["node", "--import", "tsx/esm", "./src/app.ts"]
+# run the app
+USER bun
+ENTRYPOINT [ "bun", "run", "index.ts" ]

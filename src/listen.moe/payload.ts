@@ -1,15 +1,15 @@
 interface Artist {
   id: number;
   name: string;
-  nameRomaji: string | null;
+  nameRomaji: string | undefined;
   image: string;
 }
 
 interface Album {
   id: number;
   name: string;
-  nameRomaji: string | null;
-  image: string | null;
+  nameRomaji: string | undefined;
+  image: string | undefined;
 }
 
 interface Song {
@@ -24,8 +24,8 @@ interface Song {
 
 interface TrackUpdateData {
   song: Song;
-  requester: string | null;
-  event: string | null;
+  requester: string | undefined;
+  event: string | undefined;
   startTime: Date;
   lastPlayed: Song[];
   listeners: number;

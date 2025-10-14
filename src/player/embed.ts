@@ -27,6 +27,8 @@ export const createPlayerQueue = ({ client, link }: AppContext, guildId: string,
     const maxLenStr = '' + player.queue.size;
     const maxLen = maxLenStr.length;
 
+    if (!tracks) return;
+
     for (const [index, track] of tracks.entries()) {
       const title = trimEllipse(track.info.title, 100);
       const trackNo = pageIndex * 15 + (index + 1);

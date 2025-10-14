@@ -7,6 +7,7 @@ import { LoadResultType, type LavalinkSource, type Player } from '@app/link';
 import { QueueType, updatePlayer } from '@app/player';
 import { handleSearch, handleTrack } from '@app/player/handlers/agent';
 import { agentPrompt, ResponsePrompt, ResponseType } from '@app/agent';
+import { redis } from 'bun';
 
 export const messageCreateEvent: AppEvent<Events.MessageCreate> = {
   event: Events.MessageCreate,
@@ -15,10 +16,10 @@ export const messageCreateEvent: AppEvent<Events.MessageCreate> = {
     if (message.author.bot) return;
 
     logger.debug(`Received message`, {
-      author: message.author,
       content: `[${message.guild?.name || 'Unknown'}] ${message.author.globalName}: ${message.content}`,
+      author: message.author,
       mentions: message.mentions,
-      guild: message.guild
+      guild: message.guild?.name ?? 'Unknown'
     });
 
     if (!message.mentions.users.has(context.applicationId)) return;
@@ -144,7 +145,7 @@ const playMusic = async (
 
   if (message.guildId) {
     const pageKey = `player:page:${message.guildId}`;
-    await context.redis.set(pageKey, 0);
+    await redis.set(pageKey, '0');
     await updatePlayer(context, message.guildId);
   }
 };

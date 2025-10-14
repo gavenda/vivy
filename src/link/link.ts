@@ -10,7 +10,6 @@ import {
   type GatewayVoiceServerUpdateDispatchData
 } from 'discord.js';
 import EventEmitter from 'events';
-import { createClient } from 'redis';
 import type { LavalinkEvents } from './link.events';
 import { LavalinkNode, type LavalinkNodeOptions } from './node';
 import { LoadResultType } from './payload';
@@ -63,10 +62,6 @@ export interface LavalinkOptions {
    */
   nodes: LavalinkNodeOptions[];
   /**
-   * The redis client.
-   */
-  redis: ReturnType<typeof createClient>;
-  /**
    * The send voice update function.
    */
   sendVoiceUpdate: SendVoiceUpdate;
@@ -78,10 +73,6 @@ export class Lavalink<UserData> extends EventEmitter {
    * The nodes that belong in this client.
    */
   nodes: LavalinkNode<UserData>[] = [];
-  /**
-   * The redis client.
-   */
-  redis: ReturnType<typeof createClient>;
   /**
    * The options that were used when creating this client.
    */
@@ -99,7 +90,6 @@ export class Lavalink<UserData> extends EventEmitter {
     super();
 
     this.options = options;
-    this.redis = options.redis;
     this.sendVoiceUpdate = options.sendVoiceUpdate;
   }
 
@@ -118,13 +108,19 @@ export class Lavalink<UserData> extends EventEmitter {
       throw Error('No nodes connected');
     }
 
-    return this.connectedNodes[Math.floor(Math.random() * this.connectedNodes.length)];
+    const connectedNode = this.connectedNodes[Math.floor(Math.random() * this.connectedNodes.length)];
+
+    if (!connectedNode) {
+      throw Error('Cannot fetch connected node');
+    }
+
+    return connectedNode;
   }
 
   /**
    * Returns an instance of {@link Player} within this client.
    * @param guildId the guild of the player
-   * @returns the player instance, or `null` if not found.
+   * @returns the player instance, or `undefined` if not found.
    */
   findPlayerByGuildId(guildId: string) {
     const node = this.nodes.find((node) => node.hasGuildId(guildId));

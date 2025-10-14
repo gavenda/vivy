@@ -1,6 +1,5 @@
 import { logger } from '@app/logger';
 import { version } from '@app/version';
-import WebSocket from 'ws';
 import { Lavalink } from './link';
 import {
   EventType,
@@ -17,6 +16,7 @@ import {
 import { Player, type PlayerOptions, RepeatMode } from './player';
 import type { PlayerState } from './player.state';
 import { LavalinkRestApi } from './rest';
+import { redis } from 'bun';
 
 export interface LavalinkNodeOptions {
   /**
@@ -42,7 +42,7 @@ export interface LavalinkNodeOptions {
 }
 
 export class LavalinkNode<UserData> {
-  socket: WebSocket | null = null;
+  socket: WebSocket | undefined;
   stats: Stats = {
     players: 0,
     playingPlayers: 0,
@@ -69,7 +69,7 @@ export class LavalinkNode<UserData> {
   // Private
   #players = new Map<string, Player<UserData>>();
   #rest: LavalinkRestApi<UserData>;
-  #sessionId: string | null = null;
+  #sessionId: string | undefined;
 
   constructor(link: Lavalink<UserData>, userId: string, options: LavalinkNodeOptions) {
     this.link = link;
@@ -95,7 +95,7 @@ export class LavalinkNode<UserData> {
   }
 
   get connected() {
-    return this.sessionId !== null;
+    return this.sessionId !== undefined;
   }
 
   get sessionId(): string {
@@ -112,7 +112,7 @@ export class LavalinkNode<UserData> {
 
   clearSessionId() {
     logger.debug('Session cleared');
-    this.#sessionId = null;
+    this.#sessionId = undefined;
   }
 
   hasGuildId(guildId: string) {
@@ -135,7 +135,7 @@ export class LavalinkNode<UserData> {
   async connect() {
     const { authorization, host, port, secure } = this.options;
 
-    const previousSessionId = await this.link.redis.get(`lavalink:session:${host}`);
+    const previousSessionId = await redis.get(`lavalink:session:${host}`);
 
     const headers: Record<string, string> = {
       'Authorization': authorization,
@@ -154,10 +154,11 @@ export class LavalinkNode<UserData> {
     socketUrl.protocol = secure ? 'wss' : 'ws';
 
     this.socket = new WebSocket(socketUrl, { headers });
-    this.socket.on('open', this.onWebSocketOpen.bind(this));
-    this.socket.on('message', this.onWebSocketMessage.bind(this));
-    this.socket.on('close', this.onWebSocketClose.bind(this));
-    this.socket.on('error', this.onWebSocketError.bind(this));
+    this.socket.binaryType = 'arraybuffer';
+    this.socket.addEventListener('open', this.onWebSocketOpen.bind(this));
+    this.socket.addEventListener('message', this.onWebSocketMessage.bind(this));
+    this.socket.addEventListener('close', this.onWebSocketClose.bind(this));
+    this.socket.addEventListener('error', this.onWebSocketError.bind(this));
   }
 
   private async onWebSocketClose() {
@@ -174,14 +175,14 @@ export class LavalinkNode<UserData> {
     setTimeout(() => this.connect(), this.reconnectTimeout);
   }
 
-  private onWebSocketError(error: Error) {
-    this.link.emit('nodeError', this, error);
+  private onWebSocketError(event: Event) {
+    this.link.emit('nodeError', this, event);
   }
 
-  private async onWebSocketMessage(data: WebSocket.RawData) {
-    const buffer = Array.isArray(data) ? Buffer.concat(data) : data instanceof ArrayBuffer ? Buffer.from(data) : data;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const payload: LavalinkReceivePayload<UserData> = JSON.parse(buffer.toString());
+  private async onWebSocketMessage(event: MessageEvent) {
+    const data = event.data as ArrayBuffer;
+    const buffer = Buffer.from(data);
+    const payload = JSON.parse(buffer.toString()) as LavalinkReceivePayload<UserData>;
 
     switch (payload.op) {
       case OpCode.READY:
@@ -207,7 +208,7 @@ export class LavalinkNode<UserData> {
     this.sessionId = payload.sessionId;
 
     // Save session id to redis
-    await this.link.redis.set(`lavalink:session:${this.options.host}`, payload.sessionId);
+    await redis.set(`lavalink:session:${this.options.host}`, payload.sessionId);
 
     if (payload.resumed) {
       await this.handleResume();
@@ -286,7 +287,7 @@ export class LavalinkNode<UserData> {
       case EventType.TRACK_END: {
         player.playing = false;
         player.queue.previous = payload.track;
-        player.queue.current = null;
+        player.queue.current = undefined;
 
         this.link.emit('trackEnd', player, payload.track, payload.reason);
 
@@ -307,14 +308,14 @@ export class LavalinkNode<UserData> {
       }
       case EventType.TRACK_EXCEPTION: {
         player.playing = false;
-        player.queue.current = null;
+        player.queue.current = undefined;
         await player.stop();
         this.link.emit('trackError', player, payload.track, payload.exception);
         break;
       }
       case EventType.TRACK_STUCK: {
         player.playing = false;
-        player.queue.current = null;
+        player.queue.current = undefined;
         await player.stop();
         this.link.emit('trackStuck', player, payload.track, payload.thresholdMs);
         break;
@@ -327,10 +328,15 @@ export class LavalinkNode<UserData> {
   }
 
   private async syncPlayers() {
-    const playerStateKeys = await this.link.redis.keys(`player:state:${this.options.host}:*`);
+    const playerStateKeys = await redis.keys(`player:state:${this.options.host}:*`);
 
     for (const playerStateKey of playerStateKeys) {
       const [, , , guildId] = playerStateKey.split(':');
+
+      if (!guildId) {
+        continue;
+      }
+
       await this.restorePlayer(guildId);
     }
   }
@@ -340,7 +346,7 @@ export class LavalinkNode<UserData> {
    * @param guildId guild id of the player
    */
   async restorePlayer(guildId: string) {
-    const stateStr = await this.link.redis.get(`player:state:${this.options.host}:${guildId}`);
+    const stateStr = await redis.get(`player:state:${this.options.host}:${guildId}`);
     if (!stateStr) return;
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

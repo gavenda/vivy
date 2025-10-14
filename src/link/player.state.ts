@@ -4,7 +4,7 @@ import { RepeatMode } from './player';
 export interface PlayerState {
   guildId: string;
   voiceChannelId?: string;
-  voiceState: Partial<VoiceState> | null;
+  voiceState: Partial<VoiceState> | undefined;
   filters: Filters;
   repeatMode: RepeatMode;
   playing: boolean;

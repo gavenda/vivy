@@ -5,6 +5,7 @@ import { chunkSize } from '@app/utils';
 import { Events, MessageFlags } from 'discord.js';
 import i18next from 'i18next';
 import type { AppEvent } from './event';
+import { redis } from 'bun';
 
 export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
   event: Events.InteractionCreate,
@@ -20,7 +21,7 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
       });
       return;
     }
-    const { link, redis } = context;
+    const { link } = context;
     const player = link.findPlayerByGuildId(interaction.guild.id);
 
     if (!player) {
@@ -97,7 +98,7 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
     }
 
     const container = createPlayerComponentsV2(context, interaction.guildId, pageIndex);
-    await redis.set(pageKey, pageIndex);
+    await redis.set(pageKey, pageIndex.toString());
     await interaction.update({
       flags: MessageFlags.IsComponentsV2,
       components: [container]

@@ -6,7 +6,9 @@ export const guildAvailable: AppEvent<Events.GuildAvailable> = {
   event: Events.GuildAvailable,
   once: false,
   execute: async (context, guild) => {
-    logger.debug(`Guild available`, { guild });
+    const { id, nameAcronym, name } = guild;
+
+    logger.debug(`Guild available`, { id, nameAcronym, name });
 
     if (context.link.connectedNodes.length === 0) return;
 

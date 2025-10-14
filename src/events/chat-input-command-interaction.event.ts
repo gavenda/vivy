@@ -4,6 +4,7 @@ import { updatePlayer } from '@app/player';
 import { Events, MessageFlags } from 'discord.js';
 import i18next from 'i18next';
 import type { AppEvent } from './event';
+import { redis } from 'bun';
 
 export const chatInputCommandInteraction: AppEvent<Events.InteractionCreate> = {
   event: Events.InteractionCreate,
@@ -32,7 +33,7 @@ export const chatInputCommandInteraction: AppEvent<Events.InteractionCreate> = {
       // Update player after every command
       if (interaction.guildId) {
         const pageKey = `player:page:${interaction.guildId}`;
-        await context.redis.set(pageKey, 0);
+        await redis.set(pageKey, '0');
         await updatePlayer(context, interaction.guildId);
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

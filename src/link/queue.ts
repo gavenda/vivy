@@ -1,6 +1,7 @@
 import { Lavalink } from './link';
 import type { Track } from './payload';
 import type { TrackState } from './track.state';
+import { redis } from 'bun';
 
 export interface TrackQueueOptions<UserData> {
   link: Lavalink<UserData>;
@@ -18,8 +19,8 @@ export class TrackQueue<UserData> {
   private tracks: Track<UserData>[];
   private offset: number = 0;
 
-  current: Track<UserData> | null = null;
-  previous: Track<UserData> | null = null;
+  current: Track<UserData> | undefined;
+  previous: Track<UserData> | undefined;
 
   link: Lavalink<UserData>;
   guildId: string;
@@ -56,7 +57,7 @@ export class TrackQueue<UserData> {
    * @param index the index to peek
    */
   peek(index: number) {
-    return this.size > 0 ? this.tracks[this.offset + index] : null;
+    return this.size > 0 ? this.tracks[this.offset + index] : undefined;
   }
 
   /**
@@ -79,8 +80,8 @@ export class TrackQueue<UserData> {
   /**
    * Dequeues the front track in the queue.
    */
-  dequeue(): Track<UserData> | null {
-    if (this.size === 0) return null;
+  dequeue(): Track<UserData> | undefined {
+    if (this.size === 0) return;
 
     const first = this.next;
     this.previous = this.current;
@@ -99,15 +100,15 @@ export class TrackQueue<UserData> {
   /**
    * Returns the next playing track.
    */
-  get next(): Track<UserData> | null {
-    return this.size > 0 ? this.tracks[this.offset] : null;
+  get next(): Track<UserData> | undefined {
+    return this.size > 0 ? this.tracks[this.offset] : undefined;
   }
 
   /**
    * Returns the last track in the queue.
    */
-  get last(): Track<UserData> | null {
-    return this.size > 0 ? this.tracks[this.tracks.length - 1] : null;
+  get last(): Track<UserData> | undefined {
+    return this.size > 0 ? this.tracks[this.tracks.length - 1] : undefined;
   }
 
   /**
@@ -136,18 +137,26 @@ export class TrackQueue<UserData> {
    */
   shuffle() {
     if (this.tracks.length == 2) {
+      if (!this.tracks[0]) return;
+      if (!this.tracks[1]) return;
+
       [this.tracks[0], this.tracks[1]] = [this.tracks[1], this.tracks[0]];
     } else {
       let currentIndex = this.tracks.length;
-      let currentElement: Track<UserData>;
 
       while (currentIndex != 0) {
         // Pick a remaining element
         const randomIndex = Math.floor(Math.random() * currentIndex--);
+
+        const track = this.tracks[currentIndex];
+        const randomTrack = this.tracks[randomIndex];
+
+        if (!track) continue;
+        if (!randomTrack) continue;
+
         // And swap it with the current element
-        currentElement = this.tracks[currentIndex];
-        this.tracks[currentIndex] = this.tracks[randomIndex];
-        this.tracks[randomIndex] = currentElement;
+        this.tracks[currentIndex] = randomTrack;
+        this.tracks[randomIndex] = track;
       }
     }
     this.offset = 0;
@@ -170,7 +179,6 @@ export class TrackQueue<UserData> {
    * Saves the queue state.
    */
   async saveState() {
-    const redis = this.link.redis;
     const stateStr = JSON.stringify(this.state);
     await redis.set(this.stateKey, stateStr);
   }
@@ -179,7 +187,6 @@ export class TrackQueue<UserData> {
    * Synchronizes the queue state.
    */
   async syncState() {
-    const redis = this.link.redis;
     const stateStr = await redis.get(this.stateKey);
 
     if (!stateStr) return;
@@ -200,7 +207,7 @@ export class TrackQueue<UserData> {
     this.tracks = [];
     this.offset = 0;
     // Clear remote state
-    await this.link.redis.del(this.stateKey);
+    await redis.del(this.stateKey);
   }
 
   /**

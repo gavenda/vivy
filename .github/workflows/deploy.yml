@@ -8,29 +8,24 @@ on:
 jobs:
   build:
     environment: production
-    name: Build and Register
+    name: Typecheck and Register
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         name: Checkout
-      - uses: pnpm/action-setup@v3
-        name: Set up pnpm
+      - uses: oven-sh/setup-bun@v2
+        name: Set up bun
         with:
-          run_install: true
-      - uses: actions/setup-node@v4
-        name: Set up Node.js
-        with:
-          node-version-file: '.node-version'
-          cache: 'pnpm'
-      - run: pnpm lint
+          bun-version: 1.3.0
+      - run: bun run lint
         name: Lint
         continue-on-error: true
       - run: |
-          pnpm clean
-          pnpm build
-        name: Build
+          bun run clean
+          bun run type-check
+        name: Typecheck
       - run: |
-          pnpm register
+          bun run register
         name: Register
         env:
           TOKEN: ${{ secrets.TOKEN }}

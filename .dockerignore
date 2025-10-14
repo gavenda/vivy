@@ -1,0 +1,8 @@
+**/node_modules/
+**/dist
+**/n8n
+**/podman
+**/.vscode
+**/.husky
+.git
+.env

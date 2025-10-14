@@ -6,6 +6,7 @@ import { LavalinkNode } from './node';
 import type { Filters, Track, UpdatePlayerOptions, VoiceState } from './payload';
 import type { PlayerState } from './player.state';
 import { TrackQueue } from './queue';
+import { redis } from 'bun';
 
 export const DEFAULT_AUTO_LEAVE_MS = 1000 * 60 * 5;
 
@@ -186,12 +187,12 @@ export class Player<UserData> {
    * Play a given track.
    * @param track the track to play
    */
-  async play(track: Track<UserData> | null = null) {
-    // Check if given null, otherwise take from queue
+  async play(track?: Track<UserData>) {
+    // Check if given undefined, otherwise take from queue
     if (!track) {
       track = this.queue.dequeue();
     }
-    // Take from queue check, still null, stop playing
+    // Take from queue check, still undefined, stop playing
     if (!track) {
       await this.stop();
       return;
@@ -221,7 +222,7 @@ export class Player<UserData> {
    * Stops the playing track.
    */
   async stop() {
-    this.queue.current = null;
+    this.queue.current = undefined;
     this.playing = false;
 
     await this.node.updatePlayer(this.guildId, { track: { encoded: null } });
@@ -307,14 +308,14 @@ export class Player<UserData> {
    */
   async saveState() {
     const stateStr = JSON.stringify(this.state);
-    await this.link.redis.set(this.stateKey, stateStr);
+    await redis.set(this.stateKey, stateStr);
   }
 
   /**
    * Delete the player state.
    */
   async deleteState() {
-    await this.link.redis.del(this.stateKey);
+    await redis.del(this.stateKey);
   }
 
   /**

@@ -52,15 +52,15 @@ export interface TrackInfo {
   /**
    * The track uri.
    */
-  uri: string | null;
+  uri: string | undefined;
   /**
    * The track artwork url.
    */
-  artworkUrl: string | null;
+  artworkUrl: string | undefined;
   /**
    * The track {@link https://en.wikipedia.org/wiki/International_Standard_Recording_Code | ISRC}.
    */
-  isrc: string | null;
+  isrc: string | undefined;
   /**
    * The track source name.
    */
