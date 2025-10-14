@@ -7,7 +7,7 @@
         "@spotify/web-api-ts-sdk": "^1.2.0",
         "discord.js": "^14.23.2",
         "i18next": "^25.6.0",
-        "p-debounce": "^4.0.0",
+        "p-debounce": "^5.0.0",
         "spotify-uri": "^4.1.0",
         "winston": "^3.18.3",
       },
@@ -547,7 +547,7 @@
 
     "os-name": ["os-name@6.1.0", "", { "dependencies": { "macos-release": "3.4.0", "windows-release": "6.1.0" } }, "sha512-zBd1G8HkewNd2A8oQ8c6BN/f/c9EId7rSUueOLGu28govmUctXmM+3765GwsByv9nYUdrLqHphXlYIc86saYsg=="],
 
-    "p-debounce": ["p-debounce@4.0.0", "", {}, "sha512-4Ispi9I9qYGO4lueiLDhe4q4iK5ERK8reLsuzH6BPaXn53EGaua8H66PXIFGrW897hwjXp+pVLrm/DLxN0RF0A=="],
+    "p-debounce": ["p-debounce@5.0.0", "", {}, "sha512-rnaPSZtETbl75h6lcVFQxJ9LXJhkYhtVNie4Kj/nECazixDxrPYWl8I+DfY69C299HI4Of8NJDfR0ekrlcwAkA=="],
 
     "p-limit": ["p-limit@3.1.0", "", { "dependencies": { "yocto-queue": "0.1.0" } }, "sha512-TYOanM3wGwNGsZN2cVTYPArw454xnXj5qmWF1bEoAc4+cU/ol7GVh7odevjp1FNHduHc3KZMcFduxU5Xc6uJRQ=="],
 
