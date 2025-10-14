@@ -1,7 +1,7 @@
-import type { AppContext } from '@app/context';
-import { AppEmoji } from '@app/emojis';
-import { RadioType } from '@app/listen.moe';
-import { chunk, msToTime, trimEllipse } from '@app/utils';
+import type { AppContext } from 'vivy/context';
+import { AppEmoji } from 'vivy/emojis';
+import { RadioType } from 'vivy/listen.moe';
+import { chunk, msToTime, trimEllipse } from 'vivy/utils';
 import {
   ActionRowBuilder,
   ButtonBuilder,

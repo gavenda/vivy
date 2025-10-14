@@ -1,4 +1,4 @@
-import { logger } from '@app/logger';
+import { logger } from 'vivy/logger';
 import { GatewayOpcodes } from 'discord.js';
 import { LavalinkFilter } from './filter';
 import { Lavalink } from './link';

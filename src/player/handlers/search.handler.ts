@@ -1,8 +1,8 @@
-import { AppEmoji } from '@app/emojis';
-import { Player, type SearchLoadResult } from '@app/link';
-import { logger } from '@app/logger';
-import type { Requester } from '@app/requester';
-import { trimEllipse } from '@app/utils/trim-ellipses';
+import { AppEmoji } from 'vivy/emojis';
+import { Player, type SearchLoadResult } from 'vivy/link';
+import { logger } from 'vivy/logger';
+import type { Requester } from 'vivy/requester';
+import { trimEllipse } from 'vivy/utils/trim-ellipses';
 import {
   ActionRowBuilder,
   ChatInputCommandInteraction,

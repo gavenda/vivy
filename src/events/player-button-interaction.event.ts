@@ -1,7 +1,7 @@
-import { RepeatMode } from '@app/link';
-import { logger } from '@app/logger';
-import { createPlayerComponentsV2 } from '@app/player';
-import { chunkSize } from '@app/utils';
+import { RepeatMode } from 'vivy/link';
+import { logger } from 'vivy/logger';
+import { createPlayerComponentsV2 } from 'vivy/player';
+import { chunkSize } from 'vivy/utils';
 import { Events, MessageFlags } from 'discord.js';
 import i18next from 'i18next';
 import type { AppEvent } from './event';

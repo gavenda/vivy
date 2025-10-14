@@ -1,4 +1,4 @@
-import { logger } from '@app/logger';
+import { logger } from 'vivy/logger';
 import { Events } from 'discord.js';
 import type { AppEvent } from './event';
 

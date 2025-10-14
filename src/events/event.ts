@@ -1,4 +1,4 @@
-import type { AppContext } from '@app/context';
+import type { AppContext } from 'vivy/context';
 import type { Awaitable, ClientEvents } from 'discord.js';
 
 export interface AppEvent<DiscordEvent extends keyof ClientEvents> {

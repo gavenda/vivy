@@ -1,15 +1,15 @@
-import type { AppContext } from '@app/context';
-import { LavalinkSource, LoadResultType, Player } from '@app/link';
-import { logger } from '@app/logger';
-import { handleQueueSelection, handleSearch, handleTracks } from '@app/player/handlers';
-import type { Requester } from '@app/requester';
-import { handleSpotifyAlbum, handleSpotifyPlaylist, handleSpotifyTrack } from '@app/spotify/handlers';
-import { hasVoiceState, isSpotify, trimEllipse } from '@app/utils';
+import type { AppContext } from 'vivy/context';
+import { LavalinkSource, LoadResultType, Player } from 'vivy/link';
+import { logger } from 'vivy/logger';
+import { handleQueueSelection, handleSearch, handleTracks } from 'vivy/player/handlers';
+import type { Requester } from 'vivy/requester';
+import { handleSpotifyAlbum, handleSpotifyPlaylist, handleSpotifyTrack } from 'vivy/spotify/handlers';
+import { hasVoiceState, isSpotify, trimEllipse } from 'vivy/utils';
 import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder, SlashCommandStringOption } from 'discord.js';
 import i18next from 'i18next';
 import { parse as parseSpotifyUri } from 'spotify-uri';
 import type { AppChatInputCommand } from './chat-input-command';
-import { QueueType } from '@app/player';
+import { QueueType } from 'vivy/player';
 import { redis } from 'bun';
 
 export const play: AppChatInputCommand = {

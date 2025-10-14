@@ -1,6 +1,6 @@
 import { Events } from 'discord.js';
 import type { AppEvent } from './event';
-import { logger } from '@app/logger';
+import { logger } from 'vivy/logger';
 
 export const guildAvailable: AppEvent<Events.GuildAvailable> = {
   event: Events.GuildAvailable,

@@ -1,6 +1,6 @@
-import type { AppContext } from '@app/context';
-import { LISTEN_MOE_STREAMS } from '@app/listen.moe';
-import { logger } from '@app/logger';
+import type { AppContext } from 'vivy/context';
+import { LISTEN_MOE_STREAMS } from 'vivy/listen.moe';
+import { logger } from 'vivy/logger';
 import { createMusicMoeComponentsV2, createPlayerComponentsV2 } from './embed';
 import pDebounce from 'p-debounce';
 import { MessageFlags } from 'discord.js';

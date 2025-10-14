@@ -1,5 +1,5 @@
-import { RepeatMode } from '@app/link';
-import { hasVoiceState } from '@app/utils/has-voice-state';
+import { RepeatMode } from 'vivy/link';
+import { hasVoiceState } from 'vivy/utils/has-voice-state';
 import { MessageFlags, SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
 import i18next from 'i18next';
 import type { AppChatInputCommand } from './chat-input-command';

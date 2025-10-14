@@ -1,6 +1,6 @@
-import { chatInputCommands } from '@app/commands/chat-input';
-import { logger } from '@app/logger';
-import { updatePlayer } from '@app/player';
+import { chatInputCommands } from 'vivy/commands/chat-input';
+import { logger } from 'vivy/logger';
+import { updatePlayer } from 'vivy/player';
 import { Events, MessageFlags } from 'discord.js';
 import i18next from 'i18next';
 import type { AppEvent } from './event';
@@ -38,7 +38,6 @@ export const chatInputCommandInteraction: AppEvent<Events.InteractionCreate> = {
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       logger.error(error, commandContext);
 
       // Make sure we reply to the user or they get an error for no response

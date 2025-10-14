@@ -1,7 +1,7 @@
-import { Player, type Track } from '@app/link';
-import { logger } from '@app/logger';
-import { QueueType } from '@app/player';
-import type { Requester } from '@app/requester';
+import { Player, type Track } from 'vivy/link';
+import { logger } from 'vivy/logger';
+import { QueueType } from 'vivy/player';
+import type { Requester } from 'vivy/requester';
 import { ButtonInteraction, ChatInputCommandInteraction, StringSelectMenuInteraction } from 'discord.js';
 import i18next from 'i18next';
 

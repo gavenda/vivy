@@ -1,5 +1,5 @@
-import type { LavalinkSource } from '@app/link';
-import type { QueueType } from '@app/player';
+import type { LavalinkSource } from 'vivy/link';
+import type { QueueType } from 'vivy/player';
 
 export enum ResponseType {
   MESSAGE = 'message',

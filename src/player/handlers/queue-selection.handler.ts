@@ -1,5 +1,5 @@
-import { Player, type Track } from '@app/link';
-import type { Requester } from '@app/requester';
+import { Player, type Track } from 'vivy/link';
+import type { Requester } from 'vivy/requester';
 import {
   ActionRowBuilder,
   ButtonBuilder,

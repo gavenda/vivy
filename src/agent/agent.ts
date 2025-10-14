@@ -1,7 +1,7 @@
-import { logger } from '@app/logger';
+import { logger } from 'vivy/logger';
 import type { N8NWebhookResponse } from './n8n-webhook-response';
 import type { Message, OmitPartialGroupDMChannel } from 'discord.js';
-import type { AppContext } from '@app/context';
+import type { AppContext } from 'vivy/context';
 
 /**
  * Send a prompt to the gpt agent webhook.

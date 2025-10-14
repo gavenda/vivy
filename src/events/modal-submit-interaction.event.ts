@@ -1,7 +1,7 @@
-import { logger } from '@app/logger';
+import { logger } from 'vivy/logger';
 import { Events, MessageFlags } from 'discord.js';
 import type { AppEvent } from './event';
-import { modalSubmitHandlers } from '@app/handlers/modals';
+import { modalSubmitHandlers } from 'vivy/handlers/modals';
 import i18next from 'i18next';
 
 export const modalSubmitInteraction: AppEvent<Events.InteractionCreate> = {

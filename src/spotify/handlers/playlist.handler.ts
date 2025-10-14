@@ -1,9 +1,9 @@
-import type { AppContext } from '@app/context';
-import { LavalinkSource, Player, type Track } from '@app/link';
-import { logger } from '@app/logger';
-import { handleTracks } from '@app/player/handlers';
-import { lookupTrack } from '@app/player/lookup';
-import type { Requester } from '@app/requester';
+import type { AppContext } from 'vivy/context';
+import { LavalinkSource, Player, type Track } from 'vivy/link';
+import { logger } from 'vivy/logger';
+import { handleTracks } from 'vivy/player/handlers';
+import { lookupTrack } from 'vivy/player/lookup';
+import type { Requester } from 'vivy/requester';
 import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import i18next from 'i18next';
 import type { ParsedSpotifyUri } from 'spotify-uri';

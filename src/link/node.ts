@@ -1,5 +1,5 @@
-import { logger } from '@app/logger';
-import { version } from '@app/version';
+import { logger } from 'vivy/logger';
+import { version } from 'vivy/version';
 import { Lavalink } from './link';
 import {
   EventType,

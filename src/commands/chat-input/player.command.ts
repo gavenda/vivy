@@ -1,5 +1,5 @@
-import { logger } from '@app/logger';
-import { createPlayerComponentsV2 } from '@app/player';
+import { logger } from 'vivy/logger';
+import { createPlayerComponentsV2 } from 'vivy/player';
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
 import type { AppChatInputCommand } from './chat-input-command';

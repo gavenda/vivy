@@ -1,4 +1,4 @@
-import type { Awaitable } from '@app/utils/awaitable';
+import type { Awaitable } from 'vivy/utils/awaitable';
 import { LavalinkNode } from './node';
 import { type Exception, type Track, TrackEndReason } from './payload';
 import { Player } from './player';

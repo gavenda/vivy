@@ -1,9 +1,9 @@
-import type { AppContext } from '@app/context';
-import { LoadResultType, Player } from '@app/link';
-import { LISTEN_MOE_JPOP_M38U, LISTEN_MOE_KPOP_M38U, RadioType } from '@app/listen.moe';
-import { updatePlayer } from '@app/player';
-import type { Requester } from '@app/requester';
-import { hasVoiceState } from '@app/utils/has-voice-state';
+import type { AppContext } from 'vivy/context';
+import { LoadResultType, Player } from 'vivy/link';
+import { LISTEN_MOE_JPOP_M38U, LISTEN_MOE_KPOP_M38U, RadioType } from 'vivy/listen.moe';
+import { updatePlayer } from 'vivy/player';
+import type { Requester } from 'vivy/requester';
+import { hasVoiceState } from 'vivy/utils/has-voice-state';
 import {
   ChatInputCommandInteraction,
   MessageFlags,

@@ -1,4 +1,4 @@
-import { logger } from '@app/logger';
+import { logger } from 'vivy/logger';
 import { EventEmitter } from 'events';
 import type { ListenMoeEvents } from './listen.moe.events';
 import { type ListenMoePayload, PayloadType, type PlaybackInfoPayload } from './payload';

@@ -1,5 +1,5 @@
-import { logger } from '@app/logger';
-import { type Awaitable, isValidHttpUrl } from '@app/utils';
+import { logger } from 'vivy/logger';
+import { type Awaitable, isValidHttpUrl } from 'vivy/utils';
 import {
   type APIVoiceState,
   ChannelType,

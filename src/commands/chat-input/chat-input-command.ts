@@ -1,4 +1,4 @@
-import type { AppContext } from '@app/context';
+import type { AppContext } from 'vivy/context';
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,

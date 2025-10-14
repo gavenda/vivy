@@ -1,4 +1,4 @@
-import { hasVoiceState } from '@app/utils';
+import { hasVoiceState } from 'vivy/utils';
 import { MessageFlags, SlashCommandBuilder, SlashCommandIntegerOption } from 'discord.js';
 import i18next from 'i18next';
 import type { AppChatInputCommand } from './chat-input-command';

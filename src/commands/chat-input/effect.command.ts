@@ -1,8 +1,8 @@
-import type { AppContext } from '@app/context';
-import { Player } from '@app/link';
-import { logger } from '@app/logger';
-import type { Requester } from '@app/requester';
-import { hasVoiceState } from '@app/utils';
+import type { AppContext } from 'vivy/context';
+import { Player } from 'vivy/link';
+import { logger } from 'vivy/logger';
+import type { Requester } from 'vivy/requester';
+import { hasVoiceState } from 'vivy/utils';
 import {
   ChatInputCommandInteraction,
   MessageFlags,

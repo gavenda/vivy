@@ -1,7 +1,7 @@
 import { Events, MessageFlags } from 'discord.js';
 import type { AppEvent } from './event';
-import { messageContextMenuCommands as messageContextMenuCommands } from '@app/commands/message-context-menu';
-import { logger } from '@app/logger';
+import { messageContextMenuCommands as messageContextMenuCommands } from 'vivy/commands/message-context-menu';
+import { logger } from 'vivy/logger';
 import i18next from 'i18next';
 
 export const messageContextMenuInteraction: AppEvent<Events.InteractionCreate> = {

@@ -1,5 +1,5 @@
-import { chatInputCommands } from '@app/commands/chat-input';
-import { logger } from '@app/logger';
+import { chatInputCommands } from 'vivy/commands/chat-input';
+import { logger } from 'vivy/logger';
 import { Events } from 'discord.js';
 import type { AppEvent } from './event';
 

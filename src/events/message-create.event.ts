@@ -1,12 +1,12 @@
 import { Events, GuildMember, Message, type OmitPartialGroupDMChannel } from 'discord.js';
 import type { AppEvent } from './event';
-import { logger } from '@app/logger';
-import type { AppContext } from '@app/context';
-import type { Requester } from '@app/requester';
-import { LoadResultType, type LavalinkSource, type Player } from '@app/link';
-import { QueueType, updatePlayer } from '@app/player';
-import { handleSearch, handleTrack } from '@app/player/handlers/agent';
-import { agentPrompt, ResponsePrompt, ResponseType } from '@app/agent';
+import { logger } from 'vivy/logger';
+import type { AppContext } from 'vivy/context';
+import type { Requester } from 'vivy/requester';
+import { LoadResultType, type LavalinkSource, type Player } from 'vivy/link';
+import { QueueType, updatePlayer } from 'vivy/player';
+import { handleSearch, handleTrack } from 'vivy/player/handlers/agent';
+import { agentPrompt, ResponsePrompt, ResponseType } from 'vivy/agent';
 import { redis } from 'bun';
 
 export const messageCreateEvent: AppEvent<Events.MessageCreate> = {

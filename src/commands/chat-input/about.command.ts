@@ -11,7 +11,7 @@ import {
   ThumbnailBuilder
 } from 'discord.js';
 import type { AppChatInputCommand } from './chat-input-command';
-import { version } from '@app/version';
+import { version } from 'vivy/version';
 import i18next from 'i18next';
 
 export const about: AppChatInputCommand = {
