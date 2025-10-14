@@ -19,7 +19,5 @@ jobs:
         run: bun ci
       - run: bun run lint
         name: Lint
-      - run: |
-          bun run clean
-          bun run type-check
+      - run: bun run type-check
         name: Typecheck

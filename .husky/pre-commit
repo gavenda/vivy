@@ -1,2 +1,2 @@
-pnpm exec lint-staged --quiet
-pnpm exec tsc
+bun run lint-staged --quiet
+bun run tsc
