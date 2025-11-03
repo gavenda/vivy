@@ -1,9 +1,11 @@
-import { logger } from 'vivy/logger';
 import { createPlayerComponentsV2 } from 'vivy/player';
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
 import type { AppChatInputCommand } from './chat-input-command';
 import { redis } from 'bun';
+import { getLogger } from '@logtape/logtape';
+
+const logger = getLogger(['vivy', 'command:player']);
 
 export const player: AppChatInputCommand = {
   data: new SlashCommandBuilder().setName('player').setDescription('Creates a music player in this channel.').toJSON(),
@@ -52,7 +54,7 @@ export const player: AppChatInputCommand = {
           }
         }
       } catch (e: unknown) {
-        logger.warn(`Unable to delete previous message`, { guildId: interaction.guildId, e });
+        logger.warn({ message: `Unable to delete previous message`, guildId: interaction.guildId, e });
       }
     }
 

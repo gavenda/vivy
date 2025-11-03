@@ -1,7 +1,9 @@
-import { logger } from 'vivy/logger';
+import { getLogger } from '@logtape/logtape';
 import type { N8NWebhookResponse } from './n8n-webhook-response';
 import type { Message, OmitPartialGroupDMChannel } from 'discord.js';
 import type { AppContext } from 'vivy/context';
+
+const logger = getLogger(['vivy', 'agent']);
 
 /**
  * Send a prompt to the gpt agent webhook.
@@ -38,7 +40,7 @@ export const agentPrompt = async (promptOpts: {
     'Authorization': `Bearer ${process.env.N8N_AGENT_WEBHOOK_SECRET}`
   };
 
-  logger.debug(`Sending webhook to n8n`, { headers, body });
+  logger.debug({ message: `Sending webhook to n8n`, headers, body });
 
   const response = await fetch(process.env.N8N_AGENT_WEBHOOK, {
     method: 'POST',

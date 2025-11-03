@@ -1,9 +1,12 @@
 import { Player, type SearchLoadResult } from 'vivy/link';
-import { logger } from 'vivy/logger';
+
 import type { Requester } from 'vivy/requester';
 import type { Message, OmitPartialGroupDMChannel } from 'discord.js';
 import type { QueueType } from '../../queue.type';
 import { handleTrack } from './track.handler';
+import { getLogger } from '@logtape/logtape';
+
+const logger = getLogger(['vivy', 'handler:search']);
 
 export const handleSearch = async (options: {
   query: string;
@@ -19,7 +22,7 @@ export const handleSearch = async (options: {
     return;
   }
 
-  logger.debug('Track selected', track);
+  logger.debug('Track selected', { track });
 
   await handleTrack({ message, track, player, queueType });
 };

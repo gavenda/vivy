@@ -1,8 +1,11 @@
 import { Events, MessageFlags } from 'discord.js';
 import type { AppEvent } from './event';
 import { messageContextMenuCommands as messageContextMenuCommands } from 'vivy/commands/message-context-menu';
-import { logger } from 'vivy/logger';
+
 import i18next from 'i18next';
+import { getLogger } from '@logtape/logtape';
+
+const logger = getLogger(['vivy', 'event:message-context-menu']);
 
 export const messageContextMenuInteraction: AppEvent<Events.InteractionCreate> = {
   event: Events.InteractionCreate,
@@ -21,10 +24,10 @@ export const messageContextMenuInteraction: AppEvent<Events.InteractionCreate> =
       userId: interaction.user.id
     };
 
-    logger.debug(`Received message context menu interaction command`, commandContext);
+    logger.debug({ message: `Received message context menu interaction command`, commandContext });
 
     if (!messageContextMenuCommand) {
-      logger.warn(`No matching message context menu interaction was found`, commandContext);
+      logger.warn({ message: `No matching message context menu interaction was found`, commandContext });
       return;
     }
 

@@ -1,9 +1,12 @@
 import { Player, type Track } from 'vivy/link';
-import { logger } from 'vivy/logger';
+
 import { QueueType } from 'vivy/player';
 import type { Requester } from 'vivy/requester';
 import { ButtonInteraction, ChatInputCommandInteraction, StringSelectMenuInteraction } from 'discord.js';
 import i18next from 'i18next';
+import { getLogger } from '@logtape/logtape';
+
+const logger = getLogger(['vivy', 'handler:track']);
 
 export const handleTrack = async (options: {
   interaction: ChatInputCommandInteraction | StringSelectMenuInteraction | ButtonInteraction;
@@ -13,7 +16,7 @@ export const handleTrack = async (options: {
 }) => {
   const { interaction, track, player, queueType } = options;
 
-  logger.debug(`Handling track, queue type: ${queueType}`);
+  logger.debug({ message: `Handling track, queue type: ${queueType}` });
 
   switch (queueType) {
     case QueueType.ASK:

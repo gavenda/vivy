@@ -1,12 +1,15 @@
 import type { AppContext } from 'vivy/context';
 import { LavalinkSource, Player, type Track } from 'vivy/link';
-import { logger } from 'vivy/logger';
+
 import { handleTracks } from 'vivy/player/handlers';
 import { lookupTrack } from 'vivy/player/lookup';
 import type { Requester } from 'vivy/requester';
 import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import i18next from 'i18next';
 import type { ParsedSpotifyUri } from 'spotify-uri';
+import { getLogger } from '@logtape/logtape';
+
+const logger = getLogger(['vivy', 'handler:playlist']);
 
 export const handleSpotifyPlaylist = async (options: {
   context: AppContext;
@@ -20,7 +23,7 @@ export const handleSpotifyPlaylist = async (options: {
   const spotifyPlaylist = await spotify.playlists.getPlaylist(spotifyUri.id);
   const tracks: Track<Requester>[] = [];
 
-  logger.debug(`Queuing spotify playlist`, { album: spotifyPlaylist.name });
+  logger.debug({ message: `Queuing spotify playlist`, album: spotifyPlaylist.name });
 
   await interaction.followUp({
     flags: MessageFlags.Ephemeral,

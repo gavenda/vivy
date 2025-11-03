@@ -1,10 +1,13 @@
 import { chatInputCommands } from 'vivy/commands/chat-input';
-import { logger } from 'vivy/logger';
+
 import { updatePlayer } from 'vivy/player';
 import { Events, MessageFlags } from 'discord.js';
 import i18next from 'i18next';
 import type { AppEvent } from './event';
 import { redis } from 'bun';
+import { getLogger } from '@logtape/logtape';
+
+const logger = getLogger(['vivy', 'event:chat-input-command']);
 
 export const chatInputCommandInteraction: AppEvent<Events.InteractionCreate> = {
   event: Events.InteractionCreate,
@@ -21,10 +24,10 @@ export const chatInputCommandInteraction: AppEvent<Events.InteractionCreate> = {
       userId: interaction.user.id
     };
 
-    logger.debug(`Received chat input interaction`, commandContext);
+    logger.debug({ message: `Received chat input interaction`, commandContext });
 
     if (!chatInputCommand) {
-      logger.warn(`No matching chat input interaction was found`, commandContext);
+      logger.warn({ message: `No matching chat input interaction was found`, commandContext });
       return;
     }
 

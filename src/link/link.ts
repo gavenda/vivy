@@ -1,4 +1,3 @@
-import { logger } from 'vivy/logger';
 import { type Awaitable, isValidHttpUrl } from 'vivy/utils';
 import {
   type APIVoiceState,
@@ -14,7 +13,9 @@ import type { LavalinkEvents } from './link.events';
 import { LavalinkNode, type LavalinkNodeOptions } from './node';
 import { LoadResultType } from './payload';
 import type { PlayerOptions } from './player';
+import { getLogger } from '@logtape/logtape';
 
+const logger = getLogger(['vivy', 'link']);
 /**
  * Lavalink sources.
  */
@@ -221,7 +222,7 @@ export class Lavalink<UserData> extends EventEmitter {
    * @param data voice update dispatch data from discord.js
    */
   private async handleVoiceStateUpdate(data: Partial<APIVoiceState>) {
-    logger.debug(`Receiving voice state update`, { payload: data });
+    logger.debug({ message: `Receiving voice state update`, payload: data });
 
     if (!data.member) return;
     if (!data.channel_id) return;
@@ -268,7 +269,7 @@ export class Lavalink<UserData> extends EventEmitter {
   private async handleVoiceServerUpdate(data: GatewayVoiceServerUpdateDispatchData) {
     const player = this.findPlayerByGuildId(data.guild_id);
 
-    logger.debug(`Receiving voice server update`, { data });
+    logger.debug({ message: `Receiving voice server update`, data });
 
     if (!player) return;
 

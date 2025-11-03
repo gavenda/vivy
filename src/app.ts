@@ -6,9 +6,11 @@ import { events } from './events';
 import { Lavalink } from './link';
 import { LISTEN_MOE_JPOP_STREAM, LISTEN_MOE_KPOP_STREAM, LISTEN_MOE_STREAMS, ListenMoe, RadioType } from './listen.moe';
 import en from './locales/en.json';
-import { logger } from './logger';
 import { updatePlayer } from './player';
 import type { Requester } from './requester';
+import { getFileSink } from '@logtape/file';
+import { ansiColorFormatter, configure, getConsoleSink, getLogger } from '@logtape/logtape';
+import { AsyncLocalStorage } from 'node:async_hooks';
 
 export const main = async () => {
   if (!process.env.TOKEN) {
@@ -41,6 +43,26 @@ export const main = async () => {
   if (!process.env.LAVA_PORT) {
     throw new Error('LAVA_PORT is required.');
   }
+
+  // Configure logging
+  await configure({
+    sinks: {
+      console: getConsoleSink({ nonBlocking: true, formatter: ansiColorFormatter }),
+      file: getFileSink('logs/vivy.log', {
+        lazy: true,
+        bufferSize: 8192,
+        flushInterval: 5000,
+        nonBlocking: true
+      })
+    },
+    loggers: [
+      { category: ['logtape', 'meta'], sinks: ['file'] },
+      { category: 'vivy', lowestLevel: 'debug', sinks: ['console', 'file'] }
+    ],
+    contextLocalStorage: new AsyncLocalStorage()
+  });
+
+  const logger = getLogger(['vivy', 'main']);
 
   // Create spotify client
   const spotify = SpotifyApi.withClientCredentials(process.env.SPOTIFY_CLIENT_ID, process.env.SPOTIFY_CLIENT_SECRET);
@@ -113,7 +135,7 @@ export const main = async () => {
   // link events
   link.on('nodeReady', async (node) => {
     const { host } = node.options;
-    logger.info(`Connected to node`, { host });
+    logger.info({ message: `Connected to node`, host });
 
     const guilds = client.guilds.cache.values();
 
@@ -127,17 +149,17 @@ export const main = async () => {
 
   link.on('nodeError', (node, error) => {
     const { host } = node.options;
-    logger.error(`Error on node`, { host, error });
+    logger.error({ message: `Error on node`, host, error });
   });
 
   link.on('nodeResumed', (node) => {
     const { host } = node.options;
-    logger.info(`Session resumed`, { host });
+    logger.info({ message: `Session resumed`, host });
   });
 
   link.on('nodeDisconnected', (node) => {
     const { host } = node.options;
-    logger.debug(`Disconnected from node`, { host });
+    logger.debug({ message: `Disconnected from node`, host });
   });
 
   link.on('playerMove', (player, oldVoiceChannelId, newVoiceChannelId) => {
@@ -189,7 +211,7 @@ export const main = async () => {
 
   // Register events
   for (const { once, event, execute } of events) {
-    logger.debug(`Registering event handler`, { event });
+    logger.debug({ message: `Registering event handler`, event });
 
     if (once) {
       // @ts-expect-error too much OR typing here, compiler will get confused

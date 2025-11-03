@@ -1,6 +1,6 @@
 import type { AppContext } from 'vivy/context';
 import { LavalinkSource, LoadResultType, Player } from 'vivy/link';
-import { logger } from 'vivy/logger';
+
 import { handleQueueSelection, handleSearch, handleTracks } from 'vivy/player/handlers';
 import type { Requester } from 'vivy/requester';
 import { handleSpotifyAlbum, handleSpotifyPlaylist, handleSpotifyTrack } from 'vivy/spotify/handlers';
@@ -11,6 +11,9 @@ import { parse as parseSpotifyUri } from 'spotify-uri';
 import type { AppChatInputCommand } from './chat-input-command';
 import { QueueType } from 'vivy/player';
 import { redis } from 'bun';
+import { getLogger } from '@logtape/logtape';
+
+const logger = getLogger(['vivy', 'command:play']);
 
 export const play: AppChatInputCommand = {
   data: new SlashCommandBuilder()
@@ -123,7 +126,7 @@ const playMusic = async (options: {
   // Connect to the voice channel if not connected
   if (!player.voiceConnected) {
     await player.connect(interaction.member.voice.channel.id);
-    logger.debug(`Connected to voice channel: ${interaction.member.voice.channel.name}`);
+    logger.debug({ message: `Connected to voice channel: ${interaction.member.voice.channel.name}` });
   }
 
   if (isSpotify(query)) {

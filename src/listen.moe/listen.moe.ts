@@ -1,7 +1,9 @@
-import { logger } from 'vivy/logger';
 import { EventEmitter } from 'events';
 import type { ListenMoeEvents } from './listen.moe.events';
 import { type ListenMoePayload, PayloadType, type PlaybackInfoPayload } from './payload';
+import { getLogger } from '@logtape/logtape';
+
+const logger = getLogger(['vivy', 'listen.moe']);
 
 export enum RadioType {
   JPOP,

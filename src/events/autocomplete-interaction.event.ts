@@ -1,7 +1,10 @@
 import { chatInputCommands } from 'vivy/commands/chat-input';
-import { logger } from 'vivy/logger';
+
 import { Events } from 'discord.js';
 import type { AppEvent } from './event';
+import { getLogger } from '@logtape/logtape';
+
+const logger = getLogger(['vivy', 'event:autocomplete']);
 
 export const autocompleteInteraction: AppEvent<Events.InteractionCreate> = {
   event: Events.InteractionCreate,
@@ -18,10 +21,10 @@ export const autocompleteInteraction: AppEvent<Events.InteractionCreate> = {
       userId: interaction.user.id
     };
 
-    logger.debug(`Received autocomplete interaction`, autocompleteContext);
+    logger.debug({ message: `Received autocomplete interaction`, autocompleteContext });
 
     if (!chatInputCommand || !chatInputCommand.autocomplete) {
-      logger.warn(`No matching autocomplete interaction was found`, autocompleteContext);
+      logger.warn({ message: `No matching autocomplete interaction was found`, autocompleteContext });
       return;
     }
 

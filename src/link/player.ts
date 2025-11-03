@@ -1,4 +1,3 @@
-import { logger } from 'vivy/logger';
 import { GatewayOpcodes } from 'discord.js';
 import { LavalinkFilter } from './filter';
 import { Lavalink } from './link';
@@ -7,6 +6,9 @@ import type { Filters, Track, UpdatePlayerOptions, VoiceState } from './payload'
 import type { PlayerState } from './player.state';
 import { TrackQueue } from './queue';
 import { redis } from 'bun';
+import { getLogger } from '@logtape/logtape';
+
+const logger = getLogger(['vivy', 'player']);
 
 export const DEFAULT_AUTO_LEAVE_MS = 1000 * 60 * 5;
 

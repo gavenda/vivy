@@ -1,7 +1,7 @@
 import { REST, Routes } from 'discord.js';
-import { logger } from './logger';
 import { chatInputCommands } from './commands/chat-input';
 import { messageContextMenuCommands } from './commands/message-context-menu';
+import { getLogger } from '@logtape/logtape';
 
 if (!process.env.TOKEN) {
   throw new Error('TOKEN is required.');
@@ -13,6 +13,7 @@ if (!process.env.GUILD_ID) {
   throw new Error('GUILD_ID is required.');
 }
 
+const logger = getLogger(['vivy', 'register-guild']);
 const rest = new REST().setToken(process.env.TOKEN);
 
 try {
@@ -24,11 +25,13 @@ try {
 
   const fullCommandList = [...commandList, ...messageCommandList];
 
-  logger.info(`Started refreshing ${commandList.length} application (/) commands on guild id: ${guildId}.`);
+  logger.info({
+    message: `Started refreshing ${commandList.length} application (/) commands on guild id: ${guildId}.`
+  });
 
   await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: fullCommandList });
 
-  logger.info(`Successfully reloaded application (/) commands on guild id: ${guildId}.`);
+  logger.info({ message: `Successfully reloaded application (/) commands on guild id: ${guildId}.` });
 } catch (error) {
-  logger.error(error);
+  logger.error({ error });
 }

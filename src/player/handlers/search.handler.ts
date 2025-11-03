@@ -1,6 +1,6 @@
 import { AppEmoji } from 'vivy/emojis';
 import { Player, type SearchLoadResult } from 'vivy/link';
-import { logger } from 'vivy/logger';
+
 import type { Requester } from 'vivy/requester';
 import { trimEllipse } from 'vivy/utils/trim-ellipses';
 import {
@@ -14,6 +14,9 @@ import i18next from 'i18next';
 import { handleQueueSelection } from './queue-selection.handler';
 import { handleTrack } from './track.handler';
 import { QueueType } from '../queue.type';
+import { getLogger } from '@logtape/logtape';
+
+const logger = getLogger(['vivy', 'handler:search']);
 
 export const handleSearch = async (options: {
   query: string;
@@ -64,7 +67,7 @@ export const handleSearch = async (options: {
       return;
     }
 
-    logger.debug('Track selected', track);
+    logger.debug('Track selected', { track });
 
     await selectMusic.deferUpdate();
 

@@ -1,8 +1,11 @@
 import type { AppContext } from 'vivy/context';
 import { LavalinkSource, LoadResultType, type Track } from 'vivy/link';
-import { logger } from 'vivy/logger';
+
 import type { Requester } from 'vivy/requester';
 import { ChatInputCommandInteraction } from 'discord.js';
+import { getLogger } from '@logtape/logtape';
+
+const logger = getLogger(['vivy', 'lookup']);
 
 export const lookupTrack = async (options: {
   query: string;

@@ -1,6 +1,8 @@
 import { Events } from 'discord.js';
 import type { AppEvent } from './event';
-import { logger } from 'vivy/logger';
+import { getLogger } from '@logtape/logtape';
+
+const logger = getLogger(['vivy', 'event:guild-available']);
 
 export const guildAvailable: AppEvent<Events.GuildAvailable> = {
   event: Events.GuildAvailable,
@@ -8,7 +10,7 @@ export const guildAvailable: AppEvent<Events.GuildAvailable> = {
   execute: async (context, guild) => {
     const { id, nameAcronym, name } = guild;
 
-    logger.debug(`Guild available`, { id, nameAcronym, name });
+    logger.debug({ message: `Guild available`, id, nameAcronym, name });
 
     if (context.link.connectedNodes.length === 0) return;
 

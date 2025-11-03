@@ -1,8 +1,10 @@
-import { logger } from 'vivy/logger';
 import { Events, MessageFlags } from 'discord.js';
 import type { AppEvent } from './event';
 import { modalSubmitHandlers } from 'vivy/handlers/modals';
 import i18next from 'i18next';
+import { getLogger } from '@logtape/logtape';
+
+const logger = getLogger(['vivy', 'event:modal-submit']);
 
 export const modalSubmitInteraction: AppEvent<Events.InteractionCreate> = {
   event: Events.InteractionCreate,
@@ -19,10 +21,10 @@ export const modalSubmitInteraction: AppEvent<Events.InteractionCreate> = {
       userId: interaction.user.id
     };
 
-    logger.debug(`Received modal submit interaction`, modalSubmitContext);
+    logger.debug({ message: `Received modal submit interaction`, modalSubmitContext });
 
     if (!modalSubmitHandler) {
-      logger.warn(`No matching modal submit interaction was found`, modalSubmitContext);
+      logger.warn({ message: `No matching modal submit interaction was found`, modalSubmitContext });
       return;
     }
 

@@ -1,10 +1,13 @@
 import type { AppContext } from 'vivy/context';
 import { LISTEN_MOE_STREAMS } from 'vivy/listen.moe';
-import { logger } from 'vivy/logger';
+
 import { createMusicMoeComponentsV2, createPlayerComponentsV2 } from './embed';
 import pDebounce from 'p-debounce';
 import { MessageFlags } from 'discord.js';
 import { redis } from 'bun';
+import { getLogger } from '@logtape/logtape';
+
+const logger = getLogger(['vivy', 'update']);
 
 export const updatePlayerNow = async (context: AppContext, guildId: string) => {
   const { client, link } = context;
@@ -12,7 +15,7 @@ export const updatePlayerNow = async (context: AppContext, guildId: string) => {
   const playerEmbed = await redis.get(playerEmbedKey);
 
   if (!playerEmbed) {
-    logger.warn(`Player embed cache is empty`, { playerEmbedKey });
+    logger.warn({ message: `Player embed cache is empty`, playerEmbedKey });
     return;
   }
 
@@ -40,9 +43,9 @@ export const updatePlayerNow = async (context: AppContext, guildId: string) => {
       });
     }
   } catch (error) {
-    logger.error(`Unable to send player update`, { guildId, error });
+    logger.error({ message: `Unable to send player update`, guildId, error });
     await redis.del(playerEmbedKey);
-    logger.debug(`Removing embed key from cache`, { playerEmbedKey });
+    logger.debug({ message: `Removing embed key from cache`, playerEmbedKey });
   }
 };
 

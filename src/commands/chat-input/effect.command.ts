@@ -1,6 +1,6 @@
 import type { AppContext } from 'vivy/context';
 import { Player } from 'vivy/link';
-import { logger } from 'vivy/logger';
+
 import type { Requester } from 'vivy/requester';
 import { hasVoiceState } from 'vivy/utils';
 import {
@@ -13,6 +13,9 @@ import {
 } from 'discord.js';
 import i18next from 'i18next';
 import type { AppChatInputCommand } from './chat-input-command';
+import { getLogger } from '@logtape/logtape';
+
+const logger = getLogger(['vivy', 'command:effect']);
 
 export const effect: AppChatInputCommand = {
   data: new SlashCommandBuilder()

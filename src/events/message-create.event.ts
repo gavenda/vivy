@@ -1,6 +1,6 @@
 import { Events, GuildMember, Message, type OmitPartialGroupDMChannel } from 'discord.js';
 import type { AppEvent } from './event';
-import { logger } from 'vivy/logger';
+
 import type { AppContext } from 'vivy/context';
 import type { Requester } from 'vivy/requester';
 import { LoadResultType, type LavalinkSource, type Player } from 'vivy/link';
@@ -8,6 +8,9 @@ import { QueueType, updatePlayer } from 'vivy/player';
 import { handleSearch, handleTrack } from 'vivy/player/handlers/agent';
 import { agentPrompt, ResponsePrompt, ResponseType } from 'vivy/agent';
 import { redis } from 'bun';
+import { getLogger } from '@logtape/logtape';
+
+const logger = getLogger(['vivy', 'event:message-create']);
 
 export const messageCreateEvent: AppEvent<Events.MessageCreate> = {
   event: Events.MessageCreate,
@@ -15,9 +18,10 @@ export const messageCreateEvent: AppEvent<Events.MessageCreate> = {
   execute: async (context, message) => {
     if (message.author.bot) return;
 
-    logger.debug(`Received message`, {
+    logger.debug({
+      message: `Received message`,
       content: `[${message.guild?.name || 'Unknown'}] ${message.author.globalName}: ${message.content}`,
-      author: message.author,
+      username: message.author.username,
       mentions: message.mentions,
       guild: message.guild?.name ?? 'Unknown'
     });
@@ -36,7 +40,7 @@ export const messageCreateEvent: AppEvent<Events.MessageCreate> = {
 
     const { link } = context;
 
-    logger.debug(`Received webhook response`, { prompt });
+    logger.debug({ message: `Received webhook response`, prompt });
 
     await message.reply({
       content: prompt.message
@@ -105,7 +109,7 @@ const playMusic = async (
   const { link } = context;
   const { query, message, member, source, queueType } = options;
 
-  logger.debug(`Playing music`, { query, queueType });
+  logger.debug({ message: `Playing music`, query, queueType });
 
   if (!member.voice.channel) {
     const prompt = await agentPrompt({
@@ -130,7 +134,7 @@ const playMusic = async (
   // Connect to the voice channel if not connected
   if (!player.voiceConnected) {
     await player.connect(member.voice.channel.id);
-    logger.debug(`Connected to voice channel: ${member.voice.channel.name}`);
+    logger.debug({ message: `Connected to voice channel: ${member.voice.channel.name}` });
   }
 
   await handleQuery({
