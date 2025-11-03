@@ -22,7 +22,6 @@ export const messageCreateEvent: AppEvent<Events.MessageCreate> = {
       message: `Received message`,
       content: `[${message.guild?.name || 'Unknown'}] ${message.author.globalName}: ${message.content}`,
       username: message.author.username,
-      mentions: message.mentions,
       guild: message.guild?.name ?? 'Unknown'
     });
 
