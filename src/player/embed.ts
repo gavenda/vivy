@@ -67,7 +67,7 @@ export const createPlayerComponentsV2 = (context: AppContext, guildId: string, p
   const lyricsButton = new ButtonBuilder()
     .setCustomId('player:lyrics')
     .setStyle(ButtonStyle.Secondary)
-    .setEmoji(AppEmoji.Next);
+    .setEmoji(AppEmoji.Lyrics);
   const volumeUpButton = new ButtonBuilder()
     .setCustomId('player:volume-up')
     .setStyle(ButtonStyle.Secondary)
@@ -176,7 +176,7 @@ export const createMusicMoeComponentsV2 = (context: AppContext, guildId: string)
   const lyricsButton = new ButtonBuilder()
     .setCustomId('player:lyrics')
     .setStyle(ButtonStyle.Secondary)
-    .setEmoji(AppEmoji.Next);
+    .setEmoji(AppEmoji.Lyrics);
   const volumeUpButton = new ButtonBuilder()
     .setCustomId('player:volume-up')
     .setStyle(ButtonStyle.Secondary)
