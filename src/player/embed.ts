@@ -7,7 +7,6 @@ import {
   ButtonBuilder,
   ButtonStyle,
   ContainerBuilder,
-  EmbedBuilder,
   Locale,
   MediaGalleryBuilder,
   MediaGalleryItemBuilder,
@@ -56,7 +55,7 @@ export const createPlayerComponentsV2 = (context: AppContext, guildId: string, p
   const requester = track?.userData.userId ? ` — <@${track.userData.userId}>` : '';
   const nowPlaying = track?.info.title ? `[${track?.info.title}](${track?.info.uri})` : '—';
   const artist = track?.info.author ?? '—';
-  const volume = player?.volume ? `${player?.volume}%` : '—';
+  const volume = player?.volume ? `${Math.round(player?.volume * 100)}%` : '100%';
 
   const container = new ContainerBuilder();
 
@@ -165,7 +164,7 @@ export const createMusicMoeComponentsV2 = (context: AppContext, guildId: string)
   const lng = client.guilds.cache.get(guildId)?.preferredLocale ?? Locale.EnglishUS;
   const player = link.findPlayerByGuildId(guildId);
   const playing = player?.playing ?? false;
-  const volume = player?.volume ? `${player?.volume}%` : '—';
+  const volume = player?.volume ? `${Math.round(player?.volume * 100)}%` : '100%';
 
   const container = new ContainerBuilder();
 
@@ -264,41 +263,4 @@ export const createMusicMoeComponentsV2 = (context: AppContext, guildId: string)
   container.addTextDisplayComponents(queueTextDisplay);
 
   return container;
-};
-
-export const createListenMoeEmbed = (context: AppContext, guildId: string) => {
-  const { link, client, listenMoe } = context;
-  const lng = client.guilds.cache.get(guildId)?.preferredLocale ?? Locale.EnglishUS;
-  const player = link.findPlayerByGuildId(guildId);
-
-  const listenMoeEmbed = new EmbedBuilder()
-    .setTitle(`${client.user?.username ?? 'Vivy'} Song List`)
-    .setDescription(i18next.t('player_embed.description_listen_moe', { lng }))
-    .setColor(0xff015b)
-    .setImage(listenMoe.info.cover)
-    .setThumbnail(`https://listen.moe/_nuxt/img/logo-square-64.248c1f3.png`)
-    .addFields(
-      {
-        name: i18next.t('player_embed.now_playing', { lng }),
-        value: listenMoe.info.song,
-        inline: false
-      },
-      {
-        name: i18next.t('player_embed.artist', { lng }),
-        value: listenMoe.info.artist,
-        inline: false
-      },
-      {
-        name: i18next.t('player_embed.album', { lng }),
-        value: listenMoe.info.album,
-        inline: false
-      },
-      {
-        name: i18next.t('player_embed.volume', { lng }),
-        value: player?.volume ? `${Math.round(player?.volume * 100)}%` : '100%',
-        inline: true
-      }
-    );
-
-  return listenMoeEmbed;
 };
