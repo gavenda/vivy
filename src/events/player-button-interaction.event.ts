@@ -106,7 +106,7 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
 
         const container = await fetchLyricsComponents(player.queue.current);
 
-        await interaction.followUp({
+        await interaction.reply({
           flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
           components: [container]
         });

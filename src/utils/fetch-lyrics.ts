@@ -1,4 +1,4 @@
-import { ComponentType, ContainerBuilder } from 'discord.js';
+import { ContainerBuilder, SectionBuilder, TextDisplayBuilder, ThumbnailBuilder } from 'discord.js';
 import type { Track } from 'vivy/link';
 import type { Requester } from 'vivy/requester';
 
@@ -24,24 +24,22 @@ export const fetchLyricsComponents = async (track: Track<Requester>) => {
   const result = await response.json();
   const lyricsResult = result as LyricsResult;
 
-  return new ContainerBuilder({
-    components: [
-      {
-        type: ComponentType.TextDisplay,
-        content: `-# TITLE\n${title}`
-      },
-      {
-        type: ComponentType.TextDisplay,
-        content: `-# ARTIST\n${author}`
-      },
-      {
-        type: ComponentType.TextDisplay,
-        content: `-# LYRICS`
-      },
-      {
-        type: ComponentType.TextDisplay,
-        content: lyricsResult.data.lyrics
-      }
-    ]
-  });
+  const container = new ContainerBuilder();
+
+  const titleDisplay = new TextDisplayBuilder({ content: `-# TITLE\n${title}` });
+
+  if (track.info.artworkUrl) {
+    const section = new SectionBuilder()
+      .addTextDisplayComponents(titleDisplay)
+      .setThumbnailAccessory(new ThumbnailBuilder({ media: { url: track.info.artworkUrl } }));
+
+    container.addSectionComponents(section);
+  } else {
+    container.addTextDisplayComponents(titleDisplay);
+  }
+
+  container.addTextDisplayComponents(new TextDisplayBuilder({ content: `-# ARTIST\n${author}` }));
+  container.addTextDisplayComponents(new TextDisplayBuilder({ content: `-# LYRICS\n${lyricsResult.data.lyrics}` }));
+
+  return container;
 };
