@@ -80,6 +80,7 @@ export class LavalinkFilter<UserData> {
 
   async applyVolume(volume: number) {
     this.volume = volume;
+    this.raw = { ...this.raw, volume };
     await this.player.update({ filters: this.raw });
   }
 }
