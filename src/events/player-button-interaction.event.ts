@@ -7,6 +7,7 @@ import i18next from 'i18next';
 import type { AppEvent } from './event';
 import { redis } from 'bun';
 import { getLogger } from '@logtape/logtape';
+import { fetchLyricsComponents } from 'vivy/utils/fetch-lyrics';
 
 const logger = getLogger(['vivy', 'event:player-button']);
 
@@ -96,6 +97,20 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
         if (pageIndex >= pageSize) {
           pageIndex = 0;
         }
+        break;
+      }
+      case 'lyrics': {
+        if (!player.queue.current) {
+          break;
+        }
+
+        const container = await fetchLyricsComponents(player.queue.current);
+
+        await interaction.followUp({
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+          components: [container]
+        });
+
         break;
       }
     }

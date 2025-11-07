@@ -21,6 +21,6 @@
       "vivy/*": ["./src/*"]
     }
   },
-  "include": ["index.ts", "src/**/*.ts"],
+  "include": ["index.ts", "env.d.ts", "src/**/*.ts"],
   "exclude": ["node_modules"]
 }

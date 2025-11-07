@@ -56,6 +56,7 @@ export const createPlayerComponentsV2 = (context: AppContext, guildId: string, p
   const requester = track?.userData.userId ? ` — <@${track.userData.userId}>` : '';
   const nowPlaying = track?.info.title ? `[${track?.info.title}](${track?.info.uri})` : '—';
   const artist = track?.info.author ?? '—';
+  const volume = player?.volume ? `${player?.volume}%` : '—';
 
   const container = new ContainerBuilder();
 
@@ -63,6 +64,10 @@ export const createPlayerComponentsV2 = (context: AppContext, guildId: string, p
     .setCustomId('player:stop')
     .setStyle(ButtonStyle.Danger)
     .setEmoji(AppEmoji.Stop);
+  const lyricsButton = new ButtonBuilder()
+    .setCustomId('player:lyrics')
+    .setStyle(ButtonStyle.Secondary)
+    .setEmoji(AppEmoji.Next);
   const volumeUpButton = new ButtonBuilder()
     .setCustomId('player:volume-up')
     .setStyle(ButtonStyle.Secondary)
@@ -108,12 +113,20 @@ export const createPlayerComponentsV2 = (context: AppContext, guildId: string, p
         `-# ${i18next.t('player_embed.now_playing', { lng }).toLocaleUpperCase(lng)}${requester}\n${nowPlaying}`
       )
     )
-    .setButtonAccessory(volumeUpButton);
+    .setButtonAccessory(lyricsButton);
 
   const artistSection = new SectionBuilder()
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `-# ${i18next.t('player_embed.artist', { lng }).toLocaleUpperCase(lng)}\n${artist}`
+      )
+    )
+    .setButtonAccessory(volumeUpButton);
+
+  const volumeSection = new SectionBuilder()
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `-# ${i18next.t('player_embed.volume', { lng }).toLocaleUpperCase(lng)}\n${volume}`
       )
     )
     .setButtonAccessory(volumeDownButton);
@@ -133,6 +146,7 @@ export const createPlayerComponentsV2 = (context: AppContext, guildId: string, p
   container.addSectionComponents(titleSection);
   container.addSectionComponents(nowPlayingSection);
   container.addSectionComponents(artistSection);
+  container.addSectionComponents(volumeSection);
 
   if (track?.info.artworkUrl) {
     container.addMediaGalleryComponents(
@@ -151,6 +165,7 @@ export const createMusicMoeComponentsV2 = (context: AppContext, guildId: string)
   const lng = client.guilds.cache.get(guildId)?.preferredLocale ?? Locale.EnglishUS;
   const player = link.findPlayerByGuildId(guildId);
   const playing = player?.playing ?? false;
+  const volume = player?.volume ? `${player?.volume}%` : '—';
 
   const container = new ContainerBuilder();
 
@@ -158,6 +173,10 @@ export const createMusicMoeComponentsV2 = (context: AppContext, guildId: string)
     .setCustomId('player:stop')
     .setStyle(ButtonStyle.Danger)
     .setEmoji(AppEmoji.Stop);
+  const lyricsButton = new ButtonBuilder()
+    .setCustomId('player:lyrics')
+    .setStyle(ButtonStyle.Secondary)
+    .setEmoji(AppEmoji.Next);
   const volumeUpButton = new ButtonBuilder()
     .setCustomId('player:volume-up')
     .setStyle(ButtonStyle.Secondary)
@@ -201,12 +220,20 @@ export const createMusicMoeComponentsV2 = (context: AppContext, guildId: string)
         `-# ${i18next.t('player_embed.now_playing', { lng }).toLocaleUpperCase(lng)}\n${listenMoe.info.song}`
       )
     )
-    .setButtonAccessory(volumeUpButton);
+    .setButtonAccessory(lyricsButton);
 
   const artistSection = new SectionBuilder()
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `-# ${i18next.t('player_embed.artist', { lng }).toLocaleUpperCase(lng)}\n${listenMoe.info.artist}`
+      )
+    )
+    .setButtonAccessory(volumeUpButton);
+
+  const volumeSection = new SectionBuilder()
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `-# ${i18next.t('player_embed.volume', { lng }).toLocaleUpperCase(lng)}\n${volume}`
       )
     )
     .setButtonAccessory(volumeDownButton);
@@ -225,6 +252,7 @@ export const createMusicMoeComponentsV2 = (context: AppContext, guildId: string)
   container.addSectionComponents(titleSection);
   container.addSectionComponents(nowPlayingSection);
   container.addSectionComponents(artistSection);
+  container.addSectionComponents(volumeSection);
 
   if (listenMoe.info.cover) {
     container.addMediaGalleryComponents(

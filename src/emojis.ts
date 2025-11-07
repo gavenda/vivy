@@ -1,4 +1,5 @@
 export enum AppEmoji {
+  Lyrics = '<:lyrics:1436260879359410267>',
   Play = '<:play:1418861916096561212>',
   Skip = '<:skip:1418861947729739796>',
   Pause = '<:pause:1418862241175830589>',
