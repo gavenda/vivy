@@ -9,7 +9,7 @@ import en from './locales/en.json';
 import { updatePlayer } from './player';
 import type { Requester } from './requester';
 import { getFileSink } from '@logtape/file';
-import { ansiColorFormatter, configure, getConsoleSink, getLogger } from '@logtape/logtape';
+import { ansiColorFormatter, configure, getConsoleSink, getLogger, withFilter } from '@logtape/logtape';
 import { AsyncLocalStorage } from 'node:async_hooks';
 
 export const main = async () => {
@@ -47,7 +47,7 @@ export const main = async () => {
   // Configure logging
   await configure({
     sinks: {
-      console: getConsoleSink({ nonBlocking: true, formatter: ansiColorFormatter }),
+      console: withFilter(getConsoleSink({ nonBlocking: true, formatter: ansiColorFormatter }), 'info'),
       file: getFileSink('logs/vivy.log', {
         lazy: true,
         bufferSize: 8192,
@@ -80,7 +80,7 @@ export const main = async () => {
     ],
     presence: {
       status: 'online',
-      activities: [{ name: `Flourite Eye's Song`, type: ActivityType.Listening }]
+      activities: [{ name: `Flourite Eye's Song 🎶`, type: ActivityType.Custom }]
     }
   });
 
