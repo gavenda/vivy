@@ -376,6 +376,7 @@ export class LavalinkNode<UserData> {
         voice: {
           endpoint: state.voiceState.endpoint,
           sessionId: state.voiceState.sessionId,
+          channelId: state.voiceState.channelId,
           token: state.voiceState.token
         }
       });

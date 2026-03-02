@@ -333,6 +333,7 @@ export class Player<UserData> {
       voice: {
         endpoint: voice.endpoint,
         sessionId: voice.sessionId,
+        channelId: voice.channelId,
         token: voice.token
       }
     });

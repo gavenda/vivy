@@ -257,7 +257,8 @@ export class Lavalink<UserData> extends EventEmitter {
       voice: {
         token: player.voiceState.token,
         endpoint: player.voiceState.endpoint,
-        sessionId: data.session_id
+        sessionId: data.session_id,
+        channelId: data.channel_id
       }
     });
   }
