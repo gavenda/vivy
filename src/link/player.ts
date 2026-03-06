@@ -328,6 +328,7 @@ export class Player<UserData> {
     if (!voice.endpoint) return;
     if (!voice.sessionId) return;
     if (!voice.token) return;
+    if (!voice.channelId) return;
 
     await this.update({
       voice: {

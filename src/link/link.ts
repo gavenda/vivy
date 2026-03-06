@@ -279,12 +279,16 @@ export class Lavalink<UserData> extends EventEmitter {
 
     logger.debug('Discord voice endpoint and token set', { endpoint: data.endpoint, token: data.token });
 
+    const voiceChannelId = player.voiceChannelId || player.voiceState.channelId;
+
     if (!player.voiceState.sessionId) return;
+    if (!voiceChannelId) return;
 
     await player.update({
       voice: {
         token: data.token,
         endpoint: data.endpoint,
+        channelId: voiceChannelId,
         sessionId: player.voiceState.sessionId
       }
     });

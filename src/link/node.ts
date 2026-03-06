@@ -370,13 +370,15 @@ export class LavalinkNode<UserData> {
     // Sync filters
     await player.applyFilters(state.filters);
 
+    const voiceChannelId = state.voiceChannelId || state.voiceState?.channelId;
+
     // Sync voice state
     if (state.voiceState?.endpoint && state.voiceState.sessionId && state.voiceState.token) {
       await player.update({
         voice: {
           endpoint: state.voiceState.endpoint,
           sessionId: state.voiceState.sessionId,
-          channelId: state.voiceState.channelId,
+          channelId: voiceChannelId,
           token: state.voiceState.token
         }
       });

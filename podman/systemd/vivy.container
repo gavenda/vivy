@@ -6,7 +6,7 @@ Requires=redis.container
 Requires=lavalink.container
 
 [Container]
-ContainerName=vivy
+ContainerName=vivy-app
 AutoUpdate=registry
 Image=docker.io/gavenda/vivy:latest
 EnvironmentFile=/home/vivy/.env
