@@ -6,6 +6,7 @@ import { effect } from './effect.command';
 import { listenMoe } from './listen.moe.command';
 import { loop } from './loop.command';
 import { lyrics } from './lyrics.command';
+import { move } from './move.command';
 import { pause } from './pause.command';
 import { play } from './play.command';
 import { player } from './player.command';
@@ -26,6 +27,7 @@ export const chatInputCommands = [
   listenMoe,
   loop,
   lyrics,
+  move,
   pause,
   play,
   player,
@@ -47,6 +49,7 @@ export {
   listenMoe,
   loop,
   lyrics,
+  move,
   pause,
   play,
   player,

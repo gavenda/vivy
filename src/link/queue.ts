@@ -65,7 +65,6 @@ export class TrackQueue<UserData> {
    */
   enqueue(...track: Track<UserData>[]) {
     this.tracks.push(...track);
-    return this;
   }
 
   /**
@@ -74,7 +73,29 @@ export class TrackQueue<UserData> {
   enqueueNext(track: Track<UserData>) {
     this.tracks.unshift(track);
     this.offset = 0;
-    return this;
+  }
+
+  /**
+   * Swaps two tracks in the remaining queue.
+   * @param indexA The first track index relative to the remaining queue.
+   * @param indexB The second track index relative to the remaining queue.
+   */
+  swap(indexA: number, indexB: number) {
+    if (indexA === indexB) return;
+
+    const size = this.size;
+    if (indexA < 0 || indexB < 0 || indexA >= size || indexB >= size) return;
+
+    const a = this.offset + indexA;
+    const b = this.offset + indexB;
+
+    const trackA = this.tracks[a];
+    const trackB = this.tracks[b];
+
+    if (!trackA || !trackB) return;
+
+    this.tracks[a] = trackB;
+    this.tracks[b] = trackA;
   }
 
   /**
