@@ -56,10 +56,7 @@ interface N8NRemoveRangeWebhookResponse extends N8NBaseWebhookResponse {
 }
 
 export type N8NWebhookResponse =
-  | N8NPlayWebhookResponse
-  | N8NRemoveRangeWebhookResponse
-  | N8NRemoveWebhookResponse
-  | N8NMessageWebhookResponse;
+  N8NPlayWebhookResponse | N8NRemoveRangeWebhookResponse | N8NRemoveWebhookResponse | N8NMessageWebhookResponse;
 
 export enum ResponsePrompt {
   NOT_IN_VOICE_CHANNEL = 'Tell the human that it needs to be in a voice channel for you to play a music or song',

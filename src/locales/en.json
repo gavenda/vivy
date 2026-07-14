@@ -52,7 +52,13 @@
       "queue_remember_question_success": "Remembered. We will always queue your music that way starting now.",
       "move_track_in_queue": "Moved `{{ track }}` to `{{ position }}` in the queue.",
       "invalid_queue_number": "Invalid queue number given.",
-      "queue_number_out_of_range": "Queue number is out of range."
+      "queue_number_out_of_range": "Queue number is out of range.",
+      "stats_no_records": "No stats have been recorded for this server yet.",
+      "stats_no_global_records": "No stats have been recorded globally yet.",
+      "stats_top_guild_tracks": "-# TOP TRACKS",
+      "stats_top_guild_users": "-# TOP REQUESTERS",
+      "stats_top_global_tracks": "-# TOP TRACKS (GLOBAL)",
+      "stats_top_global_users": "-# TOP REQUESTERS (GLOBAL)"
     },
     "placeholder": {
       "select_music": "Please select music to play"

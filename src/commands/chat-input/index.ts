@@ -15,6 +15,7 @@ import { remove } from './remove.command';
 import { resume } from './resume.command';
 import { shuffle } from './shuffle.command';
 import { skip } from './skip.command';
+import { stats } from './stats.command';
 import { stop } from './stop.command';
 import { volume } from './volume.command';
 
@@ -36,6 +37,7 @@ export const chatInputCommands = [
   resume,
   shuffle,
   skip,
+  stats,
   stop,
   volume
 ];
@@ -58,6 +60,7 @@ export {
   resume,
   shuffle,
   skip,
+  stats,
   stop,
   volume
 };

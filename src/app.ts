@@ -11,6 +11,7 @@ import type { Requester } from './requester';
 import { getFileSink } from '@logtape/file';
 import { ansiColorFormatter, configure, getConsoleSink, getLogger, withFilter } from '@logtape/logtape';
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { recordTrackStatistics } from './stats/track';
 
 export const main = async () => {
   if (!process.env.TOKEN) {
@@ -182,6 +183,7 @@ export const main = async () => {
       listenMoe.connect(RadioType.KPOP);
     }
 
+    await recordTrackStatistics(player, track);
     await updatePlayer(context, player.guildId);
   });
 

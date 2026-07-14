@@ -77,10 +77,6 @@ interface TrackUpdateRequestPayload extends Payload {
 }
 
 export type ListenMoePayload =
-  | HeartbeatPayload
-  | WelcomePayload
-  | HeartbeatAckPayload
-  | TrackUpdatePayload
-  | TrackUpdateRequestPayload;
+  HeartbeatPayload | WelcomePayload | HeartbeatAckPayload | TrackUpdatePayload | TrackUpdateRequestPayload;
 
 export type PlaybackInfoPayload = TrackUpdatePayload | TrackUpdateRequestPayload;
