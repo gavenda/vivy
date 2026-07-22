@@ -54,10 +54,10 @@ export const stats: AppChatInputCommand = {
 
     const guildId = interaction.guildId;
     // These statistics are stored as sorted sets (ZINCRBY). Fetch top entries with scores.
-    const topGuildTracks = await redis.zrevrange(`stats:guild:${guildId}:tracks:plays`, 0, 9, 'WITHSCORES');
-    const topGuildUsers = await redis.zrevrange(`stats:guild:${guildId}:users:requests`, 0, 9, 'WITHSCORES');
-    const topGlobalTracks = await redis.zrevrange('stats:tracks:plays', 0, 9, 'WITHSCORES');
-    const topGlobalUsers = await redis.zrevrange('stats:users:requests', 0, 9, 'WITHSCORES');
+    const topGuildTracks = await redis.zrevrange(`stats:guild:${guildId}:tracks:plays`, 0, 3, 'WITHSCORES');
+    const topGuildUsers = await redis.zrevrange(`stats:guild:${guildId}:users:requests`, 0, 3, 'WITHSCORES');
+    const topGlobalTracks = await redis.zrevrange('stats:tracks:plays', 0, 3, 'WITHSCORES');
+    const topGlobalUsers = await redis.zrevrange('stats:users:requests', 0, 3, 'WITHSCORES');
 
     const guildTrackText =
       topGuildTracks && topGuildTracks.length
