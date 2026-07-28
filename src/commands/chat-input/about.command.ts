@@ -54,14 +54,14 @@ export const about: AppChatInputCommand = {
 
     const versionText = `-# ${i18next.t('about_embed.field_version', { lng })}\n${version}\n`;
     const languageText = `-# ${i18next.t('about_embed.field_language', { lng })}\n[TypeScript](https://typescriptlang.org/)\n`;
-    const platformText = `-# ${i18next.t('about_embed.field_platform', { lng })}\n[DigitalOcean](https://www.digitalocean.com/)\n`;
+    const hostText = `-# ${i18next.t('about_embed.field_host', { lng })}\n[GreenCloud VPS](https://greencloudvps.com/)\n`;
     const dateCreatedText = `-# ${i18next.t('about_embed.field_date_created', { lng })}\n${Intl.DateTimeFormat('en-US', { dateStyle: 'long', timeStyle: 'long' }).format(dateCreated)}\n`;
 
     container.addSectionComponents(aboutSection);
     container.addTextDisplayComponents(
       new TextDisplayBuilder().setContent(versionText),
       new TextDisplayBuilder().setContent(languageText),
-      new TextDisplayBuilder().setContent(platformText),
+      new TextDisplayBuilder().setContent(hostText),
       new TextDisplayBuilder().setContent(dateCreatedText)
     );
     container.addSeparatorComponents(new SeparatorBuilder());

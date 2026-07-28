@@ -69,7 +69,7 @@
       "footer": "You can help with the development by dropping by on GitHub.",
       "field_version": "Version",
       "field_language": "Language",
-      "field_platform": "Platform",
+      "field_host": "Host",
       "field_date_created": "Date Created",
       "field_source": "Source"
     },
