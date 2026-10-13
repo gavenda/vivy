@@ -4,8 +4,7 @@ import type { AppEvent } from './event';
 import type { AppContext } from 'vivy/context';
 import type { Requester } from 'vivy/requester';
 import { LoadResultType, type LavalinkSource, type Player } from 'vivy/link';
-import { QueueType, searchWithRetry, setPlayerPage, updatePlayer } from 'vivy/player';
-import { handleSearch, handleTrack } from 'vivy/player/handlers/agent';
+import { enqueueTrack, QueueType, searchWithRetry, setPlayerPage, updatePlayer } from 'vivy/player';
 import { agentPrompt, ResponsePrompt, ResponseType } from 'vivy/agent';
 import { getLogger } from '@logtape/logtape';
 
@@ -230,12 +229,18 @@ const handleQuery = async (options: {
     }
     case LoadResultType.TRACK: {
       // Handle track result
-      await handleTrack({ message, track: result.data, player, queueType });
+      await enqueueTrack(player, result.data, queueType);
       break;
     }
     case LoadResultType.SEARCH: {
-      // Handle search result
-      await handleSearch({ message, query, player, result, queueType });
+      // Nobody to pick from, take the best match
+      const [track] = result.data;
+
+      if (!track) break;
+
+      logger.debug('Track selected', { track });
+
+      await enqueueTrack(player, track, queueType);
       break;
     }
   }
