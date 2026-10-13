@@ -1,77 +1,19 @@
 import { SpotifyApi } from '@spotify/web-api-ts-sdk';
-import { ActivityType, Client, Events, GatewayIntentBits, type GatewayReceivePayload } from 'discord.js';
+import { getLogger } from '@logtape/logtape';
+import { ActivityType, Client, GatewayIntentBits } from 'discord.js';
 import i18next from 'i18next';
+import { loadConfig, type Config } from './config';
 import type { AppContext } from './context';
-import { events } from './events';
+import { registerDiscordEvents } from './discord-events';
 import { Lavalink } from './link';
-import { LISTEN_MOE_JPOP_STREAM, LISTEN_MOE_KPOP_STREAM, LISTEN_MOE_STREAMS, ListenMoe, RadioType } from './listen.moe';
+import { registerLinkEvents } from './link-events';
+import { ListenMoe } from './listen.moe';
+import { registerListenMoeEvents } from './listen-moe-events';
 import en from './locales/en.json';
-import { updatePlayer } from './player';
+import { configureLogging } from './logging';
 import type { Requester } from './requester';
-import { getFileSink } from '@logtape/file';
-import { ansiColorFormatter, configure, getConsoleSink, getLogger, withFilter } from '@logtape/logtape';
-import { AsyncLocalStorage } from 'node:async_hooks';
-import { recordTrackStatistics } from './stats/track';
 
-export const main = async () => {
-  if (!process.env.TOKEN) {
-    throw new Error('TOKEN is required.');
-  }
-  if (!process.env.CLIENT_ID) {
-    throw new Error('CLIENT_ID is required.');
-  }
-  if (!process.env.GUILD_ID) {
-    throw new Error('GUILD_ID is required.');
-  }
-  if (!process.env.REDIS_URL) {
-    throw new Error('REDIS_URL is required.');
-  }
-  if (!process.env.SPOTIFY_CLIENT_ID) {
-    throw new Error('SPOTIFY_CLIENT_ID is required.');
-  }
-  if (!process.env.SPOTIFY_CLIENT_SECRET) {
-    throw new Error('SPOTIFY_CLIENT_SECRET is required.');
-  }
-  if (!process.env.LAVA_HOST) {
-    throw new Error('LAVA_HOST is required.');
-  }
-  if (!process.env.LAVA_SECURE) {
-    throw new Error('LAVA_SECURE is required.');
-  }
-  if (!process.env.LAVA_PASS) {
-    throw new Error('LAVA_HOST is required.');
-  }
-  if (!process.env.LAVA_PORT) {
-    throw new Error('LAVA_PORT is required.');
-  }
-
-  // Configure logging
-  await configure({
-    sinks: {
-      console: withFilter(getConsoleSink({ nonBlocking: true, formatter: ansiColorFormatter }), 'info'),
-      file: getFileSink('logs/vivy.log', {
-        lazy: true,
-        bufferSize: 8192,
-        flushInterval: 5000,
-        nonBlocking: true
-      })
-    },
-    loggers: [
-      { category: ['logtape', 'meta'], sinks: ['file'] },
-      { category: 'vivy', lowestLevel: 'debug', sinks: ['console', 'file'] }
-    ],
-    contextLocalStorage: new AsyncLocalStorage()
-  });
-
-  const logger = getLogger(['vivy', 'main']);
-
-  // Create spotify client
-  const spotify = SpotifyApi.withClientCredentials(process.env.SPOTIFY_CLIENT_ID, process.env.SPOTIFY_CLIENT_SECRET);
-
-  // Create listen moe radio
-  const listenMoe = new ListenMoe();
-
-  // Create discord client
+const createContext = (config: Config): AppContext => {
   const client = new Client({
     intents: [
       GatewayIntentBits.Guilds,
@@ -85,174 +27,63 @@ export const main = async () => {
     }
   });
 
-  // Configure lava link
   const link = new Lavalink<Requester>({
     nodes: [
       {
-        host: process.env.LAVA_HOST,
-        port: Number(process.env.LAVA_PORT),
-        secure: process.env.LAVA_SECURE === 'true',
-        authorization: process.env.LAVA_PASS
+        host: config.lavalink.host,
+        port: config.lavalink.port,
+        secure: config.lavalink.secure,
+        authorization: config.lavalink.password
       }
     ],
     sendVoiceUpdate: (guildId, data) => {
-      const guild = client.guilds.cache.get(guildId);
-
-      if (guild) {
-        guild.shard.send(data);
-      }
+      client.guilds.cache.get(guildId)?.shard.send(data);
     }
   });
 
-  // Handle raw packets
-  client.on('raw', async (data: GatewayReceivePayload) => {
-    await link.handleRawData(data);
-  });
-
-  // Handle application errors
-  client.on(Events.Error, (error) => {
-    logger.error('Internal error', { error });
-  });
-
-  const context: AppContext = {
-    applicationId: process.env.CLIENT_ID,
-    listenMoe,
+  return {
+    applicationId: config.clientId,
     client,
     link,
-    spotify
+    listenMoe: new ListenMoe(),
+    spotify: SpotifyApi.withClientCredentials(config.spotify.clientId, config.spotify.clientSecret)
   };
+};
 
-  // listen moe events
-  listenMoe.on('trackUpdate', async () => {
-    for (const node of link.connectedNodes) {
-      for (const player of node.players) {
-        if (player.queue.current && LISTEN_MOE_STREAMS.includes(player.queue.current.info.identifier)) {
-          await updatePlayer(context, player.guildId);
-        }
-      }
-    }
-  });
+export const main = async () => {
+  const config = loadConfig();
 
-  // link events
-  link.on('nodeReady', async (node) => {
-    const { host } = node.options;
-    logger.info({ message: `Connected to node`, host });
+  await configureLogging();
 
-    const guilds = client.guilds.cache.values();
+  const logger = getLogger(['vivy', 'main']);
+  const context = createContext(config);
 
-    for (const guild of guilds) {
-      await context.link.createPlayer({
-        guildId: guild.id,
-        autoLeave: true
-      });
-    }
-  });
-
-  link.on('nodeError', (node, error) => {
-    const { host } = node.options;
-    logger.error({ message: `Error on node`, host, error });
-  });
-
-  link.on('nodeResumed', (node) => {
-    const { host } = node.options;
-    logger.info({ message: `Session resumed`, host });
-  });
-
-  link.on('nodeDisconnected', (node) => {
-    const { host } = node.options;
-    logger.debug({ message: `Disconnected from node`, host });
-  });
-
-  link.on('playerMove', (player, oldVoiceChannelId, newVoiceChannelId) => {
-    const { guildId } = player;
-    logger.debug('Player moved', { guildId, oldVoiceChannelId, newVoiceChannelId });
-  });
-
-  link.on('playerSocketClosed', (player, code, byRemote, reason) => {
-    const { guildId } = player;
-    logger.debug('Player socket closed', { guildId, code, byRemote, reason });
-  });
-
-  link.on('trackStart', async (player, track) => {
-    logger.debug('Track start', { title: track.info.title, guild: player.guildId });
-
-    if (track.info.identifier === LISTEN_MOE_JPOP_STREAM) {
-      listenMoe.connect(RadioType.JPOP);
-    }
-    if (track.info.identifier === LISTEN_MOE_KPOP_STREAM) {
-      listenMoe.connect(RadioType.KPOP);
-    }
-
-    await recordTrackStatistics(player, track);
-    await updatePlayer(context, player.guildId);
-  });
-
-  link.on('trackEnd', async (player, track, reason) => {
-    logger.debug('Track end', { title: track.info.title, guild: player.guildId, reason });
-
-    if (LISTEN_MOE_STREAMS.includes(track.info.identifier)) {
-      listenMoe.disconnect();
-    }
-
-    await updatePlayer(context, player.guildId);
-  });
-
-  link.on('queueEnd', () => {
-    logger.debug('Queue end');
-  });
-
-  link.on('trackError', async (player, track, exception) => {
-    logger.error('Track error', { title: track.info.title, guild: player.guildId, exception });
-    await player.skip();
-  });
-
-  link.on('trackStuck', async (player, track) => {
-    logger.debug('Track stuck', { title: track.info.title, guild: player.guildId });
-    await player.skip();
-  });
-
-  // Register events
-  for (const { once, event, execute } of events) {
-    logger.debug({ message: `Registering event handler`, event });
-
-    if (once) {
-      // @ts-expect-error too much OR typing here, compiler will get confused
-      client.once(event, ($event) => execute(context, $event));
-    } else {
-      // @ts-expect-error too much OR typing here, compiler will get confused
-      client.on(event, ($event) => execute(context, $event));
-    }
-  }
+  registerDiscordEvents(context);
+  registerLinkEvents(context);
+  registerListenMoeEvents(context);
 
   const cleanup = async () => {
     logger.info('Received SIGINT/SIGTERM, cleaning up');
-    if (client.isReady()) {
-      await client.destroy();
+    if (context.client.isReady()) {
+      await context.client.destroy();
     }
     process.exit(0);
   };
 
-  // Graceful disconnect
   process.on('SIGINT', cleanup);
   process.on('SIGTERM', cleanup);
 
   try {
-    // Initialize i18next
     await i18next.init({
       lng: 'en-US',
-      resources: {
-        en
-      }
+      resources: { en }
     });
 
-    // Now ready to login to gateway
-    await client.login(process.env.TOKEN);
+    await context.client.login(config.token);
+
+    process.send?.('ready');
   } catch (error) {
     logger.error('Unable to connect to discord gateway', { error });
     process.exit(1);
-  } finally {
-    if (process.send) {
-      process.send('ready');
-    }
   }
 };
