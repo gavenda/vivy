@@ -295,9 +295,12 @@ export class LavalinkNode<UserData> {
 
         if (payload.reason === TrackEndReason.REPLACED) return;
 
-        if (player.repeatMode === RepeatMode.TRACK && player.queue.current) {
+        // Only a track that played to the end repeats, an explicit stop or a failure must not restart it
+        const finished = payload.reason === TrackEndReason.FINISHED;
+
+        if (finished && player.repeatMode === RepeatMode.TRACK) {
           await player.play(payload.track);
-        } else if (player.repeatMode === RepeatMode.QUEUE && player.queue.current) {
+        } else if (finished && player.repeatMode === RepeatMode.QUEUE) {
           player.queue.enqueue(payload.track);
           await player.play(player.queue.dequeue());
         } else if (player.queue.next) {

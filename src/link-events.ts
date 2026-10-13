@@ -1,5 +1,5 @@
 import { getLogger } from '@logtape/logtape';
-import { queueEncore } from './autoplay';
+import { isAutoplayTrack, queueEncore } from './autoplay';
 import type { AppContext } from './context';
 import { recordTrackMetrics } from './diva';
 import { TrackEndReason } from './link';
@@ -50,7 +50,10 @@ export const registerLinkEvents = (context: AppContext) => {
       listenMoe.connect(RadioType.KPOP);
     }
 
-    await recordTrackStatistics(player, track);
+    // Autoplay is requested by the bot itself, it must not show up as a top user
+    if (!isAutoplayTrack(context, track)) {
+      await recordTrackStatistics(player, track);
+    }
     await updatePlayer(context, player.guildId);
   });
 
@@ -62,8 +65,11 @@ export const registerLinkEvents = (context: AppContext) => {
     }
 
     // Only a natural finish is a positive signal, an explicit stop or skip is a negative one.
+    // Finishing an autoplayed track is not a signal, the bot picked it itself. Skipping one still is.
     if (reason === TrackEndReason.FINISHED) {
-      await recordTrackMetrics(player, track, true);
+      if (!isAutoplayTrack(context, track)) {
+        await recordTrackMetrics(player, track, true);
+      }
       await queueEncore(context, player, track);
     } else if (reason === TrackEndReason.STOPPED || reason === TrackEndReason.REPLACED) {
       await recordTrackMetrics(player, track, false);
