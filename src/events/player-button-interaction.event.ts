@@ -1,6 +1,6 @@
 import { RepeatMode } from 'vivy/link';
 
-import { createPlayerComponentsV2, getPlayerPage, setPlayerPage } from 'vivy/player';
+import { createPlayerComponentsV2, getPlayerPage, QUEUE_PAGE_SIZE, setPlayerPage } from 'vivy/player';
 import { chunkSize } from 'vivy/utils';
 import { Events, MessageFlags } from 'discord.js';
 import i18next from 'i18next';
@@ -41,7 +41,7 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
     logger.debug('Received player button interaction', { buttonId });
 
     let pageIndex = await getPlayerPage(player.guildId);
-    const pageSize = chunkSize(player.queue.size, 15);
+    const pageSize = chunkSize(player.queue.size, QUEUE_PAGE_SIZE);
 
     switch (buttonId) {
       case 'play-toggle': {
