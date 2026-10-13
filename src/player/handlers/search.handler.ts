@@ -13,7 +13,7 @@ import {
 import i18next from 'i18next';
 import { handleQueueSelection } from './queue-selection.handler';
 import { handleTrack } from './track.handler';
-import { QueueType } from '../queue.type';
+import { QueueType } from 'vivy/player/queue.type';
 import { getLogger } from '@logtape/logtape';
 
 const logger = getLogger(['vivy', 'handler:search']);

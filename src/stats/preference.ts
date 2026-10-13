@@ -1,7 +1,7 @@
-import type { Player, Track } from '../link';
-import { LISTEN_MOE_STREAMS } from '../listen.moe';
-import { redis } from '../redis';
-import type { Requester } from '../requester';
+import type { Player, Track } from 'vivy/link';
+import { LISTEN_MOE_STREAMS } from 'vivy/listen.moe';
+import { redis } from 'vivy/redis';
+import type { Requester } from 'vivy/requester';
 
 type TimeOfDay = 'late_night' | 'morning' | 'afternoon' | 'evening';
 

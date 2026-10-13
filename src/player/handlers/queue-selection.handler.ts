@@ -11,8 +11,8 @@ import {
   StringSelectMenuInteraction
 } from 'discord.js';
 import i18next from 'i18next';
-import { QueueType } from '../queue.type';
-import { hasAnsweredQueueQuestion, setQueueQuestionAnswered, setQueueTypePreference } from '../store';
+import { QueueType } from 'vivy/player/queue.type';
+import { hasAnsweredQueueQuestion, setQueueQuestionAnswered, setQueueTypePreference } from 'vivy/player/store';
 import { handleTrack } from './track.handler';
 
 export const handleQueueSelection = async (options: {

@@ -6,7 +6,20 @@ const CustomRules = {
     '@typescript-eslint/no-unsafe-argument': 'warn',
     '@typescript-eslint/no-explicit-any': 'warn',
     '@typescript-eslint/no-unsafe-member-access': 'warn',
-    '@typescript-eslint/no-misused-promises': 'off'
+    '@typescript-eslint/no-misused-promises': 'off',
+    // Relative imports stay within a directory, anything else goes through the 'vivy/*' alias.
+    // The package manifest sits outside of src, the alias can't reach it.
+    'no-restricted-imports': [
+      'error',
+      {
+        patterns: [
+          {
+            regex: '^\\.\\./(?!package\\.json$)',
+            message: "Import across directories with the 'vivy/*' alias instead of a parent-relative path."
+          }
+        ]
+      }
+    ]
   }
 };
 
