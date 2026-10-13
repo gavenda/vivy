@@ -1,7 +1,7 @@
 import { getLogger } from '@logtape/logtape';
 import { isAutoplayTrack, queueEncore } from './autoplay';
 import type { AppContext } from './context';
-import { recordTrackMetrics } from './diva';
+import { recordTrackMetrics } from './stats/preference';
 import { TrackEndReason } from './link';
 import { LISTEN_MOE_JPOP_STREAM, LISTEN_MOE_KPOP_STREAM, LISTEN_MOE_STREAMS, RadioType } from './listen.moe';
 import { updatePlayer } from './player';

@@ -1,6 +1,6 @@
 import { getLogger } from '@logtape/logtape';
 import type { AppContext } from './context';
-import { getContextualEncore, isAutoplayEnabled } from './diva';
+import { getContextualEncore, isAutoplayEnabled } from './stats/preference';
 import { LoadResultType, RepeatMode, type Player, type Track } from './link';
 import { LISTEN_MOE_STREAMS } from './listen.moe';
 import type { Requester } from './requester';

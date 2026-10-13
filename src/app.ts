@@ -11,6 +11,7 @@ import { ListenMoe } from './listen.moe';
 import { registerListenMoeEvents } from './listen-moe-events';
 import en from './locales/en.json';
 import { configureLogging } from './logging';
+import { redis } from './redis';
 import type { Requester } from './requester';
 
 const createContext = (config: Config): AppContext => {
@@ -64,10 +65,15 @@ export const main = async () => {
 
   const cleanup = async () => {
     logger.info('Received SIGINT/SIGTERM, cleaning up');
-    if (context.client.isReady()) {
-      await context.client.destroy();
+    try {
+      if (context.client.isReady()) {
+        await context.client.destroy();
+      }
+      // Players are intentionally left alone, their persisted state is used to resume after a restart
+      redis.close();
+    } finally {
+      process.exit(0);
     }
-    process.exit(0);
   };
 
   process.on('SIGINT', cleanup);

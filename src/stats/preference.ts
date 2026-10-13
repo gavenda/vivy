@@ -1,6 +1,6 @@
-import { redis } from 'bun';
-import type { Player, Track } from './link';
-import type { Requester } from './requester';
+import type { Player, Track } from '../link';
+import { redis } from '../redis';
+import type { Requester } from '../requester';
 
 type TimeOfDay = 'late_night' | 'morning' | 'afternoon' | 'evening';
 

@@ -1,4 +1,4 @@
-import { redis } from 'bun';
+import { redis } from 'vivy/redis';
 import type { Track } from 'vivy/link/payload/track';
 import type { Requester } from 'vivy/requester';
 import type { Player } from 'vivy/link/player';

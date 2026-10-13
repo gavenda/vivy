@@ -1,4 +1,4 @@
-import { isAutoplayEnabled, setAutoplay } from 'vivy/diva';
+import { isAutoplayEnabled, setAutoplay } from 'vivy/stats/preference';
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
 import type { AppChatInputCommand } from './chat-input-command';

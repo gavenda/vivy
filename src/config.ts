@@ -1,4 +1,4 @@
-const required = (name: string): string => {
+export const required = (name: string): string => {
   const value = process.env[name];
 
   if (!value) {
@@ -12,7 +12,6 @@ export const loadConfig = () => ({
   token: required('TOKEN'),
   clientId: required('CLIENT_ID'),
   guildId: required('GUILD_ID'),
-  redisUrl: required('REDIS_URL'),
   spotify: {
     clientId: required('SPOTIFY_CLIENT_ID'),
     clientSecret: required('SPOTIFY_CLIENT_SECRET')
