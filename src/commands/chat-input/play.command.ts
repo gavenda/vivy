@@ -9,7 +9,7 @@ import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder, SlashCo
 import i18next from 'i18next';
 import { parse as parseSpotifyUri } from 'spotify-uri';
 import type { AppChatInputCommand } from './chat-input-command';
-import { QueueType } from 'vivy/player';
+import { QueueType, searchWithRetry } from 'vivy/player';
 import { redis } from 'bun';
 import { getLogger } from '@logtape/logtape';
 
@@ -136,22 +136,18 @@ const playMusic = async (options: {
   }
 };
 
-const handleQuery = async (
-  options: {
-    query: string;
-    player: Player<Requester>;
-    context: AppContext;
-    interaction: ChatInputCommandInteraction;
-    source: LavalinkSource;
-    queueType: QueueType;
-  },
-  retry = true,
-  retryCount = 5
-) => {
+const handleQuery = async (options: {
+  query: string;
+  player: Player<Requester>;
+  context: AppContext;
+  interaction: ChatInputCommandInteraction;
+  source: LavalinkSource;
+  queueType: QueueType;
+}) => {
   const { query, interaction, player, source, queueType, context } = options;
   const { link } = context;
 
-  const result = await link.search({
+  const result = await searchWithRetry(link, {
     query,
     source,
     userData: {
@@ -163,21 +159,12 @@ const handleQuery = async (
 
   switch (result.loadType) {
     case LoadResultType.ERROR: {
-      // Attempt to retry if search fails
-      if (retry) {
-        logger.debug('Error in track lookup, attempting to retry', { retryCount });
-
-        setTimeout(async () => {
-          await handleQuery(options, retryCount !== 0, retryCount - 1);
-        }, 1000);
-      } else {
-        logger.debug('Give up in searching track', { retryCount });
-        // Responding with an error message if loading fails
-        await interaction.followUp({
-          flags: MessageFlags.Ephemeral,
-          content: i18next.t('reply.error_lookup', { lng: interaction.locale })
-        });
-      }
+      logger.debug('Give up in searching track', { query });
+      // Responding with an error message if loading fails
+      await interaction.followUp({
+        flags: MessageFlags.Ephemeral,
+        content: i18next.t('reply.error_lookup', { lng: interaction.locale })
+      });
       break;
     }
     case LoadResultType.EMPTY: {

@@ -4,7 +4,7 @@ import type { AppEvent } from './event';
 import type { AppContext } from 'vivy/context';
 import type { Requester } from 'vivy/requester';
 import { LoadResultType, type LavalinkSource, type Player } from 'vivy/link';
-import { QueueType, updatePlayer } from 'vivy/player';
+import { QueueType, searchWithRetry, updatePlayer } from 'vivy/player';
 import { handleSearch, handleTrack } from 'vivy/player/handlers/agent';
 import { agentPrompt, ResponsePrompt, ResponseType } from 'vivy/agent';
 import { redis } from 'bun';
@@ -153,23 +153,19 @@ const playMusic = async (
   }
 };
 
-const handleQuery = async (
-  options: {
-    query: string;
-    member: GuildMember;
-    message: OmitPartialGroupDMChannel<Message<boolean>>;
-    player: Player<Requester>;
-    context: AppContext;
-    source: LavalinkSource;
-    queueType: QueueType;
-  },
-  retry = true,
-  retryCount = 5
-) => {
+const handleQuery = async (options: {
+  query: string;
+  member: GuildMember;
+  message: OmitPartialGroupDMChannel<Message<boolean>>;
+  player: Player<Requester>;
+  context: AppContext;
+  source: LavalinkSource;
+  queueType: QueueType;
+}) => {
   const { query, player, source, queueType, context, member, message } = options;
   const { link } = context;
 
-  const result = await link.search({
+  const result = await searchWithRetry(link, {
     query,
     source,
     userData: {
@@ -181,32 +177,23 @@ const handleQuery = async (
 
   switch (result.loadType) {
     case LoadResultType.ERROR: {
-      // Attempt to retry if search fails
-      if (retry) {
-        logger.debug('Error in track lookup, attempting to retry', { retryCount });
+      logger.debug('Give up in searching track', { query });
 
-        setTimeout(async () => {
-          await handleQuery(options, retryCount !== 0, retryCount - 1);
-        }, 1000);
-      } else {
-        logger.debug('Give up in searching track', { retryCount });
+      const prompt = await agentPrompt({
+        prompt: ResponsePrompt.TRACK_LOAD_GIVEUP,
+        message,
+        context
+      });
 
-        const prompt = await agentPrompt({
-          prompt: ResponsePrompt.TRACK_LOAD_GIVEUP,
-          message,
-          context
-        });
+      if (!prompt) return;
 
-        if (!prompt) return;
-
-        await message.reply({
-          content: prompt.message
-        });
-      }
+      await message.reply({
+        content: prompt.message
+      });
       break;
     }
     case LoadResultType.EMPTY: {
-      logger.debug('Track came up empty', { retryCount });
+      logger.debug('Track came up empty', { query });
 
       const prompt = await agentPrompt({
         prompt: ResponsePrompt.TRACK_LOAD_EMPTY,
