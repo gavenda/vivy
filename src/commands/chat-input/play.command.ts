@@ -4,11 +4,12 @@ import { LavalinkSource, LoadResultType, Player } from 'vivy/link';
 import { handleQueueSelection, handleSearch, handleTracks } from 'vivy/player/handlers';
 import type { Requester } from 'vivy/requester';
 import { handleSpotifyAlbum, handleSpotifyPlaylist, handleSpotifyTrack } from 'vivy/spotify/handlers';
-import { hasVoiceState, isSpotify, trimEllipse } from 'vivy/utils';
+import { isSpotify, trimEllipse } from 'vivy/utils';
 import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder, SlashCommandStringOption } from 'discord.js';
 import i18next from 'i18next';
 import { parse as parseSpotifyUri } from 'spotify-uri';
 import type { AppChatInputCommand } from './chat-input-command';
+import { requireVoice } from './guards';
 import { getQueueTypePreference, QueueType, searchWithRetry } from 'vivy/player';
 import { getLogger } from '@logtape/logtape';
 
@@ -89,27 +90,11 @@ const playMusic = async (options: {
 }) => {
   const { context, interaction, source, queueType } = options;
 
-  if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
-    await interaction.reply({
-      content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
-      flags: MessageFlags.Ephemeral
-    });
-    return;
-  }
-  if (!hasVoiceState(interaction.member)) {
-    await interaction.reply({
-      content: i18next.t('reply.illegal_non_gateway_request', { lng: interaction.locale }),
-      flags: MessageFlags.Ephemeral
-    });
-    return;
-  }
-  if (!interaction.member.voice.channel) {
-    await interaction.reply({
-      content: i18next.t('reply.not_in_voice', { lng: interaction.locale }),
-      flags: MessageFlags.Ephemeral
-    });
-    return;
-  }
+  const session = await requireVoice(interaction);
+
+  if (!session) return;
+
+  const { guildId, voiceChannel } = session;
 
   // Passed the guards, defer (might be delayed)
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -117,14 +102,14 @@ const playMusic = async (options: {
   const { link } = context;
   const query = interaction.options.getString('query', true);
   const player = await link.createPlayer({
-    guildId: interaction.guild.id,
+    guildId,
     autoLeave: true
   });
 
   // Connect to the voice channel if not connected
   if (!player.voiceConnected) {
-    await player.connect(interaction.member.voice.channel.id);
-    logger.debug({ message: `Connected to voice channel: ${interaction.member.voice.channel.name}` });
+    await player.connect(voiceChannel.id);
+    logger.debug({ message: `Connected to voice channel: ${voiceChannel.name}` });
   }
 
   if (isSpotify(query)) {

@@ -1,7 +1,7 @@
-import { hasVoiceState } from 'vivy/utils';
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
 import type { AppChatInputCommand } from './chat-input-command';
+import { requirePlayer } from './guards';
 
 export const skip: AppChatInputCommand = {
   // prettier-ignore
@@ -9,38 +9,12 @@ export const skip: AppChatInputCommand = {
     .setName('skip')
     .setDescription('Skip the currently playing music.')
     .toJSON(),
-  execute: async ({ link }, interaction) => {
-    if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
-      await interaction.reply({
-        content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
-        flags: MessageFlags.Ephemeral
-      });
-      return;
-    }
-    if (!hasVoiceState(interaction.member)) {
-      await interaction.reply({
-        content: i18next.t('reply.illegal_non_gateway_request', { lng: interaction.locale }),
-        flags: MessageFlags.Ephemeral
-      });
-      return;
-    }
-    if (!interaction.member.voice.channel) {
-      await interaction.reply({
-        content: i18next.t('reply.not_in_voice', { lng: interaction.locale }),
-        flags: MessageFlags.Ephemeral
-      });
-      return;
-    }
+  execute: async (context, interaction) => {
+    const session = await requirePlayer(context, interaction);
 
-    const player = link.findPlayerByGuildId(interaction.guildId);
+    if (!session) return;
 
-    if (!player) {
-      await interaction.reply({
-        flags: MessageFlags.Ephemeral,
-        content: i18next.t('reply.not_playing', { lng: interaction.locale })
-      });
-      return;
-    }
+    const { player } = session;
 
     if (!player.queue.current) {
       await interaction.reply({

@@ -1,7 +1,8 @@
 import type { AppContext } from 'vivy/context';
-import { MessageFlags, SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
 import type { AppChatInputCommand } from './chat-input-command';
+import { requireGuild } from './guards';
 import { redis } from 'vivy/redis';
 
 const formatScore = (score: string | number | null | undefined) => `${Math.round(Number(score ?? 0))}`;
@@ -42,17 +43,12 @@ const buildUserList = (entries: [string, number][]) => {
 export const stats: AppChatInputCommand = {
   data: new SlashCommandBuilder().setName('stats').setDescription('Show music usage statistics.').toJSON(),
   execute: async (_context: AppContext, interaction) => {
-    if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
-      await interaction.reply({
-        content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
-        flags: MessageFlags.Ephemeral
-      });
-      return;
-    }
+    const guildId = await requireGuild(interaction);
+
+    if (!guildId) return;
 
     await interaction.deferReply();
 
-    const guildId = interaction.guildId;
     // These statistics are stored as sorted sets (ZINCRBY). Fetch top entries with scores.
     const topGuildTracks = await redis.zrevrange(`stats:guild:${guildId}:tracks:plays`, 0, 3, 'WITHSCORES');
     const topGuildUsers = await redis.zrevrange(`stats:guild:${guildId}:users:requests`, 0, 3, 'WITHSCORES');

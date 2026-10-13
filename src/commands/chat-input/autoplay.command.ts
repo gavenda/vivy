@@ -2,6 +2,7 @@ import { isAutoplayEnabled, setAutoplay } from 'vivy/stats/preference';
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
 import type { AppChatInputCommand } from './chat-input-command';
+import { requireGuild } from './guards';
 
 export const autoplay: AppChatInputCommand = {
   data: new SlashCommandBuilder()
@@ -9,17 +10,13 @@ export const autoplay: AppChatInputCommand = {
     .setDescription('Toggle autoplay based on what this server likes to listen to.')
     .toJSON(),
   execute: async (_context, interaction) => {
-    if (!interaction.guildId || !interaction.inGuild()) {
-      await interaction.reply({
-        content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
-        flags: MessageFlags.Ephemeral
-      });
-      return;
-    }
+    const guildId = await requireGuild(interaction);
 
-    const enabled = !(await isAutoplayEnabled(interaction.guildId));
+    if (!guildId) return;
 
-    await setAutoplay(interaction.guildId, enabled);
+    const enabled = !(await isAutoplayEnabled(guildId));
+
+    await setAutoplay(guildId, enabled);
 
     await interaction.reply({
       flags: MessageFlags.Ephemeral,

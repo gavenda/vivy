@@ -2,6 +2,7 @@ import { createPlayerComponentsV2, getPlayerEmbed, setPlayerEmbed } from 'vivy/p
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
 import type { AppChatInputCommand } from './chat-input-command';
+import { requireGuild } from './guards';
 import { getLogger } from '@logtape/logtape';
 
 const logger = getLogger(['vivy', 'command:player']);
@@ -9,15 +10,11 @@ const logger = getLogger(['vivy', 'command:player']);
 export const player: AppChatInputCommand = {
   data: new SlashCommandBuilder().setName('player').setDescription('Creates a music player in this channel.').toJSON(),
   execute: async (context, interaction) => {
-    if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
-      await interaction.reply({
-        content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
-        flags: MessageFlags.Ephemeral
-      });
-      return;
-    }
+    const guildId = await requireGuild(interaction);
 
-    if (!interaction.channel) {
+    if (!guildId) return;
+
+    if (!interaction.channel?.isSendable()) {
       await interaction.reply({
         content: i18next.t('reply.not_in_text_channel', { lng: interaction.locale }),
         flags: MessageFlags.Ephemeral
@@ -33,7 +30,7 @@ export const player: AppChatInputCommand = {
     });
 
     // Delete previous message, if any
-    const previousPlayer = await getPlayerEmbed(interaction.guildId);
+    const previousPlayer = await getPlayerEmbed(guildId);
 
     if (previousPlayer) {
       try {
@@ -48,18 +45,18 @@ export const player: AppChatInputCommand = {
           }
         }
       } catch (e: unknown) {
-        logger.warn({ message: `Unable to delete previous message`, guildId: interaction.guildId, e });
+        logger.warn({ message: `Unable to delete previous message`, guildId, e });
       }
     }
 
-    const container = createPlayerComponentsV2(context, interaction.guildId);
+    const container = createPlayerComponentsV2(context, guildId);
 
     const message = await interaction.channel.send({
       flags: MessageFlags.IsComponentsV2,
       components: [container]
     });
 
-    await setPlayerEmbed(interaction.guildId, { channelId: interaction.channelId, messageId: message.id });
+    await setPlayerEmbed(guildId, { channelId: interaction.channelId, messageId: message.id });
 
     await interaction.followUp({
       content: i18next.t('reply.player_embed_created', { lng: interaction.locale, channelId: interaction.channelId }),

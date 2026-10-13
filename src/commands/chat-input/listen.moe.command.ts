@@ -3,7 +3,6 @@ import { LoadResultType, Player } from 'vivy/link';
 import { LISTEN_MOE_JPOP_M38U, LISTEN_MOE_KPOP_M38U, RadioType } from 'vivy/listen.moe';
 import { updatePlayer } from 'vivy/player';
 import type { Requester } from 'vivy/requester';
-import { hasVoiceState } from 'vivy/utils/has-voice-state';
 import {
   ChatInputCommandInteraction,
   MessageFlags,
@@ -12,6 +11,7 @@ import {
 } from 'discord.js';
 import i18next from 'i18next';
 import type { AppChatInputCommand } from './chat-input-command';
+import { requirePlayer } from './guards';
 
 export const listenMoe: AppChatInputCommand = {
   data: new SlashCommandBuilder()
@@ -29,46 +29,17 @@ export const listenMoe: AppChatInputCommand = {
     .setDescription('Listen to a radio')
     .toJSON(),
   execute: async (context, interaction) => {
-    if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
-      await interaction.reply({
-        content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
-        flags: MessageFlags.Ephemeral
-      });
-      return;
-    }
-    if (!hasVoiceState(interaction.member)) {
-      await interaction.reply({
-        content: i18next.t('reply.illegal_non_gateway_request', { lng: interaction.locale }),
-        flags: MessageFlags.Ephemeral
-      });
-      return;
-    }
-    if (!interaction.member.voice.channel) {
-      await interaction.reply({
-        content: i18next.t('reply.not_in_voice', { lng: interaction.locale }),
-        flags: MessageFlags.Ephemeral
-      });
-      return;
-    }
+    const session = await requirePlayer(context, interaction);
 
-    const { guildId } = interaction;
-    const { link } = context;
+    if (!session) return;
 
-    const player = link.findPlayerByGuildId(guildId);
-
-    if (!player) {
-      await interaction.reply({
-        flags: MessageFlags.Ephemeral,
-        content: i18next.t('reply.not_playing', { lng: interaction.locale })
-      });
-      return;
-    }
+    const { guildId, voiceChannel, player } = session;
 
     const type = interaction.options.getSubcommand(true);
     const radioType = type === 'anime' ? RadioType.JPOP : RadioType.KPOP;
 
     if (!player.voiceConnected) {
-      await player.connect(interaction.member.voice.channel.id);
+      await player.connect(voiceChannel.id);
     }
 
     const listenAttempt = listenToRadio({ guildId, context, player, interaction, radioType });

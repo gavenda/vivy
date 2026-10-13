@@ -2,7 +2,6 @@ import type { AppContext } from 'vivy/context';
 import { Player } from 'vivy/link';
 
 import type { Requester } from 'vivy/requester';
-import { hasVoiceState } from 'vivy/utils';
 import {
   ChatInputCommandInteraction,
   MessageFlags,
@@ -13,6 +12,7 @@ import {
 } from 'discord.js';
 import i18next from 'i18next';
 import type { AppChatInputCommand } from './chat-input-command';
+import { requirePlayer } from './guards';
 import { getLogger } from '@logtape/logtape';
 
 const logger = getLogger(['vivy', 'command:effect']);
@@ -58,38 +58,11 @@ export const effect: AppChatInputCommand = {
     .setDescription('Apply an effect to the playing music.')
     .toJSON(),
   execute: async (context, interaction) => {
-    if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
-      await interaction.reply({
-        content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
-        flags: MessageFlags.Ephemeral
-      });
-      return;
-    }
-    if (!hasVoiceState(interaction.member)) {
-      await interaction.reply({
-        content: i18next.t('reply.illegal_non_gateway_request', { lng: interaction.locale }),
-        flags: MessageFlags.Ephemeral
-      });
-      return;
-    }
-    if (!interaction.member.voice.channel) {
-      await interaction.reply({
-        content: i18next.t('reply.not_in_voice', { lng: interaction.locale }),
-        flags: MessageFlags.Ephemeral
-      });
-      return;
-    }
+    const session = await requirePlayer(context, interaction);
 
-    const { link } = context;
-    const player = link.findPlayerByGuildId(interaction.guildId);
+    if (!session) return;
 
-    if (!player) {
-      await interaction.reply({
-        flags: MessageFlags.Ephemeral,
-        content: i18next.t('reply.not_playing', { lng: interaction.locale })
-      });
-      return;
-    }
+    const { player } = session;
 
     const group = interaction.options.getSubcommandGroup(true);
 

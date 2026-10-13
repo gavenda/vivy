@@ -1,7 +1,7 @@
 import { createPlayerComponentsV2 } from 'vivy/player';
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
-import i18next from 'i18next';
 import type { AppChatInputCommand } from './chat-input-command';
+import { requireGuild } from './guards';
 
 export const queue: AppChatInputCommand = {
   // prettier-ignore
@@ -10,15 +10,11 @@ export const queue: AppChatInputCommand = {
     .setDescription('Show the music queue.')
     .toJSON(),
   execute: async (context, interaction) => {
-    if (!interaction.guild || !interaction.guildId || !interaction.inGuild()) {
-      await interaction.reply({
-        content: i18next.t('reply.not_in_guild', { lng: interaction.locale }),
-        flags: MessageFlags.Ephemeral
-      });
-      return;
-    }
+    const guildId = await requireGuild(interaction);
 
-    const container = createPlayerComponentsV2(context, interaction.guildId);
+    if (!guildId) return;
+
+    const container = createPlayerComponentsV2(context, guildId);
 
     await interaction.reply({
       flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
