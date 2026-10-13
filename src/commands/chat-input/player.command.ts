@@ -2,7 +2,7 @@ import { createPlayerComponentsV2 } from 'vivy/player';
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
 import type { AppChatInputCommand } from './chat-input-command';
-import { redis } from 'bun';
+import { redis } from 'vivy/redis';
 import { getLogger } from '@logtape/logtape';
 
 const logger = getLogger(['vivy', 'command:player']);

@@ -7,7 +7,7 @@ import { LoadResultType, type LavalinkSource, type Player } from 'vivy/link';
 import { QueueType, searchWithRetry, updatePlayer } from 'vivy/player';
 import { handleSearch, handleTrack } from 'vivy/player/handlers/agent';
 import { agentPrompt, ResponsePrompt, ResponseType } from 'vivy/agent';
-import { redis } from 'bun';
+import { redis } from 'vivy/redis';
 import { getLogger } from '@logtape/logtape';
 
 const logger = getLogger(['vivy', 'event:message-create']);

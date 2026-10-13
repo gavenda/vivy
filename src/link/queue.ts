@@ -1,7 +1,7 @@
 import { Lavalink } from './link';
 import type { Track } from './payload';
 import type { TrackState } from './track.state';
-import { redis } from 'bun';
+import { redis } from 'vivy/redis';
 
 export interface TrackQueueOptions<UserData> {
   link: Lavalink<UserData>;

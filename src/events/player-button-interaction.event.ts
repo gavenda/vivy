@@ -5,7 +5,7 @@ import { chunkSize } from 'vivy/utils';
 import { Events, MessageFlags } from 'discord.js';
 import i18next from 'i18next';
 import type { AppEvent } from './event';
-import { redis } from 'bun';
+import { redis } from 'vivy/redis';
 import { getLogger } from '@logtape/logtape';
 import { fetchLyricsComponents } from 'vivy/utils/fetch-lyrics';
 

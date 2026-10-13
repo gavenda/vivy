@@ -13,7 +13,7 @@ import {
 import i18next from 'i18next';
 import { QueueType } from '../queue.type';
 import { handleTrack } from './track.handler';
-import { redis } from 'bun';
+import { redis } from 'vivy/redis';
 
 export const handleQueueSelection = async (options: {
   track: Track<Requester>;

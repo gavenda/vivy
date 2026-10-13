@@ -1,7 +1,7 @@
 import { ChannelType, Events, type VoiceState } from 'discord.js';
 import type { AppEvent } from './event';
 import type { AppContext } from 'vivy/context';
-import { redis } from 'bun';
+import { redis } from 'vivy/redis';
 
 const BOGUS_GUILD_ID = `369435836627812352`;
 const BOGUS_LIBRARY_CHANNEL_ID = `977746593430249483`;

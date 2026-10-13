@@ -4,7 +4,7 @@ import { LISTEN_MOE_STREAMS } from 'vivy/listen.moe';
 import { createMusicMoeComponentsV2, createPlayerComponentsV2 } from './embed';
 import pDebounce from 'p-debounce';
 import { MessageFlags } from 'discord.js';
-import { redis } from 'bun';
+import { redis } from 'vivy/redis';
 import { getLogger } from '@logtape/logtape';
 
 const logger = getLogger(['vivy', 'update']);

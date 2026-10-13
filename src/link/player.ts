@@ -5,7 +5,7 @@ import { LavalinkNode } from './node';
 import type { Filters, Track, UpdatePlayerOptions, VoiceState } from './payload';
 import type { PlayerState } from './player.state';
 import { TrackQueue } from './queue';
-import { redis } from 'bun';
+import { redis } from 'vivy/redis';
 import { getLogger } from '@logtape/logtape';
 
 const logger = getLogger(['vivy', 'player']);

@@ -10,7 +10,7 @@ import i18next from 'i18next';
 import { parse as parseSpotifyUri } from 'spotify-uri';
 import type { AppChatInputCommand } from './chat-input-command';
 import { QueueType, searchWithRetry } from 'vivy/player';
-import { redis } from 'bun';
+import { redis } from 'vivy/redis';
 import { getLogger } from '@logtape/logtape';
 
 const logger = getLogger(['vivy', 'command:play']);

@@ -4,7 +4,7 @@ import { updatePlayer } from 'vivy/player';
 import { Events, MessageFlags } from 'discord.js';
 import i18next from 'i18next';
 import type { AppEvent } from './event';
-import { redis } from 'bun';
+import { redis } from 'vivy/redis';
 import { getLogger } from '@logtape/logtape';
 
 const logger = getLogger(['vivy', 'event:chat-input-command']);

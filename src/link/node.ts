@@ -15,7 +15,7 @@ import {
 import { Player, type PlayerOptions, RepeatMode } from './player';
 import type { PlayerState } from './player.state';
 import { LavalinkRestApi } from './rest';
-import { redis } from 'bun';
+import { redis } from 'vivy/redis';
 import { getLogger } from '@logtape/logtape';
 
 const logger = getLogger(['vivy', 'node']);
