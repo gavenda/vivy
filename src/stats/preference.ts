@@ -1,4 +1,5 @@
 import type { Player, Track } from '../link';
+import { LISTEN_MOE_STREAMS } from '../listen.moe';
 import { redis } from '../redis';
 import type { Requester } from '../requester';
 
@@ -16,6 +17,9 @@ const timeKey = (guildId: string) => `diva:${guildId}:${getTimeOfDayBucket()}`;
  * A track that played to the end is rewarded, one that was skipped or stopped is penalized.
  */
 export const recordTrackMetrics = async (player: Player<Requester>, track: Track<Requester>, completed: boolean) => {
+  // Radio streams never end on their own, scoring them says nothing about taste
+  if (LISTEN_MOE_STREAMS.includes(track.info.identifier)) return;
+
   const score = completed ? COMPLETED_SCORE : ABANDONED_SCORE;
 
   await redis.zincrby(channelKey(player.guildId, player.voiceChannelId), score, track.info.identifier);

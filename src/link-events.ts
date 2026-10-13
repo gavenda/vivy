@@ -64,14 +64,15 @@ export const registerLinkEvents = (context: AppContext) => {
       listenMoe.disconnect();
     }
 
-    // Only a natural finish is a positive signal, an explicit stop or skip is a negative one.
+    // A natural finish is a positive signal and a skip a negative one. An explicit stop is ignored,
+    // it may just mean someone is leaving.
     // Finishing an autoplayed track is not a signal, the bot picked it itself. Skipping one still is.
     if (reason === TrackEndReason.FINISHED) {
       if (!isAutoplayTrack(context, track)) {
         await recordTrackMetrics(player, track, true);
       }
       await queueEncore(context, player, track);
-    } else if (reason === TrackEndReason.STOPPED || reason === TrackEndReason.REPLACED) {
+    } else if (reason === TrackEndReason.REPLACED) {
       await recordTrackMetrics(player, track, false);
     }
 
