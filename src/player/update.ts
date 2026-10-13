@@ -49,4 +49,18 @@ export const updatePlayerNow = async (context: AppContext, guildId: string) => {
   }
 };
 
-export const updatePlayer = pDebounce(updatePlayerNow, 1000);
+const debouncedUpdates = new Map<string, typeof updatePlayerNow>();
+
+/**
+ * Debounced per guild, a single shared debounce would drop the update of every guild but the last one.
+ */
+export const updatePlayer = (context: AppContext, guildId: string) => {
+  let update = debouncedUpdates.get(guildId);
+
+  if (!update) {
+    update = pDebounce(updatePlayerNow, 1000);
+    debouncedUpdates.set(guildId, update);
+  }
+
+  return update(context, guildId);
+};
