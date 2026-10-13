@@ -15,7 +15,6 @@ import {
 import { Player, type PlayerOptions, RepeatMode } from './player';
 import type { PlayerState } from './player.state';
 import { LavalinkRestApi } from './rest';
-import { redis } from 'vivy/redis';
 import { getLogger } from '@logtape/logtape';
 
 const logger = getLogger(['vivy', 'node']);
@@ -137,7 +136,7 @@ export class LavalinkNode<UserData> {
   async connect() {
     const { authorization, host, port, secure } = this.options;
 
-    const previousSessionId = await redis.get(`lavalink:session:${host}`);
+    const previousSessionId = await this.link.store.get(`lavalink:session:${host}`);
 
     const headers: Record<string, string> = {
       'Authorization': authorization,
@@ -209,8 +208,8 @@ export class LavalinkNode<UserData> {
   private async handleReady(payload: ReadyPayload) {
     this.sessionId = payload.sessionId;
 
-    // Save session id to redis
-    await redis.set(`lavalink:session:${this.options.host}`, payload.sessionId);
+    // Remember the session so it can be resumed after a restart
+    await this.link.store.set(`lavalink:session:${this.options.host}`, payload.sessionId);
 
     if (payload.resumed) {
       await this.handleResume();
@@ -333,7 +332,7 @@ export class LavalinkNode<UserData> {
   }
 
   private async syncPlayers() {
-    const playerStateKeys = await redis.keys(`player:state:${this.options.host}:*`);
+    const playerStateKeys = await this.link.store.keys(`player:state:${this.options.host}:*`);
 
     for (const playerStateKey of playerStateKeys) {
       const [, , , guildId] = playerStateKey.split(':');
@@ -351,7 +350,7 @@ export class LavalinkNode<UserData> {
    * @param guildId guild id of the player
    */
   async restorePlayer(guildId: string) {
-    const stateStr = await redis.get(`player:state:${this.options.host}:${guildId}`);
+    const stateStr = await this.link.store.get(`player:state:${this.options.host}:${guildId}`);
     if (!stateStr) return;
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

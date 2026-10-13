@@ -13,6 +13,7 @@ import type { LavalinkEvents } from './link.events';
 import { LavalinkNode, type LavalinkNodeOptions } from './node';
 import { LoadResultType } from './payload';
 import type { PlayerOptions } from './player';
+import type { LavalinkStateStore } from './store';
 import { getLogger } from '@logtape/logtape';
 
 const logger = getLogger(['vivy', 'link']);
@@ -66,6 +67,10 @@ export interface LavalinkOptions {
    * The send voice update function.
    */
   sendVoiceUpdate: SendVoiceUpdate;
+  /**
+   * Where sessions, player states and queues are kept so they survive a restart.
+   */
+  store: LavalinkStateStore;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
@@ -83,6 +88,10 @@ export class Lavalink<UserData> extends EventEmitter {
    */
   sendVoiceUpdate: SendVoiceUpdate;
   /**
+   * Where sessions, player states and queues are kept.
+   */
+  store: LavalinkStateStore;
+  /**
    * The user id of the discord bot this client belongs to.
    */
   userId?: string;
@@ -92,6 +101,7 @@ export class Lavalink<UserData> extends EventEmitter {
 
     this.options = options;
     this.sendVoiceUpdate = options.sendVoiceUpdate;
+    this.store = options.store;
   }
 
   /**

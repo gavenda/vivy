@@ -1,7 +1,6 @@
 import { Lavalink } from './link';
 import type { Track } from './payload';
 import type { TrackState } from './track.state';
-import { redis } from 'vivy/redis';
 
 export interface TrackQueueOptions<UserData> {
   link: Lavalink<UserData>;
@@ -201,14 +200,14 @@ export class TrackQueue<UserData> {
    */
   async saveState() {
     const stateStr = JSON.stringify(this.state);
-    await redis.set(this.stateKey, stateStr);
+    await this.link.store.set(this.stateKey, stateStr);
   }
 
   /**
    * Synchronizes the queue state.
    */
   async syncState() {
-    const stateStr = await redis.get(this.stateKey);
+    const stateStr = await this.link.store.get(this.stateKey);
 
     if (!stateStr) return;
 
@@ -228,7 +227,7 @@ export class TrackQueue<UserData> {
     this.tracks = [];
     this.offset = 0;
     // Clear remote state
-    await redis.del(this.stateKey);
+    await this.link.store.del(this.stateKey);
   }
 
   /**

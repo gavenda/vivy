@@ -3,3 +3,4 @@ export * from './player';
 export * from './payload';
 export * from './link';
 export * from './filter';
+export * from './store';

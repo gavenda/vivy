@@ -5,7 +5,6 @@ import { LavalinkNode } from './node';
 import type { Filters, Track, UpdatePlayerOptions, VoiceState } from './payload';
 import type { PlayerState } from './player.state';
 import { TrackQueue } from './queue';
-import { redis } from 'vivy/redis';
 import { getLogger } from '@logtape/logtape';
 
 const logger = getLogger(['vivy', 'player']);
@@ -310,14 +309,14 @@ export class Player<UserData> {
    */
   async saveState() {
     const stateStr = JSON.stringify(this.state);
-    await redis.set(this.stateKey, stateStr);
+    await this.link.store.set(this.stateKey, stateStr);
   }
 
   /**
    * Delete the player state.
    */
   async deleteState() {
-    await redis.del(this.stateKey);
+    await this.link.store.del(this.stateKey);
   }
 
   /**

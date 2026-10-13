@@ -7,6 +7,7 @@ import type { AppContext } from './context';
 import { registerDiscordEvents } from './discord-events';
 import { Lavalink } from './link';
 import { registerLinkEvents } from './link-events';
+import { redisLavalinkStateStore } from './link-store';
 import { ListenMoe } from './listen.moe';
 import { registerListenMoeEvents } from './listen-moe-events';
 import en from './locales/en.json';
@@ -39,7 +40,8 @@ const createContext = (config: Config): AppContext => {
     ],
     sendVoiceUpdate: (guildId, data) => {
       client.guilds.cache.get(guildId)?.shard.send(data);
-    }
+    },
+    store: redisLavalinkStateStore
   });
 
   return {
