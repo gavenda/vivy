@@ -1,13 +1,12 @@
 import type { AppContext } from 'vivy/context';
-import { LavalinkSource, Player, type Track } from 'vivy/link';
+import type { Player } from 'vivy/link';
 
-import { handleTracks } from 'vivy/player/handlers';
-import { lookupTrack } from 'vivy/player/lookup';
 import type { Requester } from 'vivy/requester';
-import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
+import type { ChatInputCommandInteraction } from 'discord.js';
 import i18next from 'i18next';
 import type { ParsedSpotifyUri } from 'spotify-uri';
 import { getLogger } from '@logtape/logtape';
+import { handleSpotifyCollection } from './collection.handler';
 
 const logger = getLogger(['vivy', 'handler:playlist']);
 
@@ -21,28 +20,18 @@ export const handleSpotifyPlaylist = async (options: {
   const { spotify } = context;
 
   const spotifyPlaylist = await spotify.playlists.getPlaylist(spotifyUri.id);
-  const tracks: Track<Requester>[] = [];
 
-  logger.debug({ message: `Queuing spotify playlist`, album: spotifyPlaylist.name });
+  logger.debug({ message: `Queuing spotify playlist`, playlist: spotifyPlaylist.name });
 
-  await interaction.followUp({
-    flags: MessageFlags.Ephemeral,
-    content: i18next.t('reply.spotify_queued_playlist', { lng: interaction.locale, playlist: spotifyPlaylist.name })
+  await handleSpotifyCollection({
+    context,
+    interaction,
+    player,
+    name: spotifyPlaylist.name,
+    queuedMessage: i18next.t('reply.spotify_queued_playlist', {
+      lng: interaction.locale,
+      playlist: spotifyPlaylist.name
+    }),
+    items: spotifyPlaylist.tracks.items.map(({ track }) => track)
   });
-
-  for (const { track: spotifyTrack } of spotifyPlaylist.tracks.items) {
-    const spotifyArtists = spotifyTrack.artists.map((artist) => artist.name).join(' ');
-    const track = await lookupTrack({
-      query: `${spotifyTrack.name} ${spotifyArtists}`,
-      source: LavalinkSource.YOUTUBE_MUSIC,
-      interaction,
-      context
-    });
-
-    if (track) {
-      tracks.push(track);
-    }
-  }
-
-  await handleTracks({ tracks, name: spotifyPlaylist.name, player, interaction });
 };

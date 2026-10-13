@@ -35,7 +35,7 @@ export const lookupTrack = async (options: {
   interaction: ChatInputCommandInteraction;
 }): Promise<Track<Requester> | undefined> => {
   const { link } = options.context;
-  const { query, interaction } = options;
+  const { query, source, interaction } = options;
   const result = await link.search({
     query,
     userData: {
@@ -43,7 +43,7 @@ export const lookupTrack = async (options: {
       userName: interaction.user.username,
       textChannelId: interaction.channelId
     },
-    source: LavalinkSource.YOUTUBE_MUSIC
+    source
   });
 
   switch (result.loadType) {
