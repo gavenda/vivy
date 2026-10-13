@@ -9,8 +9,7 @@ import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder, SlashCo
 import i18next from 'i18next';
 import { parse as parseSpotifyUri } from 'spotify-uri';
 import type { AppChatInputCommand } from './chat-input-command';
-import { QueueType, searchWithRetry } from 'vivy/player';
-import { redis } from 'vivy/redis';
+import { getQueueTypePreference, QueueType, searchWithRetry } from 'vivy/player';
 import { getLogger } from '@logtape/logtape';
 
 const logger = getLogger(['vivy', 'command:play']);
@@ -47,8 +46,7 @@ export const play: AppChatInputCommand = {
     .setDescription('Play a music or queue it in the music queue.')
     .toJSON(),
   execute: async (context, interaction) => {
-    const defaultQueueType =
-      <QueueType>await redis.get(`user-prefs:${interaction.user.id}:queue-type`) ?? QueueType.ASK;
+    const defaultQueueType = (await getQueueTypePreference(interaction.user.id)) ?? QueueType.ASK;
 
     const source = <LavalinkSource>interaction.options.getString('source') ?? LavalinkSource.YOUTUBE_MUSIC;
     const queueType = <QueueType>interaction.options.getString('queue-type') ?? defaultQueueType;

@@ -4,10 +4,9 @@ import type { AppEvent } from './event';
 import type { AppContext } from 'vivy/context';
 import type { Requester } from 'vivy/requester';
 import { LoadResultType, type LavalinkSource, type Player } from 'vivy/link';
-import { QueueType, searchWithRetry, updatePlayer } from 'vivy/player';
+import { QueueType, searchWithRetry, setPlayerPage, updatePlayer } from 'vivy/player';
 import { handleSearch, handleTrack } from 'vivy/player/handlers/agent';
 import { agentPrompt, ResponsePrompt, ResponseType } from 'vivy/agent';
-import { redis } from 'vivy/redis';
 import { getLogger } from '@logtape/logtape';
 
 const logger = getLogger(['vivy', 'event:message-create']);
@@ -147,8 +146,7 @@ const playMusic = async (
   });
 
   if (message.guildId) {
-    const pageKey = `player:page:${message.guildId}`;
-    await redis.set(pageKey, '0');
+    await setPlayerPage(message.guildId, 0);
     await updatePlayer(context, message.guildId);
   }
 };

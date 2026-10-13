@@ -1,8 +1,7 @@
-import { createPlayerComponentsV2 } from 'vivy/player';
+import { createPlayerComponentsV2, getPlayerEmbed, setPlayerEmbed } from 'vivy/player';
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
 import type { AppChatInputCommand } from './chat-input-command';
-import { redis } from 'vivy/redis';
 import { getLogger } from '@logtape/logtape';
 
 const logger = getLogger(['vivy', 'command:player']);
@@ -34,22 +33,17 @@ export const player: AppChatInputCommand = {
     });
 
     // Delete previous message, if any
-    const previousPlayer = await redis.get(`player:embed:${interaction.guildId}`);
+    const previousPlayer = await getPlayerEmbed(interaction.guildId);
 
     if (previousPlayer) {
       try {
-        const [previousChannelId, previousMessageId] = previousPlayer.split(':');
-
-        if (!previousChannelId) return;
-        if (!previousMessageId) return;
-
-        const previousChannel = await client.channels.fetch(previousChannelId);
+        const previousChannel = await client.channels.fetch(previousPlayer.channelId);
 
         if (previousChannel?.isTextBased()) {
-          const previousMessage = await previousChannel.messages.fetch(previousMessageId);
+          const previousMessage = await previousChannel.messages.fetch(previousPlayer.messageId);
 
           if (previousMessage.author.id === client?.user?.id) {
-            logger.debug('Removing previous message', { previousMessageId });
+            logger.debug('Removing previous message', { previousMessageId: previousPlayer.messageId });
             await previousMessage.delete();
           }
         }
@@ -65,7 +59,7 @@ export const player: AppChatInputCommand = {
       components: [container]
     });
 
-    await redis.set(`player:embed:${interaction.guildId}`, `${interaction.channelId}:${message.id}`);
+    await setPlayerEmbed(interaction.guildId, { channelId: interaction.channelId, messageId: message.id });
 
     await interaction.followUp({
       content: i18next.t('reply.player_embed_created', { lng: interaction.locale, channelId: interaction.channelId }),

@@ -12,8 +12,8 @@ import {
 } from 'discord.js';
 import i18next from 'i18next';
 import { QueueType } from '../queue.type';
+import { hasAnsweredQueueQuestion, setQueueQuestionAnswered, setQueueTypePreference } from '../store';
 import { handleTrack } from './track.handler';
-import { redis } from 'vivy/redis';
 
 export const handleQueueSelection = async (options: {
   track: Track<Requester>;
@@ -95,7 +95,7 @@ export const handleQueueRemember = async (options: {
   const { interaction, queueType } = options;
 
   // Check prefs if we want to ask the question
-  const queueQuestionAlreadyAnswered = await redis.get(`user-prefs:${interaction.user.id}:queue-question-answered`);
+  const queueQuestionAlreadyAnswered = await hasAnsweredQueueQuestion(interaction.user.id);
 
   // If answered, we do nothing
   if (queueQuestionAlreadyAnswered) {
@@ -134,10 +134,10 @@ export const handleQueueRemember = async (options: {
     await buttonClick.deferUpdate();
 
     if (answer === 'remember-yes') {
-      await redis.set(`user-prefs:${interaction.user.id}:queue-type`, queueType);
+      await setQueueTypePreference(interaction.user.id, queueType);
     }
 
-    await redis.set(`user-prefs:${interaction.user.id}:queue-question-answered`, '1');
+    await setQueueQuestionAnswered(interaction.user.id);
 
     await buttonClick.editReply({
       content: i18next.t('reply.queue_remember_question_success', { lng: interaction.locale }),

@@ -1,11 +1,10 @@
 import { RepeatMode } from 'vivy/link';
 
-import { createPlayerComponentsV2 } from 'vivy/player';
+import { createPlayerComponentsV2, getPlayerPage, setPlayerPage } from 'vivy/player';
 import { chunkSize } from 'vivy/utils';
 import { Events, MessageFlags } from 'discord.js';
 import i18next from 'i18next';
 import type { AppEvent } from './event';
-import { redis } from 'vivy/redis';
 import { getLogger } from '@logtape/logtape';
 import { fetchLyricsComponents } from 'vivy/utils/fetch-lyrics';
 
@@ -41,8 +40,7 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
 
     logger.debug('Received player button interaction', { buttonId });
 
-    const pageKey = `player:page:${player.guildId}`;
-    let pageIndex = Number(await redis.get(pageKey));
+    let pageIndex = await getPlayerPage(player.guildId);
     const pageSize = chunkSize(player.queue.size, 15);
 
     switch (buttonId) {
@@ -116,7 +114,7 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
     }
 
     const container = createPlayerComponentsV2(context, interaction.guildId, pageIndex);
-    await redis.set(pageKey, pageIndex.toString());
+    await setPlayerPage(player.guildId, pageIndex);
     await interaction.update({
       flags: MessageFlags.IsComponentsV2,
       components: [container]

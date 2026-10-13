@@ -1,10 +1,9 @@
 import { chatInputCommands } from 'vivy/commands/chat-input';
 
-import { updatePlayer } from 'vivy/player';
+import { setPlayerPage, updatePlayer } from 'vivy/player';
 import { Events, MessageFlags } from 'discord.js';
 import i18next from 'i18next';
 import type { AppEvent } from './event';
-import { redis } from 'vivy/redis';
 import { getLogger } from '@logtape/logtape';
 
 const logger = getLogger(['vivy', 'event:chat-input-command']);
@@ -35,8 +34,7 @@ export const chatInputCommandInteraction: AppEvent<Events.InteractionCreate> = {
       await chatInputCommand.execute(context, interaction);
       // Update player after every command
       if (interaction.guildId) {
-        const pageKey = `player:page:${interaction.guildId}`;
-        await redis.set(pageKey, '0');
+        await setPlayerPage(interaction.guildId, 0);
         await updatePlayer(context, interaction.guildId);
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
