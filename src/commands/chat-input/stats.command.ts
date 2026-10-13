@@ -24,10 +24,7 @@ const formatUserEntry = (userId: string, score: string | number | null | undefin
 
 const buildTrackList = async (entries: [string, number][]) => {
   if (!entries || entries.length === 0) return '—';
-  const rows: string[] = [];
-  for (const [trackId, score] of entries) {
-    rows.push(await formatTrackEntry(trackId, score));
-  }
+  const rows = await Promise.all(entries.map(([trackId, score]) => formatTrackEntry(trackId, score)));
   return rows.join('\n');
 };
 
@@ -50,10 +47,12 @@ export const stats: AppChatInputCommand = {
     await interaction.deferReply();
 
     // These statistics are stored as sorted sets (ZINCRBY). Fetch top entries with scores.
-    const topGuildTracks = await redis.zrevrange(`stats:guild:${guildId}:tracks:plays`, 0, 3, 'WITHSCORES');
-    const topGuildUsers = await redis.zrevrange(`stats:guild:${guildId}:users:requests`, 0, 3, 'WITHSCORES');
-    const topGlobalTracks = await redis.zrevrange('stats:tracks:plays', 0, 3, 'WITHSCORES');
-    const topGlobalUsers = await redis.zrevrange('stats:users:requests', 0, 3, 'WITHSCORES');
+    const [topGuildTracks, topGuildUsers, topGlobalTracks, topGlobalUsers] = await Promise.all([
+      redis.zrevrange(`stats:guild:${guildId}:tracks:plays`, 0, 3, 'WITHSCORES'),
+      redis.zrevrange(`stats:guild:${guildId}:users:requests`, 0, 3, 'WITHSCORES'),
+      redis.zrevrange('stats:tracks:plays', 0, 3, 'WITHSCORES'),
+      redis.zrevrange('stats:users:requests', 0, 3, 'WITHSCORES')
+    ]);
 
     const guildTrackText =
       topGuildTracks && topGuildTracks.length
