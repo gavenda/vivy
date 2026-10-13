@@ -1,6 +1,7 @@
 import { RepeatMode } from 'vivy/link';
+import { RadioType } from 'vivy/listen.moe';
 
-import { createPlayerComponentsV2, getPlayerPage, QUEUE_PAGE_SIZE, setPlayerPage } from 'vivy/player';
+import { createPlayerEmbed, getPlayerPage, playRadio, QUEUE_PAGE_SIZE, setPlayerPage } from 'vivy/player';
 import { chunkSize } from 'vivy/utils';
 import { Events, MessageFlags } from 'discord.js';
 import i18next from 'i18next';
@@ -98,6 +99,28 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
         }
         break;
       }
+      case 'kpop':
+      case 'jpop': {
+        // Fetching the stream can take a while, and the embed is refreshed once the stream has started
+        await interaction.deferUpdate();
+
+        const played =
+          player.voiceConnected &&
+          (await playRadio(context, player, buttonId === 'kpop' ? RadioType.KPOP : RadioType.JPOP, {
+            userId: interaction.user.id,
+            userName: interaction.user.username,
+            textChannelId: interaction.channelId
+          }));
+
+        if (!played) {
+          await interaction.followUp({
+            flags: MessageFlags.Ephemeral,
+            content: i18next.t('reply.error_radio', { lng: interaction.locale })
+          });
+        }
+
+        return;
+      }
       case 'lyrics': {
         if (!player.queue.current) {
           break;
@@ -110,11 +133,12 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
           components: [container]
         });
 
-        break;
+        // Already answered, updating the embed as well would be a second response
+        return;
       }
     }
 
-    const container = createPlayerComponentsV2(context, interaction.guildId, pageIndex);
+    const container = createPlayerEmbed(context, interaction.guildId, pageIndex);
     await setPlayerPage(player.guildId, pageIndex);
     await interaction.update({
       flags: MessageFlags.IsComponentsV2,

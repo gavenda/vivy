@@ -1,7 +1,7 @@
 import type { AppContext } from 'vivy/context';
 import { AppEmoji } from 'vivy/emojis';
 import type { Player } from 'vivy/link';
-import { RadioType } from 'vivy/listen.moe';
+import { RadioType, radioTypeOfStream } from 'vivy/listen.moe';
 import type { Requester } from 'vivy/requester';
 import { chunk, msToTime, trimEllipse } from 'vivy/utils';
 import {
@@ -172,4 +172,16 @@ export const createMusicMoeComponentsV2 = (context: AppContext, guildId: string)
     ],
     footer: i18next.t('player_embed.description_listen_moe', { lng })
   });
+};
+
+/**
+ * The player embed that fits what the guild is playing: the radio one for a Listen.MOE stream,
+ * the queue one for everything else.
+ */
+export const createPlayerEmbed = (context: AppContext, guildId: string, pageIndex: number = 0) => {
+  const identifier = context.link.findPlayerByGuildId(guildId)?.queue.current?.info.identifier;
+
+  return radioTypeOfStream(identifier) === undefined
+    ? createPlayerComponentsV2(context, guildId, pageIndex)
+    : createMusicMoeComponentsV2(context, guildId);
 };
