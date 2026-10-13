@@ -7,6 +7,7 @@ type TimeOfDay = 'late_night' | 'morning' | 'afternoon' | 'evening';
 const COMPLETED_SCORE = 5;
 const ABANDONED_SCORE = -3;
 
+const autoplayKey = (guildId: string) => `diva:autoplay:${guildId}`;
 const channelKey = (guildId: string, channelId: string | null | undefined) => `diva:${guildId}:${channelId}`;
 const timeKey = (guildId: string) => `diva:${guildId}:${getTimeOfDayBucket()}`;
 
@@ -44,4 +45,16 @@ const getTimeOfDayBucket = (): TimeOfDay => {
   if (hour < 12) return 'morning';
   if (hour < 18) return 'afternoon';
   return 'evening';
+};
+
+export const isAutoplayEnabled = async (guildId: string): Promise<boolean> => {
+  return (await redis.exists(autoplayKey(guildId))) === true;
+};
+
+export const setAutoplay = async (guildId: string, enabled: boolean) => {
+  if (enabled) {
+    await redis.set(autoplayKey(guildId), '1');
+  } else {
+    await redis.del(autoplayKey(guildId));
+  }
 };

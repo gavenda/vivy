@@ -15,6 +15,8 @@
       "listen_kpop": "Now listening to a k-pop radio provided by Listen.MOE.",
       "loop_track": "Now looping the current track.",
       "loop_queue": "Now looping the current queue.",
+      "autoplay_on": "Autoplay enabled. I'll keep the music going with tracks this channel likes.",
+      "autoplay_off": "Autoplay disabled.",
       "music_paused": "Music paused.",
       "music_resumed": "Music resumed.",
       "music_stopped": "Music stopped.",

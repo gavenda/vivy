@@ -1,4 +1,5 @@
 import { about } from './about.command';
+import { autoplay } from './autoplay.command';
 import { clear } from './clear.command';
 import { connect } from './connect.command';
 import { disconnect } from './disconnect.command';
@@ -21,6 +22,7 @@ import { volume } from './volume.command';
 
 export const chatInputCommands = [
   about,
+  autoplay,
   clear,
   connect,
   disconnect,
@@ -44,6 +46,7 @@ export const chatInputCommands = [
 
 export {
   about,
+  autoplay,
   clear,
   connect,
   disconnect,

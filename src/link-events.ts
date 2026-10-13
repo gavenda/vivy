@@ -1,4 +1,5 @@
 import { getLogger } from '@logtape/logtape';
+import { queueEncore } from './autoplay';
 import type { AppContext } from './context';
 import { recordTrackMetrics } from './diva';
 import { TrackEndReason } from './link';
@@ -63,6 +64,7 @@ export const registerLinkEvents = (context: AppContext) => {
     // Only a natural finish is a positive signal, an explicit stop or skip is a negative one.
     if (reason === TrackEndReason.FINISHED) {
       await recordTrackMetrics(player, track, true);
+      await queueEncore(context, player, track);
     } else if (reason === TrackEndReason.STOPPED || reason === TrackEndReason.REPLACED) {
       await recordTrackMetrics(player, track, false);
     }
