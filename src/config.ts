@@ -12,6 +12,8 @@ export const loadConfig = () => ({
   token: required('TOKEN'),
   clientId: required('CLIENT_ID'),
   guildId: required('GUILD_ID'),
+  // The shared redis client reads it when first used, requiring it here fails startup early instead
+  redisUrl: required('REDIS_URL'),
   spotify: {
     clientId: required('SPOTIFY_CLIENT_ID'),
     clientSecret: required('SPOTIFY_CLIENT_SECRET')
