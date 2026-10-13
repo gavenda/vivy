@@ -1,7 +1,7 @@
 import type { AppContext } from 'vivy/context';
 
 import { createPlayerEmbed } from './embed';
-import { clearPlayerEmbed, getPlayerEmbed } from './store';
+import { clearPlayerEmbed, getPlayerEmbed, getPlayerPage } from './store';
 import pDebounce from 'p-debounce';
 import { MessageFlags } from 'discord.js';
 import { getLogger } from '@logtape/logtape';
@@ -24,7 +24,8 @@ const updatePlayerNow = async (context: AppContext, guildId: string) => {
     if (channel?.isTextBased()) {
       const message = channel.messages.cache.get(messageId) ?? (await channel.messages.fetch(messageId));
 
-      const container = createPlayerEmbed(context, guildId);
+      // Keep the page the embed is showing, rendering the first one would leave the stored page out of step
+      const container = createPlayerEmbed(context, guildId, await getPlayerPage(guildId));
 
       await message.edit({
         flags: MessageFlags.IsComponentsV2,
