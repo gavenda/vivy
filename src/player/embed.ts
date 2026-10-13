@@ -149,21 +149,24 @@ export const createMusicMoeComponentsV2 = (context: AppContext, guildId: string)
   const { link, client, listenMoe } = context;
   const lng = client.guilds.cache.get(guildId)?.preferredLocale ?? Locale.EnglishUS;
   const player = link.findPlayerByGuildId(guildId);
+  // What this guild listens to, other guilds may be on the other radio
+  const radio = listenMoe.radioOf(guildId);
+  const info = listenMoe.infoOf(guildId);
 
   return buildPlayerShell({
     context,
     lng,
     player,
-    nowPlaying: listenMoe.info.song,
-    artist: listenMoe.info.artist,
-    artworkUrl: listenMoe.info.cover,
+    nowPlaying: info.song,
+    artist: info.artist,
+    artworkUrl: info.cover,
     controls: [
       pausePlayButton(player?.playing ?? false),
       iconButton('player:kpop', AppEmoji.ReplaceAudio, ButtonStyle.Primary)
-        .setDisabled(listenMoe.type === RadioType.KPOP)
+        .setDisabled(radio === RadioType.KPOP)
         .setLabel('K-POP'),
       iconButton('player:jpop', AppEmoji.ReplaceAudio, ButtonStyle.Primary)
-        .setDisabled(listenMoe.type === RadioType.JPOP)
+        .setDisabled(radio === RadioType.JPOP)
         .setLabel('J-POP'),
       new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Listen.MOE').setURL('https://listen.moe')
     ],

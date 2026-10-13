@@ -29,44 +29,69 @@ export const LISTEN_MOE_JPOP_STREAM = 'https://listen.moe/stream';
 export const LISTEN_MOE_KPOP_STREAM = 'https://listen.moe/kpop/stream';
 export const LISTEN_MOE_STREAMS = [LISTEN_MOE_JPOP_STREAM, LISTEN_MOE_KPOP_STREAM];
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
-export class ListenMoe extends EventEmitter {
+const RECONNECT_DELAY_MS = 5000;
+
+/**
+ * The radio a stream identifier belongs to, if it is one of the Listen.MOE streams.
+ */
+export const radioTypeOfStream = (identifier: string | undefined): RadioType | undefined => {
+  if (identifier === LISTEN_MOE_JPOP_STREAM) return RadioType.JPOP;
+  if (identifier === LISTEN_MOE_KPOP_STREAM) return RadioType.KPOP;
+};
+
+const createRadioInfo = (): RadioInfo => ({
+  song: '-',
+  artist: '-',
+  album: '-',
+  cover: null
+});
+
+/**
+ * A gateway connection following which song one of the radios is playing.
+ */
+class RadioConnection {
+  readonly info: RadioInfo = createRadioInfo();
+
+  private readonly type: RadioType;
+  private readonly onUpdate: () => void;
+  private active = false;
   private socket: WebSocket | undefined;
   private heartbeatTimerId?: NodeJS.Timeout;
   private reconnectTimerId?: NodeJS.Timeout;
 
-  type: RadioType = RadioType.JPOP;
+  constructor(type: RadioType, onUpdate: () => void) {
+    this.type = type;
+    this.onUpdate = onUpdate;
+  }
 
-  info: RadioInfo = {
-    song: '-',
-    artist: '-',
-    album: '-',
-    cover: null
-  };
+  /**
+   * Starts following the radio, and keeps doing so across dropped connections until closed.
+   */
+  open() {
+    if (this.active) return;
 
-  connect(type = RadioType.JPOP) {
+    this.active = true;
+    this.connect();
+  }
+
+  close() {
+    this.active = false;
+    this.teardown();
+  }
+
+  private connect() {
     // Never leave a previous socket (or a pending reconnect) behind
     this.teardown();
 
-    const websocketUrl = `wss://listen.moe/`;
-    const socketUrl = new URL(websocketUrl);
+    const socketUrl = new URL('wss://listen.moe/');
 
-    if (type === RadioType.JPOP) {
-      socketUrl.pathname = '/gateway_v2';
-    } else {
-      socketUrl.pathname = '/kpop/gateway_v2';
-    }
+    socketUrl.pathname = this.type === RadioType.JPOP ? '/gateway_v2' : '/kpop/gateway_v2';
 
-    this.type = type;
     this.socket = new WebSocket(socketUrl);
     this.socket.binaryType = 'arraybuffer';
     this.socket.addEventListener('open', this.onWebSocketOpen);
     this.socket.addEventListener('message', this.onWebSocketMessage);
     this.socket.addEventListener('close', this.onWebSocketClose);
-  }
-
-  disconnect() {
-    this.teardown();
   }
 
   /**
@@ -92,8 +117,11 @@ export class ListenMoe extends EventEmitter {
   // Handlers are arrow functions so the same reference can be added and removed
   private onWebSocketClose = () => {
     this.teardown();
+
     // The socket dropped on its own, reconnect to the same radio
-    this.reconnectTimerId = setTimeout(() => this.connect(this.type), 5000);
+    if (this.active) {
+      this.reconnectTimerId = setTimeout(() => this.connect(), RECONNECT_DELAY_MS);
+    }
   };
 
   private onWebSocketMessage = (event: MessageEvent) => {
@@ -162,8 +190,82 @@ export class ListenMoe extends EventEmitter {
       this.info.cover = null;
     }
 
-    logger.debug('Listen.MOE track update', { track: this.info });
+    logger.debug('Listen.MOE track update', { radio: RadioType[this.type], track: this.info });
 
-    this.emit('trackUpdate');
+    this.onUpdate();
+  }
+}
+
+/**
+ * Follows what the Listen.MOE radios are playing for the guilds listening to them.
+ *
+ * Guilds acquire the radio they listen to and release it when they stop. A radio is only connected
+ * while at least one guild listens to it, and guilds on different radios do not affect each other.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export class ListenMoe extends EventEmitter {
+  // Kept after closing, so the last known song is there when the radio is opened again
+  private readonly connections = new Map<RadioType, RadioConnection>();
+  private readonly radios = new Map<string, RadioType>();
+
+  /**
+   * Starts listening to a radio for a guild. A guild listens to one radio at a time,
+   * acquiring another one releases the previous.
+   */
+  acquire(guildId: string, type: RadioType) {
+    const current = this.radios.get(guildId);
+
+    if (current === type) return;
+    if (current !== undefined) this.release(guildId, current);
+
+    this.radios.set(guildId, type);
+    this.connectionOf(type).open();
+  }
+
+  /**
+   * Stops listening for a guild. When a type is given, nothing happens unless the guild is still
+   * listening to that radio, so a late release can't drop the radio the guild has moved on to.
+   */
+  release(guildId: string, type?: RadioType) {
+    const current = this.radios.get(guildId);
+
+    if (current === undefined) return;
+    if (type !== undefined && current !== type) return;
+
+    this.radios.delete(guildId);
+
+    const stillListened = [...this.radios.values()].includes(current);
+
+    if (!stillListened) {
+      this.connections.get(current)?.close();
+    }
+  }
+
+  /**
+   * The radio the guild is listening to, if any.
+   */
+  radioOf(guildId: string): RadioType | undefined {
+    return this.radios.get(guildId);
+  }
+
+  /**
+   * What the radio the guild is listening to is playing, placeholders when it is not listening.
+   */
+  infoOf(guildId: string): RadioInfo {
+    const type = this.radios.get(guildId);
+    const info = type === undefined ? undefined : this.connections.get(type)?.info;
+
+    return info ?? createRadioInfo();
+  }
+
+  private connectionOf(type: RadioType) {
+    let connection = this.connections.get(type);
+
+    if (!connection) {
+      connection = new RadioConnection(type, () => this.emit('trackUpdate', type));
+      this.connections.set(type, connection);
+    }
+
+    return connection;
   }
 }

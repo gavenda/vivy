@@ -3,7 +3,7 @@ import { isAutoplayTrack, queueEncore } from './autoplay';
 import type { AppContext } from './context';
 import { recordTrackMetrics } from './stats/preference';
 import { TrackEndReason } from './link';
-import { LISTEN_MOE_JPOP_STREAM, LISTEN_MOE_KPOP_STREAM, LISTEN_MOE_STREAMS, RadioType } from './listen.moe';
+import { radioTypeOfStream } from './listen.moe';
 import { updatePlayer } from './player';
 import { recordTrackStatistics } from './stats/track';
 
@@ -40,14 +40,31 @@ export const registerLinkEvents = (context: AppContext) => {
     logger.debug('Player socket closed', { guildId: player.guildId, code, byRemote, reason });
   });
 
+  link.on('playerConnected', (player) => {
+    // Coming back to a radio that was already playing, no track start will pick it up again
+    const radio = radioTypeOfStream(player.queue.current?.info.identifier);
+
+    if (radio !== undefined) {
+      listenMoe.acquire(player.guildId, radio);
+    }
+  });
+
+  // A player that is gone can't end its track, so nothing else would let go of its radio
+  link.on('playerDisconnected', (player) => {
+    listenMoe.release(player.guildId);
+  });
+
+  link.on('playerDestroy', (player) => {
+    listenMoe.release(player.guildId);
+  });
+
   link.on('trackStart', async (player, track) => {
     logger.debug('Track start', { title: track.info.title, guild: player.guildId });
 
-    if (track.info.identifier === LISTEN_MOE_JPOP_STREAM) {
-      listenMoe.connect(RadioType.JPOP);
-    }
-    if (track.info.identifier === LISTEN_MOE_KPOP_STREAM) {
-      listenMoe.connect(RadioType.KPOP);
+    const radio = radioTypeOfStream(track.info.identifier);
+
+    if (radio !== undefined) {
+      listenMoe.acquire(player.guildId, radio);
     }
 
     // Autoplay is requested by the bot itself, it must not show up as a top user
@@ -60,8 +77,10 @@ export const registerLinkEvents = (context: AppContext) => {
   link.on('trackEnd', async (player, track, reason) => {
     logger.debug('Track end', { title: track.info.title, guild: player.guildId, reason });
 
-    if (LISTEN_MOE_STREAMS.includes(track.info.identifier)) {
-      listenMoe.disconnect();
+    const radio = radioTypeOfStream(track.info.identifier);
+
+    if (radio !== undefined) {
+      listenMoe.release(player.guildId, radio);
     }
 
     // A natural finish is a positive signal and a skip a negative one. An explicit stop is ignored,

@@ -1,8 +1,10 @@
 import type { Awaitable } from 'vivy/utils';
+import type { RadioType } from './listen.moe';
 
 export interface ListenMoeEvents {
   /**
-   * Emitted when track information is updated.
+   * Emitted when the song a radio is playing is updated.
+   * @param type the radio that updated
    */
-  trackUpdate: () => Awaitable<void>;
+  trackUpdate: (type: RadioType) => Awaitable<void>;
 }
