@@ -33,6 +33,7 @@ export const LISTEN_MOE_STREAMS = [LISTEN_MOE_JPOP_STREAM, LISTEN_MOE_KPOP_STREA
 export class ListenMoe extends EventEmitter {
   private socket: WebSocket | undefined;
   private heartbeatTimerId?: NodeJS.Timeout;
+  private reconnectTimerId?: NodeJS.Timeout;
 
   type: RadioType = RadioType.JPOP;
 
@@ -44,6 +45,9 @@ export class ListenMoe extends EventEmitter {
   };
 
   connect(type = RadioType.JPOP) {
+    // Never leave a previous socket (or a pending reconnect) behind
+    this.teardown();
+
     const websocketUrl = `wss://listen.moe/`;
     const socketUrl = new URL(websocketUrl);
 
@@ -56,34 +60,43 @@ export class ListenMoe extends EventEmitter {
     this.type = type;
     this.socket = new WebSocket(socketUrl);
     this.socket.binaryType = 'arraybuffer';
-    this.socket.addEventListener('open', this.onWebSocketOpen.bind(this));
-    this.socket.addEventListener('message', this.onWebSocketMessage.bind(this));
-    this.socket.addEventListener('close', this.onWebSocketClose.bind(this));
+    this.socket.addEventListener('open', this.onWebSocketOpen);
+    this.socket.addEventListener('message', this.onWebSocketMessage);
+    this.socket.addEventListener('close', this.onWebSocketClose);
   }
 
   disconnect() {
-    if (this.socket) {
-      clearInterval(this.heartbeatTimerId);
-      this.socket.removeEventListener('open', this.onWebSocketOpen.bind(this));
-      this.socket.removeEventListener('message', this.onWebSocketMessage.bind(this));
-      this.socket.removeEventListener('close', this.onWebSocketClose.bind(this));
-      this.socket.close();
-    }
+    this.teardown();
   }
 
-  private onWebSocketClose() {
+  /**
+   * Stops the heartbeat and any pending reconnect, then closes the socket.
+   * The listeners are detached first, so closing on purpose never triggers a reconnect.
+   */
+  private teardown() {
     clearInterval(this.heartbeatTimerId);
+    clearTimeout(this.reconnectTimerId);
 
-    if (this.socket) {
-      this.socket.removeEventListener('open', this.onWebSocketOpen.bind(this));
-      this.socket.removeEventListener('message', this.onWebSocketMessage.bind(this));
-      this.socket.removeEventListener('close', this.onWebSocketClose.bind(this));
+    const socket = this.socket;
+
+    this.socket = undefined;
+
+    if (socket) {
+      socket.removeEventListener('open', this.onWebSocketOpen);
+      socket.removeEventListener('message', this.onWebSocketMessage);
+      socket.removeEventListener('close', this.onWebSocketClose);
+      socket.close();
     }
-    // Reconnect
-    setTimeout(() => this.connect(), 5000);
   }
 
-  private onWebSocketMessage(event: MessageEvent) {
+  // Handlers are arrow functions so the same reference can be added and removed
+  private onWebSocketClose = () => {
+    this.teardown();
+    // The socket dropped on its own, reconnect to the same radio
+    this.reconnectTimerId = setTimeout(() => this.connect(this.type), 5000);
+  };
+
+  private onWebSocketMessage = (event: MessageEvent) => {
     const data = event.data as ArrayBuffer;
     const buffer = Buffer.from(data);
     const payload = JSON.parse(buffer.toString()) as ListenMoePayload;
@@ -98,21 +111,22 @@ export class ListenMoe extends EventEmitter {
       case PayloadType.HEARTBEAT_ACK:
         break;
     }
-  }
+  };
 
-  private onWebSocketOpen() {
+  private onWebSocketOpen = () => {
     clearInterval(this.heartbeatTimerId);
     const payload = { op: PayloadType.WELCOME, d: { auth: '' } };
-    this.socket!.send(JSON.stringify(payload));
-  }
+    this.socket?.send(JSON.stringify(payload));
+  };
 
   private beginHeartbeat(heartbeat: number) {
-    setTimeout(() => this.sendHeartbeat(), heartbeat);
+    clearInterval(this.heartbeatTimerId);
+    this.heartbeatTimerId = setInterval(() => this.sendHeartbeat(), heartbeat);
   }
 
   private sendHeartbeat() {
     const payload = { op: PayloadType.HEARTBEAT };
-    this.socket!.send(JSON.stringify(payload));
+    this.socket?.send(JSON.stringify(payload));
   }
 
   private handlePlaybackInfo(payload: PlaybackInfoPayload) {
