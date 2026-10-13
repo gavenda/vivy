@@ -1,5 +1,4 @@
 import { autocompleteInteraction } from './events/autocomplete-interaction.event';
-// import { bogusAutoDeafenMove } from './events/bogus-auto-deafen-move.event';
 import { chatInputCommandInteraction } from './events/chat-input-command-interaction.event';
 import { guildAvailable } from './events/guild-available.event';
 import { guildUnavailable } from './events/guild-unavailable.event';
@@ -19,5 +18,4 @@ export const events = [
   readyEvent,
   guildAvailable,
   guildUnavailable
-  // bogusAutoDeafenMove
 ];

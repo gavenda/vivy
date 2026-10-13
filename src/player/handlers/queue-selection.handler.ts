@@ -88,7 +88,7 @@ export const handleQueueSelection = async (options: {
   }
 };
 
-export const handleQueueRemember = async (options: {
+const handleQueueRemember = async (options: {
   interaction: ChatInputCommandInteraction | StringSelectMenuInteraction | ButtonInteraction;
   queueType: QueueType;
 }): Promise<ChatInputCommandInteraction | StringSelectMenuInteraction | ButtonInteraction> => {

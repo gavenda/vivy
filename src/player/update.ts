@@ -9,7 +9,7 @@ import { getLogger } from '@logtape/logtape';
 
 const logger = getLogger(['vivy', 'update']);
 
-export const updatePlayerNow = async (context: AppContext, guildId: string) => {
+const updatePlayerNow = async (context: AppContext, guildId: string) => {
   const { client, link } = context;
   const playerEmbed = await getPlayerEmbed(guildId);
 

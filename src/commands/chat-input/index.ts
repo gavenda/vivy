@@ -43,27 +43,3 @@ export const chatInputCommands = [
   stop,
   volume
 ];
-
-export {
-  about,
-  autoplay,
-  clear,
-  connect,
-  disconnect,
-  effect,
-  listenMoe,
-  loop,
-  lyrics,
-  move,
-  pause,
-  play,
-  player,
-  queue,
-  remove,
-  resume,
-  shuffle,
-  skip,
-  stats,
-  stop,
-  volume
-};

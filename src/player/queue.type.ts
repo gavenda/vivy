@@ -4,5 +4,3 @@ export enum QueueType {
   NOW = 'now',
   ASK = 'ask'
 }
-
-export type QueueTypes = QueueType.LATER | QueueType.NEXT | QueueType.NOW | QueueType.ASK;

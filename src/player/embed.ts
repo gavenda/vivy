@@ -22,7 +22,7 @@ import i18next from 'i18next';
  */
 export const QUEUE_PAGE_SIZE = 15;
 
-export const createPlayerQueue = ({ client, link }: AppContext, guildId: string, pageIndex = 0) => {
+const createPlayerQueue = ({ client, link }: AppContext, guildId: string, pageIndex = 0) => {
   const player = link.findPlayerByGuildId(guildId);
   const lng = client.guilds.cache.get(guildId)?.preferredLocale ?? Locale.EnglishUS;
   const queue: string[] = [];
