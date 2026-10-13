@@ -29,15 +29,15 @@ export const createPlayerQueue = ({ client, link }: AppContext, guildId: string,
 
   if (player && player.queue.size > 0) {
     const tracksChunked = chunk(player.queue.toArray(), QUEUE_PAGE_SIZE);
-    const tracks = tracksChunked[pageIndex];
+    // The queue may have shrunk since the page was stored, show the last page instead of nothing
+    const page = Math.min(Math.max(pageIndex, 0), tracksChunked.length - 1);
+    const tracks = tracksChunked[page] ?? [];
     const maxLenStr = '' + player.queue.size;
     const maxLen = maxLenStr.length;
 
-    if (!tracks) return;
-
     for (const [index, track] of tracks.entries()) {
       const title = trimEllipse(track.info.title, 100);
-      const trackNo = pageIndex * QUEUE_PAGE_SIZE + (index + 1);
+      const trackNo = page * QUEUE_PAGE_SIZE + (index + 1);
       const trackNoText = '' + trackNo;
       const requester = `<@${track.userData.userId}>`;
       const duration = msToTime(track.info.length ?? 0);
@@ -88,7 +88,8 @@ interface PlayerShellOptions {
  */
 const buildPlayerShell = (options: PlayerShellOptions) => {
   const { context, lng, player, nowPlaying, nowPlayingSuffix = '', artist, artworkUrl, controls, footer } = options;
-  const volume = player?.volume ? `${Math.round(player.volume * 100)}%` : '100%';
+  // A volume of 0 is muted, only a missing player falls back to the default
+  const volume = player ? `${Math.round(player.volume * 100)}%` : '100%';
 
   const container = new ContainerBuilder();
 

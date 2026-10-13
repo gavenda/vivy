@@ -51,6 +51,9 @@ export const lookupTrack = async (options: {
       logger.warn('Lookup error', { query });
       return;
     }
+    case LoadResultType.TRACK: {
+      return result.data;
+    }
     case LoadResultType.PLAYLIST: {
       return result.data.tracks[result.data.info.selectedTrack];
     }

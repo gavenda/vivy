@@ -40,8 +40,9 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
 
     logger.debug('Received player button interaction', { buttonId });
 
-    let pageIndex = await getPlayerPage(player.guildId);
     const pageSize = chunkSize(player.queue.size, QUEUE_PAGE_SIZE);
+    // The queue may have shrunk since the page was stored
+    let pageIndex = Math.min(await getPlayerPage(player.guildId), pageSize - 1);
 
     switch (buttonId) {
       case 'play-toggle': {
