@@ -2,6 +2,9 @@
 Description=Vivy
 After=podman-user-wait-network-online.service
 Wants=podman-user-wait-network-online.service
+# Starts once the host's Valkey answers, or after the wait gives up (see ../valkey-wait.service).
+Wants=valkey-wait.service
+After=valkey-wait.service
 
 [Pod]
 PodName=vivy

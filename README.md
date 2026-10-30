@@ -86,7 +86,9 @@ On the server, Redis is the host's own Valkey (Arch's `valkey` package), shared 
 [Plana](https://github.com/gavenda/plana), the server's admin bot. Each bot signs in as its own user: Vivy can use
 every key, and Plana keeps its cache under `plana:` and can only read Vivy's `stats:` keys. The pods reach it on the
 host's loopback through pasta (`Network=pasta:-T,6379` in `vivy.pod`); Lavalink, in the same pod, is on `127.0.0.1`.
-Plana's `deploy/quadlet/README.md` walks through installing Valkey and both pods.
+`vivy.pod` starts after `valkey-wait.service`, a user unit (`podman/valkey-wait.service`, installed to
+`~/.config/systemd/user/`) that waits until Valkey answers, since a user's units can't depend on the system's
+`valkey.service`.
 
 Settings for it:
 
@@ -96,7 +98,7 @@ Settings for it:
   count the same days.
 
 To move existing data out of the old Redis container, copy it key by key with `scripts/redis-copy.ts` (a dump file
-can't always move between Redis and Valkey versions); the steps are in Plana's guide.
+can't always move between Redis and Valkey versions); its header shows how.
 
 Vivy's stats keys, for anyone reading them:
 
