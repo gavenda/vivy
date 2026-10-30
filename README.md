@@ -97,9 +97,6 @@ Settings for it:
 - `TIMEZONE` (default `UTC`) is the server's time zone, where a day of stats starts. Set it to the same zone as Plana's
   `TIMEZONE` so both count the same days.
 
-To move existing data out of the old Redis container, copy it key by key with `scripts/redis-copy.ts` (a dump file
-can't always move between Redis and Valkey versions); its header shows how.
-
 Vivy's stats keys, for anyone reading them:
 
 | Key                                                   | Holds                                                |
