@@ -94,8 +94,8 @@ Settings for it:
 
 - `REDIS_URL=redis://vivy:<password>@127.0.0.1:6379`
 - `LAVA_HOST=127.0.0.1`
-- `STATS_TIMEZONE` (default `UTC`) is the zone a day of stats starts in. Set it to Plana's `BIRTHDAY_TIMEZONE` so both
-  count the same days.
+- `TIMEZONE` (default `UTC`) is the server's time zone, where a day of stats starts. Set it to the same zone as Plana's
+  `TIMEZONE` so both count the same days.
 
 To move existing data out of the old Redis container, copy it key by key with `scripts/redis-copy.ts` (a dump file
 can't always move between Redis and Valkey versions); its header shows how.

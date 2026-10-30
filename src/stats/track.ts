@@ -1,5 +1,5 @@
 import { redis } from 'vivy/redis';
-import { statsTimeZone } from 'vivy/config';
+import { timeZone } from 'vivy/config';
 import type { Track } from 'vivy/link/payload/track';
 import type { Requester } from 'vivy/requester';
 import type { Player } from 'vivy/link/player';
@@ -9,10 +9,10 @@ const DAY_KEY_TTL_SECONDS = 400 * 86_400;
 
 let dayFormat: Intl.DateTimeFormat | undefined;
 
-/** Today's date as YYYY-MM-DD in STATS_TIMEZONE, so a reader such as Plana can work out the same keys. */
+/** Today's date as YYYY-MM-DD in TIMEZONE, so a reader such as Plana can work out the same keys. */
 const today = () => {
   dayFormat ??= new Intl.DateTimeFormat('en-CA', {
-    timeZone: statsTimeZone(),
+    timeZone: timeZone(),
     year: 'numeric',
     month: '2-digit',
     day: '2-digit'
