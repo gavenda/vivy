@@ -86,8 +86,8 @@ On the server, Redis is the host's own Valkey (Arch's `valkey` package), shared 
 [Plana](https://github.com/gavenda/plana), the server's admin bot. Each bot signs in as its own user: Vivy can use
 every key, and Plana keeps its cache under `plana:` and can only read Vivy's `stats:` keys. The pods reach it on the
 host's loopback through pasta (`Network=pasta:-T,6379` in `vivy.pod`); Lavalink, in the same pod, is on `127.0.0.1`.
-`vivy.pod` starts after `valkey-wait.service`, a user unit (`podman/valkey-wait.service`, installed to
-`~/.config/systemd/user/`) that waits until Valkey answers, since a user's units can't depend on the system's
+`vivy.pod` starts after `valkey-wait.service`, a user unit (installed to `~/.config/systemd/user/`) that waits until
+Valkey answers, since a user's units can't depend on the system's
 `valkey.service`.
 
 Settings for it:
