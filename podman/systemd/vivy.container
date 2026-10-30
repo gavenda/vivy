@@ -1,8 +1,6 @@
 [Unit]
 Description=Vivy
-After=redis.container
 After=lavalink.container
-Requires=redis.container
 Requires=lavalink.container
 
 [Container]

@@ -5,4 +5,9 @@ Wants=podman-user-wait-network-online.service
 
 [Pod]
 PodName=vivy
-Network=vivy.network
+
+# Redis (Valkey) runs on the host, shared with Plana, and listens on the host's loopback only.
+# Inside the pod 127.0.0.1 is the pod itself, so pasta's -T forwards the pod's port 6379 to
+# the host's. The containers share the pod's network, so Vivy reaches Lavalink on 127.0.0.1.
+Network=pasta:-T,6379
+

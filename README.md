@@ -79,3 +79,36 @@ volumes:
   n8n-data:
     driver: local
 ```
+
+## Sharing Redis with Plana
+
+On the server, Redis is the host's own Valkey (Arch's `valkey` package), shared by Vivy and
+[Plana](https://github.com/gavenda/plana), the server's admin bot. Each bot signs in as its own user: Vivy can use
+every key, and Plana keeps its cache under `plana:` and can only read Vivy's `stats:` keys. The pods reach it on the
+host's loopback through pasta (`Network=pasta:-T,6379` in `vivy.pod`); Lavalink, in the same pod, is on `127.0.0.1`.
+Plana's `deploy/quadlet/README.md` walks through installing Valkey and both pods.
+
+Settings for it:
+
+- `REDIS_URL=redis://vivy:<password>@127.0.0.1:6379`
+- `LAVA_HOST=127.0.0.1`
+- `STATS_TIMEZONE` (default `UTC`) is the zone a day of stats starts in. Set it to Plana's `BIRTHDAY_TIMEZONE` so both
+  count the same days.
+
+To move existing data out of the old Redis container, copy it key by key with `scripts/redis-copy.ts` (a dump file
+can't always move between Redis and Valkey versions); the steps are in Plana's guide.
+
+Vivy's stats keys, for anyone reading them:
+
+| Key                                                   | Holds                                                |
+| ----------------------------------------------------- | ---------------------------------------------------- |
+| `stats:guild:<guild>:tracks:plays`                    | Plays per track, all time                            |
+| `stats:guild:<guild>:users:requests`                  | Requests per user, all time                          |
+| `stats:guild:<guild>:day:<YYYY-MM-DD>:tracks:plays`   | Plays per track that day, kept 400 days              |
+| `stats:guild:<guild>:day:<YYYY-MM-DD>:users:requests` | Requests per user that day, kept 400 days            |
+| `stats:guild:<guild>:day:first`                       | The first day counted by day                         |
+| `stats:tracks:plays`, `stats:tracks:duration`         | Plays and milliseconds played per track, all servers |
+| `stats:track:meta:<track>`                            | Title, author, uri, length, artworkUrl               |
+| `stats:user:meta:<user>`                              | Username                                             |
+
+Don't give this Redis an eviction policy (`maxmemory` with `allkeys-lru`): it would delete the stats.
