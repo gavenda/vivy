@@ -37,10 +37,14 @@ export const enqueueTrack = async (
       break;
     }
     case QueueType.NOW: {
+      // The track cut off plays again right after, read before Lavalink replaces it. Not `queue.previous`, which is
+      // the last track that ended, still set once the queue ran out or the player stopped.
+      const interrupted = player.queue.current;
+
       await player.play(track);
 
-      if (player.queue.previous) {
-        player.queue.enqueueNext(player.queue.previous);
+      if (interrupted) {
+        player.queue.enqueueNext(interrupted);
       }
       break;
     }
