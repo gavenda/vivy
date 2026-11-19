@@ -87,6 +87,11 @@ export class Player<UserData> {
    */
   playing: boolean = false;
   /**
+   * Whether Lavalink's voice connection is up, as its last player update said. Not {@link voiceConnected}: Lavalink
+   * connects a moment after Vivy joins, and reconnects on its own when Discord moves the voice server.
+   */
+  socketConnected: boolean = false;
+  /**
    * The filters applied in this player.
    */
   filter = new LavalinkFilter(this);

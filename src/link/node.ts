@@ -256,13 +256,11 @@ export class LavalinkNode<UserData> {
 
     if (!player) return;
 
-    if (player.voiceConnected != payload.state.connected) {
-      if (payload.state.connected) {
-        this.link.emit('playerConnected', player);
-      } else {
-        this.link.emit('playerDisconnected', player);
-        player.playing = false;
-      }
+    // Lavalink's voice connection lags Vivy's join, so it is followed on its own. Whether a track plays is left to the
+    // track events: setting `playing` here marked a track paused that went on playing once Lavalink connected.
+    if (player.socketConnected !== payload.state.connected) {
+      player.socketConnected = payload.state.connected;
+      this.link.emit(payload.state.connected ? 'playerConnected' : 'playerDisconnected', player);
     }
 
     player.setPosition(payload.state.position);
