@@ -18,6 +18,7 @@ export const toRemoteTrack = (context: AppContext, track: Track<Requester>): Rem
     author: info.author,
     lengthMs: info.length,
     isStream: info.isStream,
+    isSeekable: info.isSeekable && !info.isStream,
     uri: info.uri ?? null,
     artworkUrl: info.artworkUrl ?? null,
     requester: requested ? { id: userData.userId, name: userData.userName } : null

@@ -301,6 +301,25 @@ export const remoteHandlers: RemoteHandlers = {
     return toGuildState(context, guildId);
   },
 
+  seek: async (context, { guildId, positionMs }) => {
+    const player = requireCurrent(context, guildId);
+    const { info } = player.queue.current!;
+
+    if (!info.isSeekable || info.isStream) throw new RemoteFailure('NOT_SEEKABLE', `Can't seek ${info.identifier}`);
+    if (typeof positionMs !== 'number' || !Number.isFinite(positionMs)) {
+      throw new RemoteFailure('BAD_REQUEST', 'positionMs must be a number');
+    }
+
+    const position = Math.round(Math.min(Math.max(positionMs, 0), info.length));
+
+    await player.update({ position });
+    // Lavalink reports the new position with its next player update, the state answered now shouldn't wait for it
+    player.setPosition(position);
+    refreshEmbed(context, guildId);
+
+    return toGuildState(context, guildId);
+  },
+
   move: async (context, { guildId, voiceChannelId }) => {
     const channel = requireVoiceChannel(requireGuild(context, guildId), voiceChannelId);
     const player = requirePlayer(context, guildId);

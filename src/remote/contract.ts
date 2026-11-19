@@ -44,6 +44,8 @@ export interface RemoteTrack {
   author: string;
   lengthMs: number;
   isStream: boolean;
+  /** Whether `seek` can move through it; never for a stream. */
+  isSeekable: boolean;
   uri: string | null;
   artworkUrl: string | null;
   /** Who asked for it, null when Vivy queued it on its own (autoplay, radio). */
@@ -114,6 +116,11 @@ export interface RemoteOps {
   remove: { params: { guildId: string; index: number; identifier?: string }; result: RemoteGuildState };
   /** Moves Vivy to another voice channel. */
   move: { params: { guildId: string; voiceChannelId: string }; result: RemoteGuildState };
+  /**
+   * Moves the playing track to `positionMs`, clamped to its length. Fails with NOT_SEEKABLE for a track that can't be
+   * seeked (a stream). A Vivy older than 2.5.0 answers BAD_REQUEST, as for any op it doesn't know.
+   */
+  seek: { params: { guildId: string; positionMs: number }; result: RemoteGuildState };
   state: { params: { guildId: string }; result: RemoteGuildState };
 }
 
@@ -130,6 +137,7 @@ export const REMOTE_OPS = [
   'shuffle',
   'remove',
   'move',
+  'seek',
   'state'
 ] as const satisfies readonly RemoteOp[];
 
@@ -157,6 +165,7 @@ export type RemoteErrorCode =
   | 'NODE_UNAVAILABLE'
   | 'NOT_CONNECTED'
   | 'NOTHING_PLAYING'
+  | 'NOT_SEEKABLE'
   | 'WRONG_VOICE_CHANNEL'
   | 'INDEX_OUT_OF_RANGE'
   | 'STALE_INDEX'
