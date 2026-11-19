@@ -39,6 +39,7 @@ export const idleState = (guildId: string, voiceChannelId: string | null = null)
   current: null,
   positionMs: 0,
   positionAt: Date.now(),
+  rate: 1,
   queue: [],
   queueSize: 0,
   durationMs: 0,
@@ -62,6 +63,7 @@ export const toGuildState = (context: AppContext, guildId: string): RemoteGuildS
     current: current ? toRemoteTrack(context, current) : null,
     positionMs: current ? Math.min(player.currentPosition, current.info.isStream ? Infinity : current.info.length) : 0,
     positionAt: Date.now(),
+    rate: player.rate,
     queue: queue
       .toArray()
       .slice(0, REMOTE_QUEUE_LIMIT)

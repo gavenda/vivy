@@ -2,8 +2,10 @@ import { getLogger } from '@logtape/logtape';
 import { Events } from 'discord.js';
 import pDebounce from 'p-debounce';
 import type { AppContext } from 'vivy/context';
+import type { Player } from 'vivy/link';
 import { onPlayerChange } from 'vivy/player';
 import { redis } from 'vivy/redis';
+import type { Requester } from 'vivy/requester';
 import { REMOTE_PROTOCOL_VERSION, RemoteChannel, type RemoteEvent } from './contract';
 import { toGuildState } from './serialize';
 
@@ -33,6 +35,26 @@ const publishState = (context: AppContext, guildId: string) =>
     seq: ++seq,
     state: toGuildState(context, guildId)
   });
+
+/** Lavalink's position report for a playing track, sent as is: it comes every few seconds already. */
+const publishProgress = (player: Player<Requester>) => {
+  const current = player.queue.current;
+
+  if (!current) return;
+
+  void publishEvent({
+    v: REMOTE_PROTOCOL_VERSION,
+    type: 'progress',
+    instanceId,
+    seq: ++seq,
+    guildId: player.guildId,
+    identifier: current.info.identifier,
+    paused: !player.playing,
+    positionMs: Math.min(player.position, current.info.isStream ? Infinity : current.info.length),
+    positionAt: player.positionAt,
+    rate: player.rate
+  });
+};
 
 const pendingStates = new Map<string, typeof publishState>();
 
@@ -65,6 +87,8 @@ export const registerRemoteEvents = (context: AppContext) => {
   client.on(Events.VoiceStateUpdate, (oldState, newState) => {
     if (newState.id === client.user?.id && oldState.channelId !== newState.channelId) schedule(newState.guild.id);
   });
+  // Where the playing track is, and how fast it moves
+  link.on('playerUpdate', publishProgress);
   link.on('trackError', (player) => schedule(player.guildId));
   link.on('trackStuck', (player) => schedule(player.guildId));
   // Players were restored from the last run

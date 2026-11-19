@@ -44,6 +44,11 @@ export interface LavalinkEvents<UserData> {
    */
   playerInit: (player: Player<UserData>) => Awaitable<void>;
   /**
+   * Emitted when Lavalink reports a player's position, every few seconds while it is connected.
+   * @param player the player instance
+   */
+  playerUpdate: (player: Player<UserData>) => Awaitable<void>;
+  /**
    * Emitted when a player has changed voice channels.
    * @param player the player instance
    * @param oldVoiceChannelId old voice channel id

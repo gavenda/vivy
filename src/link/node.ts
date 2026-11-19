@@ -268,6 +268,7 @@ export class LavalinkNode<UserData> {
     player.setPosition(payload.state.position);
     player.ping = payload.state.ping;
     player.time = payload.state.time;
+    this.link.emit('playerUpdate', player);
 
     // Save state
     await player.queue.saveState();

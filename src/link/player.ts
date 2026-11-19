@@ -129,7 +129,15 @@ export class Player<UserData> {
    * The position right now, carried forward from the last sample while playing.
    */
   get currentPosition(): number {
-    return this.playing ? this.position + (Date.now() - this.positionAt) : this.position;
+    return this.playing ? this.position + (Date.now() - this.positionAt) * this.rate : this.position;
+  }
+
+  /**
+   * How fast the position moves against the clock, sped up or slowed down by a timescale filter (nightcore).
+   */
+  get rate(): number {
+    const { speed = 1, rate = 1 } = this.filter.raw.timescale ?? {};
+    return speed * rate;
   }
 
   clearVoiceSession() {

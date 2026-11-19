@@ -7,7 +7,7 @@
  * Plana publishes a {@link RemoteRequest} on {@link RemoteChannel.request} and waits for the {@link RemoteResponse}
  * with the same id on {@link RemoteChannel.response}. Publishing reaches nobody when Vivy is offline, which Plana sees
  * as a subscriber count of 0. Vivy also publishes a {@link RemoteEvent} on {@link RemoteChannel.event} whenever a
- * guild's player changes.
+ * guild's player changes, and the position of a playing track every few seconds.
  */
 
 export const REMOTE_PROTOCOL_VERSION = 1;
@@ -68,6 +68,8 @@ export interface RemoteGuildState {
    */
   positionMs: number;
   positionAt: number;
+  /** How fast the position moves against the clock: 1, or faster or slower under a speed filter (nightcore). */
+  rate: number;
   /** The upcoming tracks, `current` excluded, the first {@link REMOTE_QUEUE_LIMIT} of them. */
   queue: RemoteTrack[];
   queueSize: number;
@@ -182,6 +184,24 @@ export type RemoteEvent =
       instanceId: string;
       seq: number;
       state: RemoteGuildState;
+    }
+  /**
+   * Where a playing track is, as Lavalink reports it every few seconds (its `playerUpdateInterval`), to correct a
+   * position counted forward since the last state. `seq` is shared with `state`. `identifier` is the track's, drop a
+   * progress for a track other than the state's current one.
+   */
+  | {
+      v: typeof REMOTE_PROTOCOL_VERSION;
+      type: 'progress';
+      instanceId: string;
+      seq: number;
+      guildId: string;
+      identifier: string;
+      paused: boolean;
+      /** As in {@link RemoteGuildState}. */
+      positionMs: number;
+      positionAt: number;
+      rate: number;
     }
   /** Vivy started listening, request the state again. */
   | { v: typeof REMOTE_PROTOCOL_VERSION; type: 'ready'; instanceId: string }
