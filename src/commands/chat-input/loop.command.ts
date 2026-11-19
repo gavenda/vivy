@@ -1,4 +1,5 @@
 import { RepeatMode } from 'vivy/link';
+import { notifyPlayerChange } from 'vivy/player';
 import { MessageFlags, SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
 import i18next from 'i18next';
 import type { AppChatInputCommand } from './chat-input-command';
@@ -40,5 +41,8 @@ export const loop: AppChatInputCommand = {
         });
         break;
     }
+
+    // The remote control shows the repeat mode
+    notifyPlayerChange(player.guildId);
   }
 };

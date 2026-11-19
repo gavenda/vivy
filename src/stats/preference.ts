@@ -51,9 +51,24 @@ const getTimeOfDayBucket = (): TimeOfDay => {
   return 'evening';
 };
 
-export const isAutoplayEnabled = async (guildId: string): Promise<boolean> => {
-  return (await redis.exists(autoplayKey(guildId))) === true;
+/** The guilds with autoplay on, as last read or set, for the remote control's state, which can't wait on Redis. */
+const autoplayGuilds = new Set<string>();
+
+const rememberAutoplay = (guildId: string, enabled: boolean) => {
+  if (enabled) autoplayGuilds.add(guildId);
+  else autoplayGuilds.delete(guildId);
 };
+
+export const isAutoplayEnabled = async (guildId: string): Promise<boolean> => {
+  const enabled = (await redis.exists(autoplayKey(guildId))) === true;
+
+  rememberAutoplay(guildId, enabled);
+
+  return enabled;
+};
+
+/** Whether autoplay is on, as last read or set; read it with {@link isAutoplayEnabled} once first (guild available). */
+export const isAutoplayEnabledNow = (guildId: string): boolean => autoplayGuilds.has(guildId);
 
 export const setAutoplay = async (guildId: string, enabled: boolean) => {
   if (enabled) {
@@ -61,4 +76,6 @@ export const setAutoplay = async (guildId: string, enabled: boolean) => {
   } else {
     await redis.del(autoplayKey(guildId));
   }
+
+  rememberAutoplay(guildId, enabled);
 };

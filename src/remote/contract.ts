@@ -80,6 +80,8 @@ export interface RemoteGuildState {
   /** 0 to 1. */
   volume: number;
   repeat: RemoteRepeat;
+  /** Whether Vivy queues similar tracks once the queue runs out. Missing from a Vivy older than 2.6.0. */
+  autoplay: boolean;
 }
 
 export interface RemoteOps {
@@ -121,6 +123,12 @@ export interface RemoteOps {
    * seeked (a stream). A Vivy older than 2.5.0 answers BAD_REQUEST, as for any op it doesn't know.
    */
   seek: { params: { guildId: string; positionMs: number }; result: RemoteGuildState };
+  /** Sets the volume, 0 to 1 as in {@link RemoteGuildState.volume}, clamped. A Vivy older than 2.6.0 answers BAD_REQUEST. */
+  volume: { params: { guildId: string; volume: number }; result: RemoteGuildState };
+  /** Sets what repeats when a track ends. A Vivy older than 2.6.0 answers BAD_REQUEST. */
+  repeat: { params: { guildId: string; mode: RemoteRepeat }; result: RemoteGuildState };
+  /** Turns autoplay on or off for the guild, in voice or not. A Vivy older than 2.6.0 answers BAD_REQUEST. */
+  autoplay: { params: { guildId: string; enabled: boolean }; result: RemoteGuildState };
   state: { params: { guildId: string }; result: RemoteGuildState };
 }
 
@@ -138,6 +146,9 @@ export const REMOTE_OPS = [
   'remove',
   'move',
   'seek',
+  'volume',
+  'repeat',
+  'autoplay',
   'state'
 ] as const satisfies readonly RemoteOp[];
 

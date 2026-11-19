@@ -1,11 +1,19 @@
 import type { Guild } from 'discord.js';
 import type { AppContext } from 'vivy/context';
-import { LavalinkSource, LoadResultType, type LavalinkTrackLoadResult, type Player, type Track } from 'vivy/link';
-import { enqueueTracks, QueueType, refreshPlayer, searchWithRetry } from 'vivy/player';
+import {
+  LavalinkSource,
+  LoadResultType,
+  RepeatMode,
+  type LavalinkTrackLoadResult,
+  type Player,
+  type Track
+} from 'vivy/link';
+import { enqueueTracks, notifyPlayerChange, QueueType, refreshPlayer, searchWithRetry } from 'vivy/player';
 import type { Requester } from 'vivy/requester';
+import { setAutoplay } from 'vivy/stats/preference';
 import { sleep } from 'vivy/utils';
 import { isSpotify } from 'vivy/utils/is-spotify';
-import { REMOTE_SEARCH_LIMIT, type RemoteOp, type RemoteOps, type RemoteSource } from './contract';
+import { REMOTE_SEARCH_LIMIT, type RemoteOp, type RemoteOps, type RemoteRepeat, type RemoteSource } from './contract';
 import { RemoteFailure } from './errors';
 import { currentVoiceChannelId, idleState, toGuildState, toRemoteTrack, toSearchTrack } from './serialize';
 
@@ -28,6 +36,12 @@ const QUEUE_TYPES: Record<RemoteOps['play']['params']['queueType'], QueueType> =
 const SOURCES: Record<RemoteSource, LavalinkSource> = {
   ytmsearch: LavalinkSource.YOUTUBE_MUSIC,
   ytsearch: LavalinkSource.YOUTUBE
+};
+
+const REPEAT_MODES: Record<RemoteRepeat, RepeatMode> = {
+  off: RepeatMode.OFF,
+  track: RepeatMode.TRACK,
+  queue: RepeatMode.QUEUE
 };
 
 const toSource = (source: unknown): LavalinkSource => {
@@ -316,6 +330,46 @@ export const remoteHandlers: RemoteHandlers = {
     // Lavalink reports the new position with its next player update, the state answered now shouldn't wait for it
     player.setPosition(position);
     refreshEmbed(context, guildId);
+
+    return toGuildState(context, guildId);
+  },
+
+  volume: async (context, { guildId, volume }) => {
+    const player = requirePlayer(context, guildId);
+
+    if (typeof volume !== 'number' || !Number.isFinite(volume)) {
+      throw new RemoteFailure('BAD_REQUEST', 'volume must be a number');
+    }
+
+    // The /volume command's range, as a fraction
+    await player.applyVolume(Math.min(Math.max(volume, 0), 1));
+    refreshEmbed(context, guildId);
+
+    return toGuildState(context, guildId);
+  },
+
+  // eslint-disable-next-line @typescript-eslint/require-await -- every handler answers with a promise
+  repeat: async (context, { guildId, mode }) => {
+    const player = requirePlayer(context, guildId);
+
+    if (typeof mode !== 'string' || !(mode in REPEAT_MODES)) {
+      throw new RemoteFailure('BAD_REQUEST', `Unknown repeat mode ${JSON.stringify(mode)}`);
+    }
+
+    player.repeatMode = REPEAT_MODES[mode];
+    // The player embed doesn't show the repeat mode, only the remote control's state changes
+    notifyPlayerChange(guildId);
+
+    return toGuildState(context, guildId);
+  },
+
+  autoplay: async (context, { guildId, enabled }) => {
+    requireGuild(context, guildId);
+
+    if (typeof enabled !== 'boolean') throw new RemoteFailure('BAD_REQUEST', 'enabled must be a boolean');
+
+    await setAutoplay(guildId, enabled);
+    notifyPlayerChange(guildId);
 
     return toGuildState(context, guildId);
   },

@@ -1,6 +1,7 @@
 import type { AppContext } from 'vivy/context';
 import type { Player, Track } from 'vivy/link';
 import type { Requester } from 'vivy/requester';
+import { isAutoplayEnabledNow } from 'vivy/stats/preference';
 import { REMOTE_QUEUE_LIMIT, type RemoteGuildState, type RemoteSearchTrack, type RemoteTrack } from './contract';
 
 /** The voice channel Vivy is in, as Discord sees it. The player's own idea can be stale after a kick. */
@@ -45,7 +46,8 @@ export const idleState = (guildId: string, voiceChannelId: string | null = null)
   queueSize: 0,
   durationMs: 0,
   volume: 1,
-  repeat: 'off'
+  repeat: 'off',
+  autoplay: isAutoplayEnabledNow(guildId)
 });
 
 export const toGuildState = (context: AppContext, guildId: string): RemoteGuildState => {
@@ -72,6 +74,7 @@ export const toGuildState = (context: AppContext, guildId: string): RemoteGuildS
     queueSize: queue.size,
     durationMs: queue.duration,
     volume: player.volume,
-    repeat: player.repeatMode
+    repeat: player.repeatMode,
+    autoplay: isAutoplayEnabledNow(guildId)
   };
 };

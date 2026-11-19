@@ -1,3 +1,4 @@
+import { notifyPlayerChange } from 'vivy/player';
 import { isAutoplayEnabled, setAutoplay } from 'vivy/stats/preference';
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import i18next from 'i18next';
@@ -17,6 +18,7 @@ export const autoplay: AppChatInputCommand = {
     const enabled = !(await isAutoplayEnabled(guildId));
 
     await setAutoplay(guildId, enabled);
+    notifyPlayerChange(guildId);
 
     await interaction.reply({
       flags: MessageFlags.Ephemeral,
