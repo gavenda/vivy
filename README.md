@@ -40,7 +40,6 @@ services:
     depends_on:
       - redis
       - lavalink
-      - n8n
     environment:
       TOKEN: <your bot token>
       LAVA_HOST: lavalink
@@ -57,16 +56,6 @@ services:
     restart: unless-stopped
     volumes:
       - redis:/data
-  n8n:
-    image: docker.n8n.io/n8nio/n8n
-    restart: unless-stopped
-    environment:
-      GENERIC_TIMEZONE: <YOUR_TIMEZONE>
-      TZ: <YOUR_TIMEZONE>
-      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: 'true'
-      N8N_RUNNERS_ENABLED: 'true'
-    volumes:
-      - n8n-data:/home/node/.n8n
   lavalink:
     image: ghcr.io/lavalink-devs/lavalink:4
     restart: unless-stopped
@@ -75,8 +64,6 @@ services:
       LAVALINK_SERVER_PASSWORD: youshallnotpass
 volumes:
   redis:
-    driver: local
-  n8n-data:
     driver: local
 ```
 

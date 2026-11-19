@@ -17,12 +17,7 @@ import type { Requester } from './requester';
 
 const createContext = (config: Config): AppContext => {
   const client = new Client({
-    intents: [
-      GatewayIntentBits.Guilds,
-      GatewayIntentBits.GuildMessages,
-      GatewayIntentBits.MessageContent,
-      GatewayIntentBits.GuildVoiceStates
-    ],
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
     presence: {
       status: 'online',
       activities: [{ name: `Flourite Eye's Song 🎶`, type: ActivityType.Custom }]
