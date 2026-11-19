@@ -97,4 +97,19 @@ Vivy's stats keys, for anyone reading them:
 | `stats:track:meta:<track>`                            | Title, author, uri, length, artworkUrl               |
 | `stats:user:meta:<user>`                              | Username                                             |
 
+### Remote control from Plana
+
+Plana's Music page commands Vivy over pub/sub on the same Redis. `src/remote/contract.ts` defines the messages, and Plana
+keeps a copy of it, so change both together.
+
+| Channel                | Direction     | Carries                                                                                |
+| ---------------------- | ------------- | -------------------------------------------------------------------------------------- |
+| `vivy:remote:request`  | Plana to Vivy | Requests: search, play, pause, resume, skip, stop, clear, shuffle, remove, move, state |
+| `vivy:remote:response` | Vivy to Plana | The answer to each request, matched by its id                                          |
+| `vivy:remote:event`    | Vivy to Plana | A server's player state whenever it changes, and `ready`/`shutdown`                    |
+
+Vivy listens once it is ready, unless `INTERACTIONS_ONLY` is set. Plana takes nobody receiving its request as Vivy being
+offline. Valkey users start with no channels (`resetchannels`), so both need `&vivy:remote:*`, and plana the pub/sub
+commands. On the server, `valkey.yml` in the playbooks grants them.
+
 Don't give this Redis an eviction policy (`maxmemory` with `allkeys-lru`): it would delete the stats.

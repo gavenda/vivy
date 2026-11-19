@@ -46,9 +46,28 @@ export class TrackQueue<UserData> {
     };
   }
 
-  slice(start: number, end?: number) {
-    this.tracks = this.tracks.slice(this.offset + start, end);
-    this.offset = 0;
+  /**
+   * Removes the tracks from `start` up to, not including, `end` in the remaining queue, the rest stay in order.
+   * @param start the first index relative to the remaining queue
+   * @param end the index after the last one to remove, the end of the queue when omitted
+   * @returns the removed tracks
+   */
+  removeRange(start: number, end = this.size): Track<UserData>[] {
+    const from = Math.max(0, start);
+    const to = Math.min(this.size, end);
+
+    if (from >= to) return [];
+
+    return this.tracks.splice(this.offset + from, to - from);
+  }
+
+  /**
+   * Removes one track from the remaining queue.
+   * @param index the index relative to the remaining queue
+   * @returns the removed track, or `undefined` if the index is out of range
+   */
+  removeAt(index: number): Track<UserData> | undefined {
+    return this.removeRange(index, index + 1)[0];
   }
 
   /**
@@ -70,8 +89,8 @@ export class TrackQueue<UserData> {
    * Adds a track to the start of the queue.
    */
   enqueueNext(track: Track<UserData>) {
-    this.tracks.unshift(track);
-    this.offset = 0;
+    // Ahead of the remaining tracks, not of the played ones still kept behind the offset
+    this.tracks.splice(this.offset, 0, track);
   }
 
   /**
@@ -156,6 +175,10 @@ export class TrackQueue<UserData> {
    * Shuffle the queue.
    */
   shuffle() {
+    // Played tracks stay behind the offset, drop them so they don't come back
+    this.tracks = this.tracks.slice(this.offset);
+    this.offset = 0;
+
     if (this.tracks.length == 2) {
       if (!this.tracks[0]) return;
       if (!this.tracks[1]) return;
@@ -179,20 +202,15 @@ export class TrackQueue<UserData> {
         this.tracks[randomIndex] = track;
       }
     }
-    this.offset = 0;
   }
 
   /**
    * Total duration of the tracks in the queue.
    */
   get duration(): number {
-    const current = this.current?.info.length ?? 0;
-    return (
-      current +
-      this.tracks
-        .filter((track) => track.info.isSeekable)
-        .reduce((accumulator, track) => accumulator + track.info.length, 0)
-    );
+    return [this.current, ...this.toArray()]
+      .filter((track) => track && track.info.isSeekable && !track.info.isStream)
+      .reduce((accumulator, track) => accumulator + (track?.info.length ?? 0), 0);
   }
 
   /**

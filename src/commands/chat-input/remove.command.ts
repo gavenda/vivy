@@ -46,7 +46,7 @@ export const remove: AppChatInputCommand = {
         return;
       }
 
-      player.queue.slice(from, to);
+      player.queue.removeRange(from, to);
 
       await interaction.reply({
         flags: MessageFlags.Ephemeral,
@@ -63,7 +63,7 @@ export const remove: AppChatInputCommand = {
         return;
       }
 
-      player.queue.slice(from + 1);
+      player.queue.removeAt(from);
 
       await interaction.reply({
         flags: MessageFlags.Ephemeral,

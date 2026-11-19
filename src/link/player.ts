@@ -63,9 +63,13 @@ export class Player<UserData> {
    */
   voiceChannelId?: string;
   /**
-   * The position this player is playing music.
+   * The position this player is playing music, as last sampled. Set it with {@link setPosition}.
    */
   position: number = 0;
+  /**
+   * When {@link position} was sampled, by this process's clock (epoch ms).
+   */
+  positionAt: number = Date.now();
   /**
    * The server time of this player.
    */
@@ -111,6 +115,21 @@ export class Player<UserData> {
    */
   get voiceConnected() {
     return this.voiceChannelId !== undefined;
+  }
+
+  /**
+   * Records a sampled position, stamped now.
+   */
+  setPosition(position: number) {
+    this.position = position;
+    this.positionAt = Date.now();
+  }
+
+  /**
+   * The position right now, carried forward from the last sample while playing.
+   */
+  get currentPosition(): number {
+    return this.playing ? this.position + (Date.now() - this.positionAt) : this.position;
   }
 
   clearVoiceSession() {
@@ -233,6 +252,8 @@ export class Player<UserData> {
    * Pauses this player.
    */
   async pause() {
+    // Frozen where it stopped, not at the last sample
+    this.setPosition(this.currentPosition);
     this.playing = false;
 
     await this.node.updatePlayer(this.guildId, { paused: true });
@@ -242,6 +263,8 @@ export class Player<UserData> {
    * Resumes playing if paused.
    */
   async resume() {
+    // Carried forward from now, not from before the pause
+    this.setPosition(this.position);
     this.playing = true;
 
     await this.node.updatePlayer(this.guildId, { paused: false });
@@ -281,6 +304,25 @@ export class Player<UserData> {
     });
 
     this.voiceChannelId = voiceChannelId;
+  }
+
+  /**
+   * Move to another voice channel while connected.
+   * The voice state update that follows sets {@link voiceChannelId} and emits `playerMove`.
+   * @param voiceChannelId voice channel id
+   */
+  async move(voiceChannelId: string) {
+    if (!this.voiceConnected || this.voiceChannelId === voiceChannelId) return;
+
+    await this.link.sendVoiceUpdate(this.guildId, {
+      op: GatewayOpcodes.VoiceStateUpdate,
+      d: {
+        guild_id: this.guildId,
+        channel_id: voiceChannelId,
+        self_mute: false,
+        self_deaf: false
+      }
+    });
   }
 
   /**

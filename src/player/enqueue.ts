@@ -48,3 +48,42 @@ export const enqueueTrack = async (
 
   return true;
 };
+
+/**
+ * Puts several tracks, such as a playlist, in the player's queue the way the queue type asks for, keeping their order.
+ * With {@link QueueType.NOW} only the first one interrupts, the rest play right after it.
+ */
+export const enqueueTracks = async (
+  player: Player<Requester>,
+  tracks: Track<Requester>[],
+  queueType: QueueType
+): Promise<boolean> => {
+  const [first, ...rest] = tracks;
+
+  if (!first) return false;
+
+  switch (queueType) {
+    case QueueType.ASK:
+      return enqueueTrack(player, first, queueType);
+    case QueueType.LATER: {
+      player.queue.enqueue(...tracks);
+
+      if (!player.queue.current) await player.play();
+      break;
+    }
+    case QueueType.NEXT: {
+      for (const track of [...tracks].reverse()) player.queue.enqueueNext(track);
+
+      if (!player.queue.current) await player.play();
+      break;
+    }
+    case QueueType.NOW: {
+      await enqueueTrack(player, first, queueType);
+
+      for (const track of [...rest].reverse()) player.queue.enqueueNext(track);
+      break;
+    }
+  }
+
+  return true;
+};

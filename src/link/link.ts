@@ -212,6 +212,20 @@ export class Lavalink<UserData> extends EventEmitter {
   }
 
   /**
+   * Decode a track loaded earlier, such as a search result picked elsewhere, without searching again.
+   * @param encoded the encoded track
+   * @param userData the user data to stamp on the track
+   * @returns the track, or `undefined` if it can't be decoded
+   */
+  async decodeTrack(encoded: string, userData: UserData) {
+    const track = await this.availableNode.decodeTrack(encoded);
+
+    if (track) track.userData = userData;
+
+    return track;
+  }
+
+  /**
    * Handle channel delete.
    * @param payload channel delete payload from discord.js
    */

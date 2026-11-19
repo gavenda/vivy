@@ -18,6 +18,7 @@ export const stop: AppChatInputCommand = {
 
     await player.queue.clear();
     await player.stop();
+    await player.disconnect();
     await player.destroy();
 
     await interaction.reply({

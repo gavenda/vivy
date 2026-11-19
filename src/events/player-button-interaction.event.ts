@@ -1,7 +1,14 @@
 import { RepeatMode } from 'vivy/link';
 import { RadioType } from 'vivy/listen.moe';
 
-import { createPlayerEmbed, getPlayerPage, playRadio, QUEUE_PAGE_SIZE, setPlayerPage } from 'vivy/player';
+import {
+  createPlayerEmbed,
+  getPlayerPage,
+  notifyPlayerChange,
+  playRadio,
+  QUEUE_PAGE_SIZE,
+  setPlayerPage
+} from 'vivy/player';
 import { chunkSize } from 'vivy/utils';
 import { Events, MessageFlags } from 'discord.js';
 import i18next from 'i18next';
@@ -137,6 +144,9 @@ export const buttonInteraction: AppEvent<Events.InteractionCreate> = {
         return;
       }
     }
+
+    // The embed is re-rendered here rather than through updatePlayer, so tell the remote control directly
+    notifyPlayerChange(player.guildId);
 
     const container = createPlayerEmbed(context, interaction.guildId, pageIndex);
     await setPlayerPage(player.guildId, pageIndex);

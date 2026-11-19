@@ -96,7 +96,8 @@ export class LavalinkNode<UserData> {
   }
 
   get connected() {
-    return this.sessionId !== undefined;
+    // Not the getter, it throws while there is no session
+    return this.#sessionId !== undefined;
   }
 
   get sessionId(): string {
@@ -264,7 +265,7 @@ export class LavalinkNode<UserData> {
       }
     }
 
-    player.position = payload.state.position;
+    player.setPosition(payload.state.position);
     player.ping = payload.state.ping;
     player.time = payload.state.time;
 
@@ -281,6 +282,7 @@ export class LavalinkNode<UserData> {
     switch (payload.type) {
       case EventType.TRACK_START: {
         player.playing = true;
+        player.setPosition(0);
         player.queue.current = payload.track;
         this.link.emit('trackStart', player, payload.track);
         break;
@@ -425,6 +427,14 @@ export class LavalinkNode<UserData> {
    */
   async loadTrack(identifier: string) {
     return this.#rest.loadTracks(identifier);
+  }
+
+  /**
+   * Decode an encoded track using this node.
+   * @param encoded the encoded track, as found on a loaded track
+   */
+  async decodeTrack(encoded: string) {
+    return this.#rest.decodeTrack(encoded);
   }
 
   /**

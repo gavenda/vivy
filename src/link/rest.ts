@@ -1,5 +1,5 @@
 import { LavalinkNode } from './node';
-import type { LavalinkTrackLoadResult, UpdatePlayerOptions, UpdateSession } from './payload';
+import type { LavalinkTrackLoadResult, Track, UpdatePlayerOptions, UpdateSession } from './payload';
 
 export interface LavalinkRestApiOptions {
   host: string;
@@ -84,5 +84,25 @@ export class LavalinkRestApi<UserData> {
     const response = await fetch(loadTracksUrl, { headers });
 
     return response.json() as Promise<LavalinkTrackLoadResult<UserData>>;
+  }
+
+  /**
+   * Decodes an encoded track back into a full track.
+   * @returns the track, or `undefined` if Lavalink can't decode it
+   */
+  async decodeTrack(encoded: string): Promise<Track<UserData> | undefined> {
+    const { authorization } = this.options;
+    const headers = { Authorization: authorization };
+    const decodeTrackUrl = new URL('/v4/decodetrack', this.restUrl);
+
+    decodeTrackUrl.searchParams.set('encodedTrack', encoded);
+
+    const response = await fetch(decodeTrackUrl, { headers });
+
+    if (!response.ok) return;
+
+    const track = (await response.json()) as Partial<Track<UserData>>;
+
+    return track.info ? (track as Track<UserData>) : undefined;
   }
 }

@@ -12,6 +12,7 @@ import { ListenMoe } from './listen.moe';
 import { registerListenMoeEvents } from './listen-moe-events';
 import en from './locales/en.json';
 import { configureLogging } from './logging';
+import { registerRemoteEvents, stopRemoteServer } from './remote';
 import { redis } from './redis';
 import type { Requester } from './requester';
 
@@ -59,6 +60,7 @@ export const main = async () => {
   registerDiscordEvents(context);
   registerLinkEvents(context);
   registerListenMoeEvents(context);
+  registerRemoteEvents(context);
 
   const cleanup = async () => {
     logger.info('Received SIGINT/SIGTERM, cleaning up');
@@ -66,6 +68,7 @@ export const main = async () => {
       if (context.client.isReady()) {
         await context.client.destroy();
       }
+      await stopRemoteServer();
       // Players are intentionally left alone, their persisted state is used to resume after a restart
       redis.close();
     } finally {

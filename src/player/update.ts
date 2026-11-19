@@ -1,7 +1,7 @@
 import type { AppContext } from 'vivy/context';
 
 import { createPlayerEmbed } from './embed';
-import { clearPlayerEmbed, getPlayerEmbed, getPlayerPage } from './store';
+import { clearPlayerEmbed, getPlayerEmbed, getPlayerPage, setPlayerPage } from './store';
 import pDebounce from 'p-debounce';
 import { MessageFlags } from 'discord.js';
 import { getLogger } from '@logtape/logtape';
@@ -41,10 +41,33 @@ const updatePlayerNow = async (context: AppContext, guildId: string) => {
 
 const debouncedUpdates = new Map<string, typeof updatePlayerNow>();
 
+type PlayerChangeListener = (guildId: string) => void;
+
+const changeListeners = new Set<PlayerChangeListener>();
+
+/**
+ * Follows changes to a guild's player (track, queue, pause), such as for the remote control's live state.
+ * @returns a function that stops following
+ */
+export const onPlayerChange = (listener: PlayerChangeListener) => {
+  changeListeners.add(listener);
+  return () => changeListeners.delete(listener);
+};
+
+/**
+ * Tells the followers of {@link onPlayerChange} the player changed. {@link updatePlayer} already does,
+ * call this only where the player embed is re-rendered some other way.
+ */
+export const notifyPlayerChange = (guildId: string) => {
+  for (const listener of changeListeners) listener(guildId);
+};
+
 /**
  * Debounced per guild, a single shared debounce would drop the update of every guild but the last one.
  */
 export const updatePlayer = (context: AppContext, guildId: string) => {
+  notifyPlayerChange(guildId);
+
   let update = debouncedUpdates.get(guildId);
 
   if (!update) {
@@ -53,4 +76,12 @@ export const updatePlayer = (context: AppContext, guildId: string) => {
   }
 
   return update(context, guildId);
+};
+
+/**
+ * Shows the first page of the player embed again after a command changed the player, as the command dispatcher does.
+ */
+export const refreshPlayer = async (context: AppContext, guildId: string) => {
+  await setPlayerPage(guildId, 0);
+  await updatePlayer(context, guildId);
 };
